@@ -113,8 +113,7 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
 
 (defun tempel--replace-field (ov str)
   "Replace OV content with STR."
-  (let ((inhibit-modification-hooks t)
-        (beg (overlay-start ov)))
+  (let ((beg (overlay-start ov)))
     (goto-char beg)
     (delete-char (- (overlay-end ov) beg))
     (insert str)
@@ -125,19 +124,20 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
   (when (and after (>= beg (overlay-start ov)) (<= beg (overlay-end ov)))
-    (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
-    (when-let (name (overlay-get ov 'tempel--name))
-      (let ((state (overlay-get ov 'tempel--state))
-            (str (buffer-substring-no-properties (overlay-start ov) (overlay-end ov))))
-        (setf (alist-get name (cddr state)) str)
-        (save-excursion
-          ;; Update overlays
-          (dolist (other (alist-get name (car state)))
-            (unless (eq other ov)
-              (tempel--replace-field other str)))
-          ;; Update forms
-          (dolist (other (cadr state))
-            (tempel--replace-field other (eval (overlay-get other 'tempel--form) (cddr state)))))))))
+    (save-excursion
+      (with-silent-modifications
+        (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
+        (when-let (name (overlay-get ov 'tempel--name))
+          (let ((state (overlay-get ov 'tempel--state))
+                (str (buffer-substring-no-properties (overlay-start ov) (overlay-end ov))))
+            (setf (alist-get name (cddr state)) str)
+            ;; Update overlays
+            (dolist (other (alist-get name (car state)))
+              (unless (eq other ov)
+                (tempel--replace-field other str)))
+            ;; Update forms
+            (dolist (other (cadr state))
+              (tempel--replace-field other (eval (overlay-get other 'tempel--form) (cddr state))))))))))
 
 (defun tempel--field (&optional face)
   "Create template field with FACE."
@@ -214,6 +214,8 @@ BEG and END are the boundaries of the modification."
   (when-let* ((name (intern-soft name))
               (template (cdr (assoc name templates))))
     (setf (alist-get 'tempel--overlays minor-mode-overriding-map-alist) tempel-map)
+    (unless (eq buffer-undo-list t)
+      (push (list 'apply #'tempel-done) buffer-undo-list))
     (save-excursion
       ;; Split existing overlays, do not expand within existing field.
       (dolist (ov tempel--overlays)
