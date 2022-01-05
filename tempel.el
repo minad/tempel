@@ -74,11 +74,7 @@
     (goto-char (point-max))
     (insert "\n)")
     (goto-char (point-min))
-    (let ((templates (read (current-buffer))) result)
-      (while (and templates (symbolp (car templates)))
-        (push (cons (car templates) (seq-take-while #'consp (cdr templates))) result)
-        (setq templates (seq-drop-while #'consp (cdr templates))))
-      result)))
+    (read (current-buffer))))
 
 (defun tempel--annotate (templates sep name)
   "Annotate template NAME given the list of TEMPLATES and SEP."
@@ -232,9 +228,12 @@ BEG and END are the boundaries of the modification."
     (unless (equal tempel--modified mod)
       (setq tempel--templates (tempel--load tempel-file)
             tempel--modified mod)))
-  (apply #'append (mapcar #'cdr
-                          (seq-filter (lambda (x) (derived-mode-p (car x)))
-                                      tempel--templates))))
+  (let (result (templates tempel--templates))
+    (while (and templates (symbolp (car templates)))
+      (when (derived-mode-p (car templates))
+        (push (seq-take-while #'consp (cdr templates)) result))
+      (setq templates (seq-drop-while #'consp (cdr templates))))
+    (apply #'append result)))
 
 (defun tempel--region ()
   "Return region bounds."
