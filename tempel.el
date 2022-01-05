@@ -44,8 +44,16 @@
   :prefix "tempel-")
 
 (defcustom tempel-file (expand-file-name "templates" user-emacs-directory)
-  "Path to the template file"
+  "Path to the template file."
   :type 'string)
+
+(defcustom tempel-insert-annotation 40
+  "Annotation width for `tempel-insert'."
+  :type '(choice (const nil integer)))
+
+(defcustom tempel-expand-annotation 20
+  "Annotation width for `tempel-expand'."
+  :type '(choice (const nil integer)))
 
 (defface tempel-field '((t :inherit highlight))
   "Face used for fields.")
@@ -76,8 +84,9 @@
     (goto-char (point-min))
     (read (current-buffer))))
 
-(defun tempel--annotate (templates sep name)
-  "Annotate template NAME given the list of TEMPLATES and SEP."
+(defun tempel--annotate (templates width ellipsis sep name)
+  "Annotate template NAME given the list of TEMPLATES.
+WIDTH, SEP and ELLIPSIS configure the formatting."
   (when-let* ((name (intern-soft name))
               (def (cdr (assoc name templates))))
     (concat
@@ -88,13 +97,19 @@
        (propertize
         (replace-regexp-in-string
          "\\s-+" " "
-         (mapconcat (lambda (x) (pcase x
-                                  ((pred stringp) x)
-                                  ((or 'n 'n>) " ")
-                                  (_ "_")))
+         (mapconcat (lambda (x)
+                      (pcase x
+                        ('nil nil)
+                        (`(q . ,_) nil)
+                        ((pred stringp) x)
+                        (`(s ,name) (symbol-name name))
+                        (`(,(or 'p 'P) ,_ ,name . ,noinsert)
+                         (and (not (car noinsert)) (symbol-name name)))
+                        ((or 'n 'n>) " ")
+                        (_ "_")))
                     def ""))
         'face 'completions-annotations))
-      20 0 ?\s))))
+      width 0 ?\s ellipsis))))
 
 (defun tempel--replace-field (ov str)
   "Replace OV content with STR."
@@ -293,10 +308,14 @@ If INTERACTIVE is nil the function acts like a capf."
                          (cons (point) (point)))))
         (list (car bounds) (cdr bounds) templates
               :exclusive 'no
-              :exit-function (lambda (name _status)
-                               (delete-region (max (point-min) (- (point) (length name))) (point))
-                               (tempel--insert templates name region))
-              :annotation-function (apply-partially #'tempel--annotate templates " "))))))
+              :company-kind (lambda (_) 'snippet)
+              :exit-function
+              (lambda (name _status)
+                (delete-region (max (point-min) (- (point) (length name))) (point))
+                (tempel--insert templates name region))
+              :annotation-function
+              (and tempel-expand-annotation
+                   (apply-partially #'tempel--annotate templates tempel-expand-annotation nil " ")))))))
 
 ;;;###autoload
 (defun tempel-insert ()
@@ -305,9 +324,11 @@ If INTERACTIVE is nil the function acts like a capf."
   (let* ((templates (or (tempel--templates)
                         (error "Tempel: No templates for %s" major-mode)))
          (completion-extra-properties
-          (list :annotation-function
-                (apply-partially #'tempel--annotate templates
-                                 #("  " 1 2 (display (space :align-to (+ left 20)))))))
+          (and tempel-insert-annotation
+               (list :annotation-function
+                     (apply-partially
+                      #'tempel--annotate templates tempel-insert-annotation t
+                      #("  " 1 2 (display (space :align-to (+ left 20))))))))
          (name (completing-read "Template: " templates nil t nil 'tempel--history)))
     (tempel--insert templates name (tempel--region))))
 
