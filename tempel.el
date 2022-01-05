@@ -92,7 +92,6 @@
               (template (cdr (assoc name templates))))
     (setf (alist-get 'tempo-marks minor-mode-overriding-map-alist) tempel-map)
     (let ((tempel--current template))
-      (setq tempo-marks nil)
       (tempo-insert-template 'tempel--current region))))
 
 (defun tempel--save ()
@@ -113,16 +112,16 @@
 (defun tempel-forward-mark ()
   "Move to next template mark and quit at the end."
   (interactive)
-  (tempo-forward-mark)
   (when-let (mark (car (last tempo-marks)))
-    (when (>= (point) mark) (tempel-done))))
+    (when (>= (point) mark) (tempel-done)))
+  (tempo-forward-mark))
 
 (defun tempel-backward-mark ()
   "Move to previous template mark and quit at the beginning."
   (interactive)
-  (tempo-backward-mark)
   (when-let (mark (car tempo-marks))
-    (when (<= (point) mark) (tempel-done))))
+    (when (<= (point) mark) (tempel-done)))
+  (tempo-backward-mark))
 
 (defun tempel-done ()
   "Template completion is done."
@@ -143,7 +142,6 @@ If INTERACTIVE is nil the function acts like a capf."
             (completion-at-point-functions (list #'tempel-expand)))
         (tempel--save)
         (or (completion-at-point) (user-error "Tempel: No completions")))
-    (tempel-done)
     (when-let (templates (tempel--templates))
       (let ((region (use-region-p)) bounds)
         (when region
@@ -165,7 +163,6 @@ If INTERACTIVE is nil the function acts like a capf."
 (defun tempel-insert ()
   "Insert Tempo template using `completing-read'."
   (interactive)
-  (tempel-done)
   (let* ((templates (or (tempel--templates)
                         (error "Tempel: No templates for %s" major-mode)))
          (completion-extra-properties
