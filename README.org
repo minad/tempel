@@ -24,9 +24,9 @@ keys ~M-left/right~ as defined in the ~tempel-map~ keymap. As soon as you move
 before (behind) the first (last) field, the fields are removed.
 
 Note that this package is not a competitor to the mature and widely used
-YASnippet library. Try Tempel only if your snippet and templating requirements
-are limited and if you like tiny and simple packages. Tempel took inspiration
-from the [[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]] package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
+YASnippet library. Try Tempel only if you like tiny and simple packages and if
+you want to write templates in Lisp syntax. Tempel took inspiration from the
+[[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]] package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
 
 * Quick start
 
@@ -47,9 +47,9 @@ and has to be installed manually with ~package-install-file~.
 
 * Template file format
 
-The template file format is a lisp file =templates= which is stored by default in
+The template file format is a Lisp file =templates= which is stored by default in
 the ~user-emacs-directory~ (=~/.config/emacs/templates=). The templates are defined
-as lisp expressions in the concise form of the Emacs Tempo package. The first
+as Lisp expressions in the concise form of the Emacs Tempo package. The first
 element of the list is the name of the template. After the name the Tempo
 elements follow.
 
@@ -84,14 +84,14 @@ org-mode
 
 * Template syntax
 
-All the syntax elements of ~tempo-define-template~ are supported. We document
-the important ones here:
+All the Tempo syntax elements are fully supported. The syntax elements are
+described in detail in ~tempo-define-template~ are supported. We document the
+important ones here:
 
  - "string" :: Inserts a string literal.
  - ~p~ :: Inserts an unnamed prompt field.
  - ~r~ :: Inserts the current region.
  - ~(s NAME)~ :: Inserts a named field.
- - ~(q PROMPT NAME)~ :: Query the user via ~read-string~, store variable ~NAME~.
  - ~n~ :: Inserts a newline.
  - ~>~ :: Indents with ~indent-according-to-mode~.
  - ~r>~ :: The region, but indented.
@@ -99,5 +99,9 @@ the important ones here:
  - ~&~ :: Insert newline if there is only whitespace between line start and point.
  - ~%~ :: Insert newline if there is only whitespace between point and line end.
  - ~o~ :: Like ~%~ but leaves the point before newline.
- - ~(form ...)~ :: Other lisp forms are evaluated. Named fields are lexically bound.
+
+Furthermore Tempel supports two syntax extensions:
+
+ - ~(q PROMPT NAME)~ :: Query the user via ~read-string~ and store the result in variable ~NAME~.
+ - ~(form ...)~ :: Other Lisp forms are evaluated. Named fields are lexically bound.
    Use caution with templates which execute code!
