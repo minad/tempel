@@ -43,12 +43,12 @@
 (defvar tempel--modified nil)
 (defvar tempel--current nil)
 (defvar tempel--history nil)
-(defvar-local tempel--overlays nil)
+(defvar-local tempel--fields nil)
 
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [M-right] #'tempel-forward-mark)
-    (define-key map [M-left] #'tempel-backward-mark)
+    (define-key map [M-right] #'tempel-next-field)
+    (define-key map [M-left] #'tempel-previous-field)
     map)
   "Keymap to navigate across template markers.")
 
@@ -93,13 +93,14 @@
               (template (cdr (assoc name templates))))
     (setf (alist-get 'tempo-marks minor-mode-overriding-map-alist) tempel-map)
     (let ((tempel--current template))
-      (mapc #'delete-overlay tempel--overlays)
-      (setq tempel--overlays nil)
+      (mapc #'delete-overlay tempel--fields)
+      (setq tempel--fields nil)
       (tempo-insert-template 'tempel--current region)
       (dolist (x tempo-marks)
-        (let ((ov (make-overlay x x)))
+        (let ((ov (make-overlay x x nil nil t)))
+          (overlay-put ov 'face 'highlight)
           (overlay-put ov 'before-string #(" " 0 1 (face highlight display (space :width (1)))))
-          (push ov tempel--overlays))))))
+          (push ov tempel--fields))))))
 
 (defun tempel--save ()
   "Save Tempo file buffer."
@@ -116,27 +117,37 @@
             tempel--modified mod)))
   (cdr (seq-find (lambda (x) (derived-mode-p (car x))) tempel--templates)))
 
-(defun tempel-forward-mark ()
-  "Move to next template mark and quit at the end."
-  (interactive)
-  (when-let (mark (car (last tempo-marks)))
-    (when (>= (point) mark) (tempel-done)))
-  (tempo-forward-mark))
+(defun tempel-next-field (arg)
+  "Move to next template field and quit at the end."
+  (interactive "p")
+  (catch 'tempel--break
+    (cond
+     ((> arg 0)
+      (dolist (ov (reverse tempel--fields))
+        (when (> (overlay-start ov) (point))
+          (if (> arg 1) (cl-decf arg)
+            (goto-char (overlay-start ov))
+            (throw 'tempel--break nil)))))
+     ((< arg 0)
+      (dolist (ov tempel--fields)
+        (when (< (overlay-end ov) (point))
+          (if (< arg -1) (cl-incf arg)
+            (goto-char (overlay-start ov))
+            (throw 'tempel--break nil))))))
+    (tempel-done)))
 
-(defun tempel-backward-mark ()
-  "Move to previous template mark and quit at the beginning."
-  (interactive)
-  (when-let (mark (car tempo-marks))
-    (when (<= (point) mark) (tempel-done)))
-  (tempo-backward-mark))
+(defun tempel-previous-field (arg)
+  "Move to previous template field and quit at the beginning."
+  (interactive "p")
+  (tempel-next-field (- arg)))
 
 (defun tempel-done ()
   "Template completion is done."
   (interactive)
   (dolist (mark tempo-marks) (set-marker mark nil))
-  (mapc #'delete-overlay tempel--overlays)
+  (mapc #'delete-overlay tempel--fields)
   (setq tempo-marks nil
-        tempel--overlays nil
+        tempel--fields nil
         minor-mode-overriding-map-alist
         (delq (assq-delete-all 'tempo-marks minor-mode-overriding-map-alist)
               minor-mode-overriding-map-alist)))
