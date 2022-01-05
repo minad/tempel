@@ -70,7 +70,7 @@
   "Load templates from FILE."
   (with-temp-buffer
     (insert "(\n")
-    (insert-file-contents-literally file)
+    (insert-file-contents file)
     (goto-char (point-max))
     (insert "\n)")
     (goto-char (point-min))
