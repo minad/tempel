@@ -58,7 +58,7 @@ elements follow.
 
 latex-mode
 
-(begin "\\begin{" (P "Environment: " env) "}" > n> r> "\\end{" (s env) "}" > n)
+(begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}" > n)
 (enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}" > n)
 (itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}" > n)
 
