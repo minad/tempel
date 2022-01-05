@@ -9,23 +9,24 @@
 
 * Introduction
 
-Tempel is a tiny template package for Emacs, which uses the builtin Tempo Emacs
-library for expansion. Tempo is an ancient temple. It is 27 years old, but still
+Tempel is a tiny template package for Emacs, which uses the syntax of the
+Emacs Tempo library. Tempo is an ancient temple. It is 27 years old, but still
 in good shape since it successfully resisted change over the decades. Tempel
-provides a modernized UI on top of Tempo, in the form of two commands:
+is a modernized implementation of Tempo, in the form of two commands:
 
 + ~tempel-expand~: Expand a template at point in the buffer. If called
   non-interactively the function behaves like a completion-at-point-function
   (Capf). You may want to use my [[https://github.com/minad/corfu][Corfu]] completion at point UI.
 + ~tempel-insert~: Select a template by name and insert it into the current buffer.
 
-After inserting a template you can move between the visible template fields
-with keys ~M-left/right~ as defined in the ~tempel-map~ keymap. As soon as you move
+After inserting a template you can move between the visible template fields with
+keys ~M-left/right~ as defined in the ~tempel-map~ keymap. As soon as you move
 before (behind) the first (last) field, the fields are removed.
 
 Note that this package is not a competitor to the mature and widely used
 YASnippet library. Try Tempel only if your snippet and templating requirements
-are limited and if you like tiny and simple packages.
+are limited and if you like tiny and simple packages. Tempel took inspiration
+from the [[https://github.com/nschum/tempo-snippets.el][Tempo-Snippets]] package by Nikolaj Schumacher.
 
 * Quick start
 
@@ -81,53 +82,20 @@ org-mode
 (title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en" n n)
 #+end_src
 
-Take a look at the documentation of ~tempo-define-template~ for the documentation
-of the template elements. You can even define your own template elements via
-~tempo-user-elements~.
+All the syntax elements of ~tempo-define-template~ are supported. We document
+the important ones here:
 
-#+begin_quote
- - A string: It is sent to the hooks in `tempo-insert-string-functions',
-   and the result is inserted.
- - The symbol `p': This position is saved in `tempo-marks'.
- - The symbol `r': If `tempo-insert' is called with ON-REGION non-nil
-   the current region is placed here.  Otherwise it works like `p'.
- - (p PROMPT <NAME> <NOINSERT>): If `tempo-interactive' is non-nil, the
-   user is prompted in the minibuffer with PROMPT for a string to be
-   inserted.  If the optional parameter NAME is non-nil, the text is
-   saved for later insertion with the `s' tag.  If there already is
-   something saved under NAME that value is used instead and no
-   prompting is made.  If NOINSERT is provided and non-nil, nothing is
-   inserted, but text is still saved when a NAME is provided.  For
-   clarity, the symbol `noinsert' should be used as argument.
- - (P PROMPT <NAME> <NOINSERT>): Works just like the previous tag, but
-   forces `tempo-interactive' to be true.
- - (r PROMPT <NAME> <NOINSERT>): Like the previous tag, but if
-   `tempo-interactive' is nil and `tempo-insert' is called with
-   ON-REGION non-nil, the current region is placed here.  This usually
-   happens when you call the template function with a prefix argument.
- - (s NAME): Inserts text previously read with the (p ..) construct.
-   Finds the insertion saved under NAME and inserts it.  Acts like `p'
-   if tempo-interactive is nil.
- - `&': If there is only whitespace between the line start and point,
-   nothing happens.  Otherwise a newline is inserted.
- - `%': If there is only whitespace between point and end of line,
-   nothing happens.  Otherwise a newline is inserted.
- - `n': Inserts a newline.
- - `>': The line is indented using `indent-according-to-mode'.  Note
-   that you often should place this item after the text you want on
-   the line.
- - `r>': Like `r', but it also indents the region.
- - (r> PROMPT <NAME> <NOINSERT>): Like (r ...), but is also indents
-   the region.
- - `n>': Inserts a newline and indents line.
- - `o': Like `%' but leaves the point before the newline.
- - nil: It is ignored.
- - Anything else: Each function in `tempo-user-elements' is called
-   with it as argument until one of them returns non-nil, and the
-   result is inserted.  If all of them return nil, it is evaluated and
-   the result is treated as an element to be inserted.  One additional
-   tag is useful for these cases.  If an expression returns a list (l
-   foo bar), the elements after `l' will be inserted according to the
-   usual rules.  This makes it possible to return several elements
-   from one expression."
-#+end_quote
+ - "string" :: Inserts a string literal.
+ - ~p~ :: Inserts an unnamed prompt field.
+ - ~r~ :: Inserts the current region.
+ - ~(s NAME)~ :: Inserts a named field.
+ - ~(q PROMPT NAME)~ :: Query the user via ~read-string~, store variable ~NAME~.
+ - ~n~ :: Inserts a newline.
+ - ~>~ :: Indents with ~indent-according-to-mode~.
+ - ~r>~ :: The region, but indented.
+ - ~n>~ :: Inserts a newline and indents.
+ - ~&~ :: Insert newline if there is only whitespace between line start and point.
+ - ~%~ :: Insert newline if there is only whitespace between point and line end.
+ - ~o~ :: Like ~%~ but leaves the point before newline.
+ - ~(form ...)~ :: Other lisp forms are evaluated. Named fields are lexically bound.
+   Use caution with templates which execute code!
