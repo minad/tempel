@@ -19,8 +19,9 @@ provides a modernized UI on top of Tempo, in the form of two commands:
   (Capf). You may want to use my [[https://github.com/minad/corfu][Corfu]] completion at point UI.
 + ~tempel-insert~: Select a template by name and insert it into the current buffer.
 
-After inserting a template you can move between the template markers with keys
-~M-up/down~ as defined in the ~tempel-map~ keymap.
+After inserting a template you can move between the visible template markers
+with keys ~M-left/right~ as defined in the ~tempel-map~ keymap. As soon as you move
+before (behind) the first (last) marker, the markers will be removed.
 
 Note that this package is not a competitor to the mature and widely used
 YASnippet library. Try Tempel only if your snippet and templating requirements

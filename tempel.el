@@ -43,6 +43,7 @@
 (defvar tempel--modified nil)
 (defvar tempel--current nil)
 (defvar tempel--history nil)
+(defvar-local tempel--overlays nil)
 
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
@@ -91,8 +92,22 @@
   (when-let* ((name (intern-soft name))
               (template (cdr (assoc name templates))))
     (setf (alist-get 'tempo-marks minor-mode-overriding-map-alist) tempel-map)
-    (let ((tempel--current template))
-      (tempo-insert-template 'tempel--current region))))
+    (let ((tempel--current template)
+          (old-point (point))
+          (split-overlays nil)
+          (old-marks (copy-sequence tempo-marks)))
+      (dolist (ov tempel--overlays)
+        (when (and (<= (overlay-start ov) old-point) (>= (overlay-end ov) old-point))
+          (push ov split-overlays)))
+      (tempo-insert-template 'tempel--current region)
+      (dolist (ov split-overlays)
+        (setf (overlay-end ov) old-point))
+      (dolist (x tempo-marks)
+        (unless (member x old-marks)
+          (let ((ov (make-overlay x x nil nil t)))
+            (overlay-put ov 'face '(:underline t))
+            (overlay-put ov 'before-string #(" " 0 1 (face highlight display (space :width (1)))))
+            (push ov tempel--overlays)))))))
 
 (defun tempel--save ()
   "Save Tempo file buffer."
@@ -127,7 +142,9 @@
   "Template completion is done."
   (interactive)
   (dolist (mark tempo-marks) (set-marker mark nil))
+  (mapc #'delete-overlay tempel--overlays)
   (setq tempo-marks nil
+        tempel--overlays nil
         minor-mode-overriding-map-alist
         (delq (assq-delete-all 'tempo-marks minor-mode-overriding-map-alist)
               minor-mode-overriding-map-alist)))
