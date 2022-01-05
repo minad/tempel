@@ -1,0 +1,132 @@
+#+title: TempEl - Simple templates for Emacs
+#+author: Daniel Mendler
+#+language: en
+
+#+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://github.com/minad/corfu/blob/screenshots/emacs.svg?raw=true"/></a>
+#+html: <a href="https://melpa.org/#/tempel"><img alt="MELPA" src="https://melpa.org/packages/tempel-badge.svg"/></a>
+#+html: <a href="https://stable.melpa.org/#/tempel"><img alt="MELPA Stable" src="https://stable.melpa.org/packages/tempel-badge.svg"/></a>
+#+html: <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg/1920px-Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg" align="right" width="30%">
+
+* Introduction
+
+Tempel is a tiny template package for Emacs, which uses the builtin Tempo Emacs
+library for expansion. Tempo is an ancient temple. It is 27 years old, but still
+in good shape since it successfully resisted change over the decades. Tempel
+provides a modernized UI on top of Tempo, in the form of two commands:
+
++ ~tempel-expand~: Expand a template at point in the buffer. If called
+  non-interactively the function behaves like a completion-at-point-function
+  (Capf). You may want to use my [[https://github.com/minad/corfu][Corfu]] completion at point UI.
++ ~tempel-insert~: Select a template by name and insert it into the current buffer.
+
+After inserting a template you can move between the template markers with keys
+~M-up/down~ as defined in the ~tempel-map~ keymap.
+
+Note that this package is not a competitor to the mature and widely used
+YASnippet library. Try Tempel only if your snippet and templating requirements
+are limited and if you like tiny and simple packages.
+
+* Quick start
+
+As of 2022-01-05 the package is not yet available in a package repository
+and has to be installed manually with ~package-install-file~.
+
+#+begin_src emacs-lisp
+  ;; Bind the Tempel commands
+  (use-package tempel
+    :bind (("M-+" . tempel-expand)
+           ("M-*" . tempel-insert)))
+
+  ;; Optional: Use the Corfu completion UI
+  (use-package corfu
+    :init
+    (corfu-global-mode))
+#+end_src
+
+* Template file format
+
+The template file format is a lisp file =templates= which is stored by default in
+the ~user-emacs-directory~ (=~/.config/emacs/templates=). The templates are defined
+as lisp expressions in the concise form of the Emacs Tempo package. The first
+element of the list is the name of the template. After the name the Tempo
+elements follow.
+
+#+begin_src emacs-lisp
+;; -*- mode: lisp -*-
+
+latex-mode
+
+(begin "\\begin{" (P "Environment: " env) "}" > n> r> "\\end{" (s env) "}" > n)
+(enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}" > n)
+(itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}" > n)
+
+emacs-lisp-mode
+
+(lambda "(lambda (" p ")" n> r> ")")
+(var "(defvar " p "\n  \"" p "\")" n n)
+(const "(defconst " p "\n  \"" p "\")" n n)
+(custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")" n n)
+(face "(defface " p " '((t :inherit font-lock-" p "-face))\n  \"" p "\")" n n)
+(group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")" n n)
+(macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
+(fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
+(let "(let (" p ")" n> r> ")")
+(star "(let* (" p ")" n> r> ")")
+(rec "(letrec (" p ")" n> r> ")")
+(command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive)" n> r> ")" n n)
+
+org-mode
+
+(title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en" n n)
+#+end_src
+
+Take a look at the documentation of ~tempo-define-template~ for the documentation
+of the template elements. You can even define your own template elements via
+~tempo-user-elements~.
+
+#+begin_quote
+ - A string: It is sent to the hooks in `tempo-insert-string-functions',
+   and the result is inserted.
+ - The symbol `p': This position is saved in `tempo-marks'.
+ - The symbol `r': If `tempo-insert' is called with ON-REGION non-nil
+   the current region is placed here.  Otherwise it works like `p'.
+ - (p PROMPT <NAME> <NOINSERT>): If `tempo-interactive' is non-nil, the
+   user is prompted in the minibuffer with PROMPT for a string to be
+   inserted.  If the optional parameter NAME is non-nil, the text is
+   saved for later insertion with the `s' tag.  If there already is
+   something saved under NAME that value is used instead and no
+   prompting is made.  If NOINSERT is provided and non-nil, nothing is
+   inserted, but text is still saved when a NAME is provided.  For
+   clarity, the symbol `noinsert' should be used as argument.
+ - (P PROMPT <NAME> <NOINSERT>): Works just like the previous tag, but
+   forces `tempo-interactive' to be true.
+ - (r PROMPT <NAME> <NOINSERT>): Like the previous tag, but if
+   `tempo-interactive' is nil and `tempo-insert' is called with
+   ON-REGION non-nil, the current region is placed here.  This usually
+   happens when you call the template function with a prefix argument.
+ - (s NAME): Inserts text previously read with the (p ..) construct.
+   Finds the insertion saved under NAME and inserts it.  Acts like `p'
+   if tempo-interactive is nil.
+ - `&': If there is only whitespace between the line start and point,
+   nothing happens.  Otherwise a newline is inserted.
+ - `%': If there is only whitespace between point and end of line,
+   nothing happens.  Otherwise a newline is inserted.
+ - `n': Inserts a newline.
+ - `>': The line is indented using `indent-according-to-mode'.  Note
+   that you often should place this item after the text you want on
+   the line.
+ - `r>': Like `r', but it also indents the region.
+ - (r> PROMPT <NAME> <NOINSERT>): Like (r ...), but is also indents
+   the region.
+ - `n>': Inserts a newline and indents line.
+ - `o': Like `%' but leaves the point before the newline.
+ - nil: It is ignored.
+ - Anything else: Each function in `tempo-user-elements' is called
+   with it as argument until one of them returns non-nil, and the
+   result is inserted.  If all of them return nil, it is evaluated and
+   the result is treated as an element to be inserted.  One additional
+   tag is useful for these cases.  If an expression returns a list (l
+   foo bar), the elements after `l' will be inserted according to the
+   usual rules.  This makes it possible to return several elements
+   from one expression."
+#+end_quote
