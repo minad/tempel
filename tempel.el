@@ -39,7 +39,6 @@
 (eval-when-compile (require 'subr-x))
 
 (defvar tempel-file (expand-file-name "templates" user-emacs-directory))
-(defvar tempel-region nil)
 (defvar tempel--templates nil)
 (defvar tempel--modified nil)
 (defvar tempel--history nil)
@@ -147,8 +146,8 @@ BEG and END are the boundaries of the modification."
   "Read input with PROMPT and assign to NAME."
   (setf (alist-get name (cddr tempel--state)) (read-string prompt)))
 
-(defun tempel--element (element)
-  "Insert template ELEMENT."
+(defun tempel--element (element region)
+  "Insert template ELEMENT given the REGION."
   (pcase element
     ('nil)
     ('n (insert "\n"))
@@ -159,15 +158,15 @@ BEG and END are the boundaries of the modification."
           (insert "\n")))
     ('% (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
           (insert "\n")))
-    ('o (unless (or tempel-region (eolp)
+    ('o (unless (or region (eolp)
 		    (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
 	  (open-line 1)))
     ('p (tempel--field))
-    ((or 'r `(r . ,_)) (if tempel-region (goto-char (cdr tempel-region)) (tempel--field)))
+    ((or 'r `(r . ,_)) (if region (goto-char (cdr region)) (tempel--field)))
     ((or 'r> `(r> . ,_))
-     (if (not tempel-region) (tempel--field)
-       (goto-char (cdr tempel-region))
-       (indent-region (car tempel-region) (cdr tempel-region) nil)))
+     (if (not region) (tempel--field)
+       (goto-char (cdr region))
+       (indent-region (car region) (cdr region) nil)))
     (`(,(or 'p 'P) ,prompt . ,rest) ;; Tempo legacy, use i, s, or plain p instead
      (cond
       ((cadr rest) (tempel--query prompt (car rest)))
@@ -177,8 +176,8 @@ BEG and END are the boundaries of the modification."
     (`(s ,name) (tempel--named name))
     (_ (tempel--form element))))
 
-(defun tempel--insert (templates name)
-  "Insert template NAME given the list of TEMPLATES."
+(defun tempel--insert (templates name region)
+  "Insert template NAME given the list of TEMPLATES and the REGION."
   (when-let* ((name (intern-soft name))
               (template (cdr (assoc name templates))))
     (setf (alist-get 'tempel--overlays minor-mode-overriding-map-alist) tempel-map)
@@ -191,7 +190,7 @@ BEG and END are the boundaries of the modification."
       (push (make-overlay (point) (point)) tempel--overlays)
       (let ((tempel--state (list nil nil))
             (inhibit-modification-hooks t))
-        (mapc #'tempel--element template))
+        (dolist (x template) (tempel--element x region)))
       ;; End marker
       (push (make-overlay (point) (point)) tempel--overlays))
     (setq tempel--overlays (sort tempel--overlays (lambda (x y) (< (overlay-start x) (overlay-start y)))))
@@ -271,8 +270,7 @@ If INTERACTIVE is nil the function acts like a capf."
               :exclusive 'no
               :exit-function (lambda (name _status)
                                (delete-region (max (point-min) (- (point) (length name))) (point))
-                               (let ((tempel-region region))
-                                 (tempel--insert templates name)))
+                               (tempel--insert templates name region))
               :annotation-function (apply-partially #'tempel--annotate templates " "))))))
 
 ;;;###autoload
@@ -286,8 +284,7 @@ If INTERACTIVE is nil the function acts like a capf."
                 (apply-partially #'tempel--annotate templates
                                  #("  " 1 2 (display (space :align-to (+ left 20)))))))
          (name (completing-read "Template: " templates nil t nil 'tempel--history)))
-    (let ((tempel-region (tempel--region)))
-      (tempel--insert templates name))))
+    (tempel--insert templates name (tempel--region))))
 
 (provide 'tempel)
 ;;; tempel.el ends here
