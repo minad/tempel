@@ -232,7 +232,9 @@ BEG and END are the boundaries of the modification."
     (unless (equal tempel--modified mod)
       (setq tempel--templates (tempel--load tempel-file)
             tempel--modified mod)))
-  (cdr (seq-find (lambda (x) (derived-mode-p (car x))) tempel--templates)))
+  (apply #'append (mapcar #'cdr
+                          (seq-filter (lambda (x) (derived-mode-p (car x)))
+                                      tempel--templates))))
 
 (defun tempel--region ()
   "Return region bounds."
