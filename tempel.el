@@ -125,17 +125,22 @@ AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
   (when (and after (>= beg (overlay-start ov)) (<= beg (overlay-end ov)))
     (save-excursion
+      ;; TODO: We use silent modifications such that the undo list is
+      ;; not affected and that the modification hooks are not triggered
+      ;; recursively. However since the edits which are made to the
+      ;; other fields are not recorded in the undo list, we will end up
+      ;; with an invalid undo state after tempel-done.
       (with-silent-modifications
         (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
         (when-let (name (overlay-get ov 'tempel--name))
           (let ((state (overlay-get ov 'tempel--state))
                 (str (buffer-substring-no-properties (overlay-start ov) (overlay-end ov))))
             (setf (alist-get name (cddr state)) str)
-            ;; Update overlays
+            ;; Update other fields
             (dolist (other (alist-get name (car state)))
               (unless (eq other ov)
                 (tempel--replace-field other str)))
-            ;; Update forms
+            ;; Update evaluated forms
             (dolist (other (cadr state))
               (tempel--replace-field other (eval (overlay-get other 'tempel--form) (cddr state))))))))))
 
