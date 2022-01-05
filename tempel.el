@@ -162,18 +162,22 @@ BEG and END are the boundaries of the modification."
 		    (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
 	  (open-line 1)))
     ('p (tempel--field))
+    (`(s ,name) (tempel--named name))
+    ;; LEGACY: (r ...) and (r> ...) is legacy syntax from Tempo, use r instead.
     ((or 'r `(r . ,_)) (if region (goto-char (cdr region)) (tempel--field)))
     ((or 'r> `(r> . ,_))
      (if (not region) (tempel--field)
        (goto-char (cdr region))
        (indent-region (car region) (cdr region) nil)))
-    (`(,(or 'p 'P) ,prompt . ,rest) ;; Tempo legacy, use i, s, or plain p instead
+    ;; LEGACY: (p ...) and (P ...) is legacy syntax from Tempo, use q, s, or p instead.
+    (`(,(or 'p 'P) ,prompt . ,rest)
      (cond
       ((cadr rest) (tempel--query prompt (car rest)))
       ((car rest) (tempel--named (car rest)))
       (t (tempel--field))))
-    (`(q ,prompt ,name) (tempel--query prompt name)) ;; Tempel Extension over Tempo
-    (`(s ,name) (tempel--named name))
+    ;; EXTENSION: Query from minibuffer, Tempel extension!
+    (`(q ,prompt ,name) (tempel--query prompt name))
+    ;; EXTENSION: Evaluate forms, Tempel extension!
     (_ (tempel--form element))))
 
 (defun tempel--insert (templates name region)
@@ -182,7 +186,7 @@ BEG and END are the boundaries of the modification."
               (template (cdr (assoc name templates))))
     (setf (alist-get 'tempel--overlays minor-mode-overriding-map-alist) tempel-map)
     (save-excursion
-      ;; Split old overlays
+      ;; Split existing overlays, do not expand within existing field.
       (dolist (ov tempel--overlays)
         (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
           (setf (overlay-end ov) (point))))
