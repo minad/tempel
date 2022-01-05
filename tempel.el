@@ -38,7 +38,21 @@
 (require 'seq)
 (eval-when-compile (require 'subr-x))
 
-(defvar tempel-file (expand-file-name "templates" user-emacs-directory))
+(defgroup tempel nil
+  "Simple templates"
+  :group 'editing
+  :prefix "tempel-")
+
+(defcustom tempel-file (expand-file-name "templates" user-emacs-directory)
+  "Path to the template file"
+  :type 'string)
+
+(defface tempel-field '((t :inherit highlight))
+  "Face used for fields.")
+
+(defface tempel-form '((t :inherit region))
+  "Face used for evaluated forms.")
+
 (defvar tempel--templates nil)
 (defvar tempel--modified nil)
 (defvar tempel--history nil)
@@ -114,11 +128,12 @@ BEG and END are the boundaries of the modification."
           (dolist (other (cadr state))
             (tempel--replace-field other (eval (overlay-get other 'tempel--form) (cddr state)))))))))
 
-(defun tempel--field ()
-  "Create template field."
+(defun tempel--field (&optional face)
+  "Create template field with FACE."
   (let ((ov (make-overlay (point) (point))))
-    (overlay-put ov 'face 'highlight)
-    (overlay-put ov 'before-string #(" " 0 1 (face highlight display (space :width (1)))))
+    (setq face (or face 'tempel-field))
+    (overlay-put ov 'face face)
+    (overlay-put ov 'before-string (propertize " " 'face face 'display '(space :width (1))))
     (overlay-put ov 'modification-hooks (list #'tempel--update-field))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--update-field))
     (push ov tempel--overlays)
@@ -127,19 +142,22 @@ BEG and END are the boundaries of the modification."
 (defun tempel--named (name)
   "Create template field named NAME."
   (let ((ov (tempel--field)))
-    (push ov (alist-get name (car tempel--state)))
     (overlay-put ov 'tempel--name name)
     (overlay-put ov 'tempel--state tempel--state)
+    (push ov (alist-get name (car tempel--state)))
     (when-let (str (alist-get name (cddr tempel--state)))
       (insert str)
       (move-overlay ov (overlay-start ov) (point)))))
 
 (defun tempel--form (form)
   "Create template field evaluating FORM."
-  (let ((ov (tempel--field)))
-    (push ov (cadr tempel--state))
+  (let ((ov (tempel--field 'tempel-form)))
     (overlay-put ov 'tempel--form form)
-    (insert (eval form (cddr tempel--state)))
+    (push ov (cadr tempel--state))
+    ;; Ignore variable errors, since some variables may not be defined yet.
+    (condition-case nil
+        (insert (eval form (cddr tempel--state)))
+      (void-variable nil))
     (move-overlay ov (overlay-start ov) (point))))
 
 (defun tempel--query (prompt name)
@@ -230,13 +248,15 @@ BEG and END are the boundaries of the modification."
     (cond
      ((> arg 0)
       (dolist (ov tempel--overlays)
-        (when (> (overlay-start ov) (point))
+        (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
+                   (> (overlay-start ov) (point)))
           (if (> arg 1) (setq arg (1- arg))
             (goto-char (overlay-end ov))
             (throw 'tempel--break nil)))))
      ((< arg 0)
       (dolist (ov (reverse tempel--overlays))
-        (when (< (overlay-end ov) (point))
+        (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
+                   (< (overlay-end ov) (point)))
           (if (< arg -1) (setq arg (1+ arg))
             (goto-char (overlay-end ov))
             (throw 'tempel--break nil))))))

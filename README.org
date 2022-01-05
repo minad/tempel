@@ -54,32 +54,36 @@ element of the list is the name of the template. After the name the Tempo
 elements follow.
 
 #+begin_src emacs-lisp
-;; -*- mode: lisp -*-
+  ;; -*- mode: lisp -*-
 
-latex-mode
+  latex-mode
 
-(begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}" > n)
-(enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}" > n)
-(itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}" > n)
+  (begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}" > n)
+  (enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}" > n)
+  (itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}" > n)
 
-emacs-lisp-mode
+  emacs-lisp-mode
 
-(lambda "(lambda (" p ")" n> r> ")")
-(var "(defvar " p "\n  \"" p "\")" n n)
-(const "(defconst " p "\n  \"" p "\")" n n)
-(custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")" n n)
-(face "(defface " p " '((t :inherit font-lock-" p "-face))\n  \"" p "\")" n n)
-(group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")" n n)
-(macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
-(fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
-(let "(let (" p ")" n> r> ")")
-(star "(let* (" p ")" n> r> ")")
-(rec "(letrec (" p ")" n> r> ")")
-(command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive)" n> r> ")" n n)
+  (lambda "(lambda (" p ")" n> r> ")")
+  (var "(defvar " p "\n  \"" p "\")" n n)
+  (const "(defconst " p "\n  \"" p "\")" n n)
+  (custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")" n n)
+  (face "(defface " p " '((t :inherit font-lock-" p "-face))\n  \"" p "\")" n n)
+  (group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")" n n)
+  (macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
+  (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
+  (let "(let (" p ")" n> r> ")")
+  (star "(let* (" p ")" n> r> ")")
+  (rec "(letrec (" p ")" n> r> ")")
+  (command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive)" n> r> ")" n n)
 
-org-mode
+  rst-mode
 
-(title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en" n n)
+  (title (make-string (length title) ?=) n (s title) n (make-string (length title) ?=) n)
+
+  org-mode
+
+  (title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en" n n)
 #+end_src
 
 * Template syntax
@@ -89,7 +93,7 @@ described in detail in ~tempo-define-template~ are supported. We document the
 important ones here:
 
  - ~"string"~ Inserts a string literal.
- - ~p~ Inserts an unnamed prompt field.
+ - ~p~ Inserts an unnamed placeholder field.
  - ~r~ Inserts the current region.
  - ~(s NAME)~ Inserts a named field.
  - ~n~ Inserts a newline.
