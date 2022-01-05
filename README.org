@@ -26,7 +26,7 @@ before (behind) the first (last) field, the fields are removed.
 Note that this package is not a competitor to the mature and widely used
 YASnippet library. Try Tempel only if your snippet and templating requirements
 are limited and if you like tiny and simple packages. Tempel took inspiration
-from the [[https://github.com/nschum/tempo-snippets.el][Tempo-Snippets]] package by Nikolaj Schumacher.
+from the [[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]] package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
 
 * Quick start
 
