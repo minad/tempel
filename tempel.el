@@ -47,8 +47,8 @@
 
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [M-right] #'tempel-next-field)
-    (define-key map [M-left] #'tempel-previous-field)
+    (define-key map [M-right] #'tempel-next)
+    (define-key map [M-left] #'tempel-previous)
     map)
   "Keymap to navigate across template markers.")
 
@@ -195,7 +195,7 @@ BEG and END are the boundaries of the modification."
       (push (make-overlay (point) (point)) tempel--overlays))
     (setq tempel--overlays (sort tempel--overlays (lambda (x y) (< (overlay-start x) (overlay-start y)))))
     ;; Jump to first field
-    (tempel-next-field 1)))
+    (tempel-next 1)))
 
 (defun tempel--save ()
   "Save template file buffer."
@@ -219,7 +219,7 @@ BEG and END are the boundaries of the modification."
     (deactivate-mark)
     (cons (point-marker) (mark-marker))))
 
-(defun tempel-next-field (arg)
+(defun tempel-next (arg)
   "Move ARG fields forward and quit at the end."
   (interactive "p")
   (catch 'tempel--break
@@ -238,10 +238,10 @@ BEG and END are the boundaries of the modification."
             (throw 'tempel--break nil))))))
     (tempel-done)))
 
-(defun tempel-previous-field (arg)
+(defun tempel-previous (arg)
   "Move ARG fields backward and quit at the beginning."
   (interactive "p")
-  (tempel-next-field (- arg)))
+  (tempel-next (- arg)))
 
 (defun tempel-done ()
   "Template completion is done."
