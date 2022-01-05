@@ -82,6 +82,8 @@ org-mode
 (title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en" n n)
 #+end_src
 
+* Template syntax
+
 All the syntax elements of ~tempo-define-template~ are supported. We document
 the important ones here:
 
