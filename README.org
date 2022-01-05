@@ -88,20 +88,20 @@ All the Tempo syntax elements are fully supported. The syntax elements are
 described in detail in ~tempo-define-template~ are supported. We document the
 important ones here:
 
- - "string" :: Inserts a string literal.
- - ~p~ :: Inserts an unnamed prompt field.
- - ~r~ :: Inserts the current region.
- - ~(s NAME)~ :: Inserts a named field.
- - ~n~ :: Inserts a newline.
- - ~>~ :: Indents with ~indent-according-to-mode~.
- - ~r>~ :: The region, but indented.
- - ~n>~ :: Inserts a newline and indents.
- - ~&~ :: Insert newline if there is only whitespace between line start and point.
- - ~%~ :: Insert newline if there is only whitespace between point and line end.
- - ~o~ :: Like ~%~ but leaves the point before newline.
+ - ~"string"~ Inserts a string literal.
+ - ~p~ Inserts an unnamed prompt field.
+ - ~r~ Inserts the current region.
+ - ~(s NAME)~ Inserts a named field.
+ - ~n~ Inserts a newline.
+ - ~>~ Indents with ~indent-according-to-mode~.
+ - ~r>~ The region, but indented.
+ - ~n>~ Inserts a newline and indents.
+ - ~&~ Insert newline if there is only whitespace between line start and point.
+ - ~%~ Insert newline if there is only whitespace between point and line end.
+ - ~o~ Like ~%~ but leaves the point before newline.
 
 Furthermore Tempel supports two syntax extensions:
 
- - ~(q PROMPT NAME)~ :: Query the user via ~read-string~ and store the result in variable ~NAME~.
- - ~(form ...)~ :: Other Lisp forms are evaluated. Named fields are lexically bound.
+ - ~(q PROMPT NAME)~ Query the user via ~read-string~ and store the result in variable ~NAME~.
+ - ~(form ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
    Use caution with templates which execute code!
