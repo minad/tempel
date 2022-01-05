@@ -71,6 +71,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map [M-right] #'tempel-next)
     (define-key map [M-left] #'tempel-previous)
+    (define-key map [remap keyboard-quit] #'tempel-quit)
     map)
   "Keymap to navigate across template markers.")
 
@@ -230,6 +231,20 @@ BEG and END are the boundaries of the modification."
     ;; Jump to first field
     (tempel-next 1)))
 
+(defun tempel--begin ()
+  "Return beginning point for current template."
+  (apply #'min
+         (mapcar (lambda (ov)
+                   (ov-beg ov))
+                 tempel--overlays)))
+
+(defun tempel--end ()
+  "Return end point for current template."
+  (apply #'max
+         (mapcar (lambda (ov)
+                   (ov-end ov))
+                 tempel--overlays)))
+
 (defun tempel--save ()
   "Save template file buffer."
   (when-let (buf (get-file-buffer tempel-file))
@@ -291,6 +306,14 @@ BEG and END are the boundaries of the modification."
         minor-mode-overriding-map-alist
         (delq (assq-delete-all 'tempel--overlays minor-mode-overriding-map-alist)
               minor-mode-overriding-map-alist)))
+
+(defun tempel-quit ()
+  "Quit and remove template."
+  (interactive)
+  (let ((beg (tempel--begin))
+        (end (tempel--end))) 
+    (tempel-done)
+    (delete-region beg end)))
 
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
