@@ -153,18 +153,17 @@ BEG and END are the boundaries of the modification."
   "Replace region beween BEG and END with STR.
 If OV is alive, move it."
   (let ((old (buffer-substring-no-properties beg end)))
+    (setq ov (and ov (overlay-buffer ov) ov))
     (unless (equal str old)
       (unless (eq buffer-undo-list t)
-        (push (list 'apply #'tempel--replace
-                    beg (+ beg (length str)) ov old)
+        (push (list 'apply #'tempel--replace beg (+ beg (length str)) ov old)
               buffer-undo-list))
       (with-silent-modifications
         (save-excursion
           (goto-char beg)
           (delete-char (- end beg))
           (insert str)
-          (when (overlay-buffer ov)
-            (move-overlay ov beg (point))))))))
+          (when ov (move-overlay ov beg (point))))))))
 
 (defun tempel--field (st &optional name init)
   "Add template field to ST.
