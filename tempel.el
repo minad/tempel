@@ -49,6 +49,16 @@
   "Path to the template file."
   :type 'string)
 
+(defcustom tempel-field-prefix
+  #(" " 0 1 (display (space :width (2)) face tempel-field))
+  "Field indicator prefix string."
+  :type 'string)
+
+(defcustom tempel-form-prefix
+  #(" " 0 1 (display (space :width (2)) face tempel-form))
+  "Form indicator prefix string."
+  :type 'string)
+
 (defcustom tempel-insert-annotation 40
   "Annotation width for `tempel-insert'."
   :type '(choice (const nil integer)))
@@ -174,7 +184,7 @@ INIT is the optional initial input."
   (let ((ov (make-overlay (point) (point))))
     (push ov (car st))
     (overlay-put ov 'face 'tempel-field)
-    (overlay-put ov 'before-string #(" " 0 1 (display (space :width (1)) face tempel-field)))
+    (overlay-put ov 'before-string tempel-field-prefix)
     (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
@@ -196,7 +206,7 @@ INIT is the optional initial input."
       (void-variable nil))
     (let ((ov (make-overlay beg (point) nil t)))
       (overlay-put ov 'face 'tempel-form)
-      (overlay-put ov 'before-string #(" " 0 1 (display (space :width (1)) face tempel-form)))
+      (overlay-put ov 'before-string tempel-form-prefix)
       (overlay-put ov 'tempel--form form)
       (push ov (car st)))))
 
