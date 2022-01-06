@@ -82,8 +82,8 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [M-right] #'tempel-next)
-    (define-key map [M-left] #'tempel-previous)
+    (define-key map [remap forward-paragraph] #'tempel-next)
+    (define-key map [remap backward-paragraph] #'tempel-previous)
     map)
   "Keymap to navigate across template markers.")
 
