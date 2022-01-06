@@ -277,7 +277,8 @@ INIT is the optional initial input."
       (push st tempel--active)))
   ;; Jump to first field
   (unless (cl-loop for ov in (caar tempel--active)
-                   thereis (eq (point) (overlay-start ov)))
+                   thereis (and (overlay-get ov 'tempel--state)
+                                (eq (point) (overlay-start ov))))
     (tempel-next 1)))
 
 (defun tempel--save ()
