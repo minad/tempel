@@ -77,6 +77,15 @@ elements follow.
   (rec "(letrec (" p ")" n> r> ")")
   (command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive)" n> r> ")" n n)
 
+  text-mode
+
+  (today (format-time-string "%Y-%m-%d"))
+  (cut "--8<---------------cut here---------------start------------->8---" n r n
+       "--8<---------------cut here---------------end--------------->8---" n)
+  (asciibox "+-" (make-string (length str) ?-) "-+" n
+            "| " (s str)                       " |" n
+            "+-" (make-string (length str) ?-) "-+" n)
+
   rst-mode
 
   (title (make-string (length title) ?=) n (s title) n (make-string (length title) ?=) n)
