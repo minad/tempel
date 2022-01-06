@@ -227,7 +227,7 @@ INIT is the optional initial input."
        (goto-char (cdr region))
        (indent-region (car region) (cdr region) nil)))
     ;; LEGACY: (p ...) and (P ...) is legacy syntax from Tempo, use q, s, or p instead.
-    ;; EXTENSION: (p (FORM...) <NAME>)
+    ;; TEMPEL EXTENSION: (p (FORM...) <NAME>)
     (`(,(or 'p 'P) ,prompt . ,rest)
      (if (cadr rest)
          (tempel--query st prompt (car rest))

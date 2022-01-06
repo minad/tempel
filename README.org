@@ -22,13 +22,14 @@ is a modernized implementation of Tempo, in the form of two commands:
 After inserting a template you can move between the visible template fields with
 the keys ~M-{~, ~M-}~ or ~C-up/down~ which are normally bound to
 ~forward/backward-paragraph~. Tempel remaps them to ~tempel-next~ and
-~tempel-previous~. The keys are defined in the ~temple-map~ keymap, you can change
+~tempel-previous~. The keys are defined in the ~tempel-map~ keymap, you can change
 them there. As soon as you move before (behind) the first (last) field, the
 fields are removed.
 
 Note that this package is not a competitor to the mature and widely used
-YASnippet library. Try Tempel only if you like tiny and simple packages and if
-you want to write templates in Lisp syntax. Tempel took inspiration from the
+YASnippet library. Try Tempel only if you like small and simple packages. With
+Temple you write your templates in Lisp syntax, which from my perspective fits
+well to the hackable nature of Emacs. Tempel took inspiration from the
 [[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]] package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
 
 #+html: <table><tr><td><img src="https://github.com/minad/tempel/blob/screenshots/rst.gif?raw=true" align="left"></td><td><img src="https://github.com/minad/tempel/blob/screenshots/latex.gif?raw=true" align="left"></td><td><img src="https://github.com/minad/tempel/blob/screenshots/elisp.gif?raw=true" align="left"></td></tr></table>
