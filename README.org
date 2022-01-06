@@ -9,22 +9,23 @@
 
 * Introduction
 
-Tempel is a tiny template package for Emacs, which uses the syntax of the
-Emacs Tempo library. Tempo is an ancient temple. It is 27 years old, but still
-in good shape since it successfully resisted change over the decades. Tempel
-is a modernized implementation of Tempo, in the form of two commands:
+Tempel is a tiny template package for Emacs, which uses the syntax of the Emacs
+Tempo library. Tempo is an ancient temple. It is 27 years old, but still in good
+shape since it successfully resisted change over the decades. However it may
+look a bit dusty here and there. Therefore I present to you, Tempel, a
+modernized implementation of Tempo, in the form of two commands:
 
-+ ~tempel-expand~: Expand a template at point in the buffer. If called
++ ~tempel-expand~ expands a template at point in the buffer. If called
   non-interactively the function behaves like a completion-at-point-function
-  (Capf). You may want to use my [[https://github.com/minad/corfu][Corfu]] completion at point UI.
-+ ~tempel-insert~: Select a template by name and insert it into the current buffer.
+  (Capf). You may want to give my [[https://github.com/minad/corfu][Corfu]] completion at point UI a try.
++ ~tempel-insert~ selects a template by name and insert it into the current buffer.
 
-After inserting a template you can move between the visible template fields with
-the keys ~M-{~, ~M-}~ or ~C-up/down~ which are normally bound to
-~forward/backward-paragraph~. Tempel remaps them to ~tempel-next~ and
-~tempel-previous~. The keys are defined in the ~tempel-map~ keymap, you can change
-them there. As soon as you move before (behind) the first (last) field, the
-fields are removed.
+After inserting the template you can move between the visible template fields
+with the keys ~M-{~, ~M-}~ or ~C-up/down,~ which are normally bound to
+~forward/backward-paragraph~. Tempel temporarily remaps these commands to
+~tempel-next~ and ~tempel-previous~. The key bindings are defined in the ~tempel-map~
+keymap. You can customize them there. As soon as you move before (behind) the
+first (last) field, the fields are removed.
 
 Note that this package is not a competitor to the mature and widely used
 YASnippet library. Try Tempel only if you like small and simple packages. With
@@ -55,9 +56,9 @@ and has to be installed manually with ~package-install-file~.
 
 The template file format is a Lisp file =templates= which is stored by default in
 the ~user-emacs-directory~ (=~/.config/emacs/templates=). The templates are defined
-as Lisp expressions in the concise form of the Emacs Tempo package. The first
-element of the list is the name of the template. After the name the Tempo
-elements follow.
+as Lisp expressions in the concise form of the Emacs Tempo syntax. The first
+element of the list is the name of the template. Behind the name, the Tempo
+syntax elements follow.
 
 #+begin_src emacs-lisp
   ;; -*- mode: lisp -*-
@@ -126,4 +127,4 @@ Furthermore Tempel supports syntax extensions:
  - ~(p (FORM ...) <NAME>)~ Execute ~FORM~ and insert the result, optionally bind to ~NAME~.
  - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
 
-Use caution with templates which execute code!
+Use caution with templates which execute arbitrary code!
