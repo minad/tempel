@@ -75,7 +75,10 @@
 (defvar-local tempel--active nil
   "List of active templates.
 Each template state is a pair, where the car is a list of overlays and
-the cdr is an alist of variable bindings.")
+the cdr is an alist of variable bindings. The template state is attached
+to each overlay as the property `tempel--state'. Furthermore overlays
+may be named with `tempel--name' or carry an evaluatable Lisp expression
+`tempel--form'.")
 
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
