@@ -36,7 +36,9 @@
 ;;; Code:
 
 (require 'seq)
-(eval-when-compile (require 'subr-x))
+(eval-when-compile
+  (require 'subr-x)
+  (require 'cl-lib))
 
 (defgroup tempel nil
   "Simple templates"
@@ -238,7 +240,6 @@ BEG and END are the boundaries of the modification."
         (dolist (x template) (tempel--element x region)))
       ;; End marker
       (push (make-overlay (point) (point)) tempel--overlays))
-    (setq tempel--overlays (sort tempel--overlays (lambda (x y) (< (overlay-start x) (overlay-start y)))))
     ;; Jump to first field
     (tempel-next 1)))
 
@@ -269,26 +270,29 @@ BEG and END are the boundaries of the modification."
     (deactivate-mark)
     (cons (point-marker) (mark-marker))))
 
+(defun tempel--find (dir)
+  "Find next overlay in DIR."
+  (let ((pt (point))
+        (next nil))
+    (if (> dir 0)
+        (cl-loop for ov in tempel--overlays do
+                 (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
+                            (> (overlay-start ov) pt))
+                   (setq next (min (or next most-positive-fixnum) (overlay-end ov)))))
+      (cl-loop for ov in tempel--overlays do
+               (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
+                          (< (overlay-end ov) pt))
+                 (setq next (max (or next most-negative-fixnum) (overlay-end ov))))))
+    next))
+
 (defun tempel-next (arg)
   "Move ARG fields forward and quit at the end."
   (interactive "p")
-  (catch 'tempel--break
-    (cond
-     ((> arg 0)
-      (dolist (ov tempel--overlays)
-        (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
-                   (> (overlay-start ov) (point)))
-          (if (> arg 1) (setq arg (1- arg))
-            (goto-char (overlay-end ov))
-            (throw 'tempel--break nil)))))
-     ((< arg 0)
-      (dolist (ov (reverse tempel--overlays))
-        (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
-                   (< (overlay-end ov) (point)))
-          (if (< arg -1) (setq arg (1+ arg))
-            (goto-char (overlay-end ov))
-            (throw 'tempel--break nil))))))
-    (tempel-done)))
+  (cl-loop for i below (abs arg)
+           for next = (tempel--find arg) do
+           (if next (goto-char next)
+             (tempel-done)
+             (cl-return))))
 
 (defun tempel-previous (arg)
   "Move ARG fields backward and quit at the beginning."
