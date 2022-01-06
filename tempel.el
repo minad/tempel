@@ -187,7 +187,9 @@ BEG and END are the boundaries of the modification."
 
 (defun tempel--query (st prompt name)
   "Read input with PROMPT and assign to binding NAME in ST."
-  (setf (alist-get name (cdr st)) (read-string prompt)))
+  (setf (alist-get name (cdr st)) (if (stringp prompt)
+                                      (read-string prompt)
+                                    (eval prompt 'lexical-binding))))
 
 (defun tempel--element (st element region)
   "Add template ELEMENT to ST given the REGION."

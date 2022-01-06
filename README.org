@@ -116,5 +116,7 @@ important ones here:
 Furthermore Tempel supports two syntax extensions:
 
  - ~(q PROMPT NAME)~ Query the user via ~read-string~ and store the result in variable ~NAME~.
+ - ~(q (form ...) NAME)~ Query the user using ~FORM~ and store the result in variable ~NAME~.
+   Use caution with templates which execute code!
  - ~(form ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
    Use caution with templates which execute code!
