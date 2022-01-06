@@ -78,6 +78,10 @@
     (t :inherit region))
   "Face used for evaluated forms.")
 
+(defface tempel-default
+  '((t :inherit tempel-field :slant italic))
+  "Face used for default values.")
+
 (defvar tempel--templates nil
   "Templates loaded from the `tempel-file'.")
 
@@ -140,21 +144,29 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
                           'face 'completions-annotations))
              width 0 ?\s ellipsis))))
 
-(defun tempel--field-modified (ov after _beg end &optional _len)
+(defun tempel--field-modified (ov after beg end &optional _len)
   "Update field overlay OV.
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
-  (when after
+  (cond
+   ;; Overwrite default before modification
+   ((and (not after) (eq 'tempel-default (overlay-get ov 'face)))
+    (setq beg (overlay-start ov) end (overlay-end ov))
+    (goto-char beg)
+    (overlay-put ov 'face 'tempel-field)
+    (delete-region beg end))
+   ;; Update field after modification
+   (after
     (let ((st (overlay-get ov 'tempel--state)))
       (unless undo-in-progress
         (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
-      (tempel--update-mark ov)
       (when-let (name (overlay-get ov 'tempel--name))
         (setf (alist-get name (cdr st))
               (buffer-substring-no-properties
                (overlay-start ov) (overlay-end ov))))
       (unless undo-in-progress
         (template--synchronize-fields st ov)))))
+  (tempel--update-mark ov))
 
 (defun template--synchronize-fields (st current)
   "Synchronize fields of ST, except CURRENT overlay."
@@ -183,6 +195,8 @@ If OV is alive, move it."
           (insert str)
           (when ov
             (move-overlay ov beg (point))
+            (when (eq (overlay-get ov 'face) 'tempel-default)
+              (overlay-put ov 'face 'tempel-field))
             (tempel--update-mark ov)))))))
 
 (defun tempel--update-mark (ov)
@@ -202,11 +216,6 @@ NAME is the optional field name.
 INIT is the optional initial input."
   (let ((ov (make-overlay (point) (point))))
     (push ov (car st))
-    (overlay-put ov 'face 'tempel-field)
-    (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
-    (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
-    (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
-    (overlay-put ov 'tempel--state st)
     (when name
       (overlay-put ov 'tempel--name name)
       (setq init (or init (alist-get name (cdr st)) ""))
@@ -214,7 +223,13 @@ INIT is the optional initial input."
     (when (and init (not (equal init "")))
       (insert init)
       (move-overlay ov (overlay-start ov) (point)))
-    (tempel--update-mark ov)))
+    (tempel--update-mark ov)
+    (overlay-put ov 'face (if (and init (get-text-property 0 'tempel--default init))
+                              'tempel-default 'tempel-field))
+    (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
+    (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
+    (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
+    (overlay-put ov 'tempel--state st)))
 
 (defun tempel--form (st form)
   "Add new template field evaluating FORM to ST."
@@ -256,9 +271,11 @@ INIT is the optional initial input."
 If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
 PROMPT is the optional prompt/default value."
   (setq prompt
-        (if (and (stringp prompt) noinsert) (read-string prompt)
-          ;; TEMPEL EXTENSION: Evaluate prompt
-          (eval prompt 'lexical)))
+        (cond
+         ((and (stringp prompt) noinsert) (read-string prompt))
+         ((stringp prompt) (propertize prompt 'tempel--default t))
+         ;; TEMPEL EXTENSION: Evaluate prompt
+         (t (eval prompt 'lexical))))
   (if noinsert
       (setf (alist-get name (cdr st)) prompt)
     (tempel--field st name prompt)))
@@ -320,15 +337,17 @@ PROMPT is the optional prompt/default value."
 
 (defun tempel--find (dir)
   "Find next overlay in DIR."
-  (let ((pt (point)) next)
+  (let ((pt (point)) next stop)
     (dolist (st tempel--active next)
       (dolist (ov (car st))
         (unless (overlay-get ov 'tempel--form)
+          (setq stop (if (or (< dir 0) (eq 'tempel-default (overlay-get ov 'face)))
+                         (overlay-start ov) (overlay-end ov)))
           (cond
-           ((and (> dir 0) (> (overlay-end ov) pt))
-            (setq next (min (or next (point-max)) (overlay-end ov))))
-           ((and (< dir 0) (< (overlay-start ov) pt))
-            (setq next (max (or next -1) (overlay-start ov))))))))))
+           ((and (> dir 0) (> stop pt))
+            (setq next (min (or next (point-max)) stop)))
+           ((and (< dir 0) (< stop pt))
+            (setq next (max (or next -1) stop)))))))))
 
 (defun tempel-next (arg)
   "Move ARG fields forward and quit at the end."
