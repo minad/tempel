@@ -113,10 +113,11 @@ important ones here:
  - ~%~ Insert newline if there is only whitespace between point and line end.
  - ~o~ Like ~%~ but leaves the point before newline.
 
-Furthermore Tempel supports two syntax extensions:
+Furthermore Tempel supports syntax extensions:
 
  - ~(q PROMPT NAME)~ Query the user via ~read-string~ and store the result in variable ~NAME~.
- - ~(q (form ...) NAME)~ Query the user using ~FORM~ and store the result in variable ~NAME~.
-   Use caution with templates which execute code!
- - ~(form ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
-   Use caution with templates which execute code!
+ - ~(q (FORM ...) NAME)~ Execute ~FORM~ and store the result in variable ~NAME~.
+ - ~(p (FORM ...) <NAME>)~ Execute ~FORM~ and insert the result, optionally bind to ~NAME~.
+ - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
+
+Use caution with templates which execute code!

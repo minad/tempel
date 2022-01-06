@@ -153,22 +153,22 @@ BEG and END are the boundaries of the modification."
                 (insert str)
                 (move-overlay other (overlay-start other) (point))))))))))
 
-(defun tempel--field (st)
-  "Add template field to ST."
+(defun tempel--field (st &optional name init)
+  "Add template field to ST.
+NAME is the optional field name.
+INIT is the optional initial input."
   (let ((ov (make-overlay (point) (point))))
+    (push ov (car st))
     (overlay-put ov 'face 'tempel-field)
     (overlay-put ov 'before-string #(" " 0 1 (display (space :width (1)) face tempel-field)))
     (overlay-put ov 'modification-hooks (list #'tempel--update-field))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--update-field))
     (overlay-put ov 'tempel--state st)
-    (push ov (car st))
-    ov))
-
-(defun tempel--named (st name)
-  "Add new template field NAME to ST."
-  (let ((ov (tempel--field st)))
-    (overlay-put ov 'tempel--name name)
-    (when-let (str (alist-get name (cdr st)))
+    (when name
+      (overlay-put ov 'tempel--name name)
+      (when init
+        (setf (alist-get name (cdr st)) init)))
+    (when-let (str (or init (and name (alist-get name (cdr st)))))
       (insert str)
       (move-overlay ov (overlay-start ov) (point)))))
 
@@ -207,7 +207,7 @@ BEG and END are the boundaries of the modification."
 		    (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
 	  (open-line 1)))
     ('p (tempel--field st))
-    (`(s ,name) (tempel--named st name))
+    (`(s ,name) (tempel--field st name))
     ;; LEGACY: (r ...) and (r> ...) is legacy syntax from Tempo, use r instead.
     ((or 'r `(r . ,_)) (if region (goto-char (cdr region)) (tempel--field st)))
     ((or 'r> `(r> . ,_))
@@ -215,14 +215,15 @@ BEG and END are the boundaries of the modification."
        (goto-char (cdr region))
        (indent-region (car region) (cdr region) nil)))
     ;; LEGACY: (p ...) and (P ...) is legacy syntax from Tempo, use q, s, or p instead.
+    ;; EXTENSION: (p (FORM...) <NAME>)
     (`(,(or 'p 'P) ,prompt . ,rest)
-     (cond
-      ((cadr rest) (tempel--query st prompt (car rest)))
-      ((car rest) (tempel--named st (car rest)))
-      (t (tempel--field st))))
-    ;; EXTENSION: Query from minibuffer, Tempel extension!
+     (if (cadr rest)
+         (tempel--query st prompt (car rest))
+       (tempel--field st (car rest) (and (consp prompt)
+                                         (eval prompt 'lexical)))))
+    ;; TEMPEL EXTENSION: Query from minibuffer, (q "Prompt: " name), (q (FORM...) name)
     (`(q ,prompt ,name) (tempel--query st prompt name))
-    ;; EXTENSION: Evaluate forms, Tempel extension!
+    ;; TEMPEL EXTENSION: Evaluate forms
     (_ (tempel--form st element))))
 
 (defun tempel--insert (templates name region)
