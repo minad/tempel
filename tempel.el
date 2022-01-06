@@ -124,34 +124,47 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
         'face 'completions-annotations))
       width 0 ?\s ellipsis))))
 
-(defun tempel--update-field (ov after beg end &optional _len)
+(defun tempel--field-modified (ov after beg end &optional _len)
   "Update field overlay OV.
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
   (when (and after (>= beg (overlay-start ov)) (<= beg (overlay-end ov)))
-    (save-excursion
-      ;; TODO: We use silent modifications such that the undo list is
-      ;; not affected and that the modification hooks are not triggered
-      ;; recursively. However since the edits which are made to the
-      ;; other fields are not recorded in the undo list, we will end up
-      ;; with an invalid undo state after tempel-done.
+    (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
+    (let ((st (overlay-get ov 'tempel--state)))
+      (when-let (name (overlay-get ov 'tempel--name))
+        (setf (alist-get name (cdr st))
+              (buffer-substring-no-properties
+               (overlay-start ov) (overlay-end ov))))
+      (unless undo-in-progress
+        (template--synchronize-fields st ov)))))
+
+(defun template--synchronize-fields (st current)
+  "Synchronize fields of ST, except CURRENT overlay."
+  (dolist (ov (car st))
+    (unless (eq ov current)
+      (save-excursion
+        (goto-char (overlay-start ov))
+        (let (x)
+          (when-let (str (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cdr st)))
+                             (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
+            (tempel--replace (overlay-start ov) (overlay-end ov) ov str)))))))
+
+(defun tempel--replace (beg end ov str)
+  "Replace region beween BEG and END with STR.
+If OV is alive, move it."
+  (let ((old (buffer-substring-no-properties beg end)))
+    (unless (equal str old)
+      (unless (eq buffer-undo-list t)
+        (push (list 'apply #'tempel--replace
+                    beg (+ beg (length str)) ov old)
+              buffer-undo-list))
       (with-silent-modifications
-        (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
-        (let ((st (overlay-get ov 'tempel--state))
-              (name (overlay-get ov 'tempel--name))
-              str)
-          (when name
-            (setq str (buffer-substring-no-properties (overlay-start ov) (overlay-end ov)))
-            (setf (alist-get name (cdr st)) str))
-          (dolist (other (car st))
-            (unless (eq other ov)
-              (goto-char (overlay-start other))
-              (when-let (str (if-let (form (overlay-get other 'tempel--form))
-                                 (eval form (cdr st))
-                               (and name (eq name (overlay-get other 'tempel--name)) str)))
-                (delete-char (- (overlay-end other) (point)))
-                (insert str)
-                (move-overlay other (overlay-start other) (point))))))))))
+        (save-excursion
+          (goto-char beg)
+          (delete-char (- end beg))
+          (insert str)
+          (when (overlay-buffer ov)
+            (move-overlay ov beg (point))))))))
 
 (defun tempel--field (st &optional name init)
   "Add template field to ST.
@@ -161,8 +174,8 @@ INIT is the optional initial input."
     (push ov (car st))
     (overlay-put ov 'face 'tempel-field)
     (overlay-put ov 'before-string #(" " 0 1 (display (space :width (1)) face tempel-field)))
-    (overlay-put ov 'modification-hooks (list #'tempel--update-field))
-    (overlay-put ov 'insert-behind-hooks (list #'tempel--update-field))
+    (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
+    (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
     (overlay-put ov 'tempel--state st)
     (when name
       (overlay-put ov 'tempel--name name)
