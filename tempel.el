@@ -113,15 +113,6 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
         'face 'completions-annotations))
       width 0 ?\s ellipsis))))
 
-(defun tempel--replace-field (ov str)
-  "Replace OV content with STR."
-  (save-excursion
-    (let ((beg (overlay-start ov)))
-      (goto-char beg)
-      (delete-char (- (overlay-end ov) beg))
-      (insert str)
-      (move-overlay ov beg (point)))))
-
 (defun tempel--update-field (ov after beg end &optional _len)
   "Update field overlay OV.
 AFTER is non-nil after the modification.
@@ -135,21 +126,21 @@ BEG and END are the boundaries of the modification."
       ;; with an invalid undo state after tempel-done.
       (with-silent-modifications
         (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
-        (let ((state (overlay-get ov 'tempel--state)))
-          ;; Update other named fields
-          (when-let (name (overlay-get ov 'tempel--name))
-            (let ((str (buffer-substring-no-properties (overlay-start ov) (overlay-end ov))))
-              (setf (alist-get name (cddr state)) str)
-              (dolist (other (alist-get name (car state)))
-                (unless (eq other ov)
-                  (tempel--replace-field other str)))))
-          ;; Update evaluated form fields
-          (dolist (other (cadr state))
-            (tempel--replace-field
-             other
-             (save-excursion
-               (goto-char (overlay-start other))
-               (eval (overlay-get other 'tempel--form) (cddr state))))))))))
+        (let ((state (overlay-get ov 'tempel--state))
+              (name (overlay-get ov 'tempel--name))
+              str)
+          (when name
+            (setq str (buffer-substring-no-properties (overlay-start ov) (overlay-end ov)))
+            (setf (alist-get name (cdr state)) str))
+          (dolist (other (car state))
+            (unless (eq other ov)
+              (goto-char (overlay-start other))
+              (when-let (str (if-let (form (overlay-get other 'tempel--form))
+                                 (eval form (cdr state))
+                               (and name (eq name (overlay-get other 'tempel--name)) str)))
+                (delete-char (- (overlay-end other) (point)))
+                (insert str)
+                (move-overlay other (overlay-start other) (point))))))))))
 
 (defun tempel--field (&optional face)
   "Create template field with FACE."
@@ -160,6 +151,7 @@ BEG and END are the boundaries of the modification."
     (overlay-put ov 'modification-hooks (list #'tempel--update-field))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--update-field))
     (overlay-put ov 'tempel--state tempel--state)
+    (push ov (car tempel--state))
     (push ov tempel--overlays)
     ov))
 
@@ -167,8 +159,7 @@ BEG and END are the boundaries of the modification."
   "Create template field named NAME."
   (let ((ov (tempel--field)))
     (overlay-put ov 'tempel--name name)
-    (push ov (alist-get name (car tempel--state)))
-    (when-let (str (alist-get name (cddr tempel--state)))
+    (when-let (str (alist-get name (cdr tempel--state)))
       (insert str)
       (move-overlay ov (overlay-start ov) (point)))))
 
@@ -176,16 +167,15 @@ BEG and END are the boundaries of the modification."
   "Create template field evaluating FORM."
   (let ((ov (tempel--field 'tempel-form)))
     (overlay-put ov 'tempel--form form)
-    (push ov (cadr tempel--state))
     ;; Ignore variable errors, since some variables may not be defined yet.
     (condition-case nil
-        (insert (eval form (cddr tempel--state)))
+        (insert (eval form (cdr tempel--state)))
       (void-variable nil))
     (move-overlay ov (overlay-start ov) (point))))
 
 (defun tempel--query (prompt name)
   "Read input with PROMPT and assign to NAME."
-  (setf (alist-get name (cddr tempel--state)) (read-string prompt)))
+  (setf (alist-get name (cdr tempel--state)) (read-string prompt)))
 
 (defun tempel--element (element region)
   "Insert template ELEMENT given the REGION."
@@ -235,11 +225,11 @@ BEG and END are the boundaries of the modification."
           (setf (overlay-end ov) (point))))
       ;; Begin marker
       (push (make-overlay (point) (point)) tempel--overlays)
-      (let ((tempel--state (list nil nil))
+      (let ((tempel--state (cons nil nil))
             (inhibit-modification-hooks t))
         (dolist (x template) (tempel--element x region)))
       ;; End marker
-      (push (make-overlay (point) (point)) tempel--overlays))
+      (push (make-overlay (point) (point) nil nil t) tempel--overlays))
     ;; Jump to first field
     (tempel-next 1)))
 
