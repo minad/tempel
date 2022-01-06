@@ -66,7 +66,6 @@
 (defvar tempel--templates nil)
 (defvar tempel--modified nil)
 (defvar tempel--history nil)
-(defvar tempel--state nil)
 (defvar-local tempel--overlays nil)
 
 (defvar tempel-map
@@ -126,59 +125,59 @@ BEG and END are the boundaries of the modification."
       ;; with an invalid undo state after tempel-done.
       (with-silent-modifications
         (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
-        (let ((state (overlay-get ov 'tempel--state))
+        (let ((st (overlay-get ov 'tempel--state))
               (name (overlay-get ov 'tempel--name))
               str)
           (when name
             (setq str (buffer-substring-no-properties (overlay-start ov) (overlay-end ov)))
-            (setf (alist-get name (cdr state)) str))
-          (dolist (other (car state))
+            (setf (alist-get name (cdr st)) str))
+          (dolist (other (car st))
             (unless (eq other ov)
               (goto-char (overlay-start other))
               (when-let (str (if-let (form (overlay-get other 'tempel--form))
-                                 (eval form (cdr state))
+                                 (eval form (cdr st))
                                (and name (eq name (overlay-get other 'tempel--name)) str)))
                 (delete-char (- (overlay-end other) (point)))
                 (insert str)
                 (move-overlay other (overlay-start other) (point))))))))))
 
-(defun tempel--field (&optional face)
-  "Create template field with FACE."
+(defun tempel--field (st &optional face)
+  "Add template field with FACE to ST."
   (let ((ov (make-overlay (point) (point))))
     (setq face (or face 'tempel-field))
     (overlay-put ov 'face face)
     (overlay-put ov 'before-string (propertize " " 'face face 'display '(space :width (1))))
     (overlay-put ov 'modification-hooks (list #'tempel--update-field))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--update-field))
-    (overlay-put ov 'tempel--state tempel--state)
-    (push ov (car tempel--state))
+    (overlay-put ov 'tempel--state st)
+    (push ov (car st))
     (push ov tempel--overlays)
     ov))
 
-(defun tempel--named (name)
-  "Create template field named NAME."
-  (let ((ov (tempel--field)))
+(defun tempel--named (st name)
+  "Add new template field NAME to ST."
+  (let ((ov (tempel--field st)))
     (overlay-put ov 'tempel--name name)
-    (when-let (str (alist-get name (cdr tempel--state)))
+    (when-let (str (alist-get name (cdr st)))
       (insert str)
       (move-overlay ov (overlay-start ov) (point)))))
 
-(defun tempel--form (form)
-  "Create template field evaluating FORM."
-  (let ((ov (tempel--field 'tempel-form)))
+(defun tempel--form (st form)
+  "Add new template field evaluating FORM to ST."
+  (let ((ov (tempel--field st 'tempel-form)))
     (overlay-put ov 'tempel--form form)
     ;; Ignore variable errors, since some variables may not be defined yet.
     (condition-case nil
-        (insert (eval form (cdr tempel--state)))
+        (insert (eval form (cdr st)))
       (void-variable nil))
     (move-overlay ov (overlay-start ov) (point))))
 
-(defun tempel--query (prompt name)
-  "Read input with PROMPT and assign to NAME."
-  (setf (alist-get name (cdr tempel--state)) (read-string prompt)))
+(defun tempel--query (st prompt name)
+  "Read input with PROMPT and assign to binding NAME in ST."
+  (setf (alist-get name (cdr st)) (read-string prompt)))
 
-(defun tempel--element (element region)
-  "Insert template ELEMENT given the REGION."
+(defun tempel--element (st element region)
+  "Add template ELEMENT to ST given the REGION."
   (pcase element
     ('nil)
     ('n (insert "\n"))
@@ -192,24 +191,24 @@ BEG and END are the boundaries of the modification."
     ('o (unless (or region (eolp)
 		    (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
 	  (open-line 1)))
-    ('p (tempel--field))
-    (`(s ,name) (tempel--named name))
+    ('p (tempel--field st))
+    (`(s ,name) (tempel--named st name))
     ;; LEGACY: (r ...) and (r> ...) is legacy syntax from Tempo, use r instead.
-    ((or 'r `(r . ,_)) (if region (goto-char (cdr region)) (tempel--field)))
+    ((or 'r `(r . ,_)) (if region (goto-char (cdr region)) (tempel--field st)))
     ((or 'r> `(r> . ,_))
-     (if (not region) (tempel--field)
+     (if (not region) (tempel--field st)
        (goto-char (cdr region))
        (indent-region (car region) (cdr region) nil)))
     ;; LEGACY: (p ...) and (P ...) is legacy syntax from Tempo, use q, s, or p instead.
     (`(,(or 'p 'P) ,prompt . ,rest)
      (cond
-      ((cadr rest) (tempel--query prompt (car rest)))
-      ((car rest) (tempel--named (car rest)))
-      (t (tempel--field))))
+      ((cadr rest) (tempel--query st prompt (car rest)))
+      ((car rest) (tempel--named st (car rest)))
+      (t (tempel--field st))))
     ;; EXTENSION: Query from minibuffer, Tempel extension!
-    (`(q ,prompt ,name) (tempel--query prompt name))
+    (`(q ,prompt ,name) (tempel--query st prompt name))
     ;; EXTENSION: Evaluate forms, Tempel extension!
-    (_ (tempel--form element))))
+    (_ (tempel--form st element))))
 
 (defun tempel--insert (templates name region)
   "Insert template NAME given the list of TEMPLATES and the REGION."
@@ -225,9 +224,9 @@ BEG and END are the boundaries of the modification."
           (setf (overlay-end ov) (point))))
       ;; Begin marker
       (push (make-overlay (point) (point)) tempel--overlays)
-      (let ((tempel--state (cons nil nil))
+      (let ((st (cons nil nil))
             (inhibit-modification-hooks t))
-        (dolist (x template) (tempel--element x region)))
+        (dolist (x template) (tempel--element st x region)))
       ;; End marker
       (push (make-overlay (point) (point) nil nil t) tempel--overlays))
     ;; Jump to first field
