@@ -20,8 +20,11 @@ is a modernized implementation of Tempo, in the form of two commands:
 + ~tempel-insert~: Select a template by name and insert it into the current buffer.
 
 After inserting a template you can move between the visible template fields with
-keys ~M-left/right~ as defined in the ~tempel-map~ keymap. As soon as you move
-before (behind) the first (last) field, the fields are removed.
+the keys ~M-{~, ~M-}~ or ~C-up/down~ which are normally bound to
+~forward/backward-paragraph~. Tempel remaps them to ~tempel-next~ and
+~tempel-previous~. The keys are defined in the ~temple-map~ keymap, you can change
+them there. As soon as you move before (behind) the first (last) field, the
+fields are removed.
 
 Note that this package is not a competitor to the mature and widely used
 YASnippet library. Try Tempel only if you like tiny and simple packages and if
