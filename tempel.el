@@ -63,6 +63,9 @@
 (defface tempel-form '((t :inherit region))
   "Face used for evaluated forms.")
 
+(defface tempel-default '((t :inherit (italic shadow highlight)))
+  "Face used for default values.")
+
 (defvar tempel--templates nil
   "Templates loaded from the `tempel-file'.")
 
@@ -128,6 +131,13 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
   "Update field overlay OV.
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
+  (when (and (not after) (eq (overlay-get ov 'face) 'tempel-default))
+    (save-excursion
+      (with-silent-modifications
+        ;; TODO find all others with the same name and reset
+        (goto-char (overlay-start ov))
+        (delete-char (- (overlay-end ov) (overlay-start ov)))
+        (overlay-put ov 'face 'tempel-field))))
   (when (and after (>= beg (overlay-start ov)) (<= beg (overlay-end ov)))
     (save-excursion
       ;; TODO: We use silent modifications such that the undo list is
@@ -165,11 +175,14 @@ BEG and END are the boundaries of the modification."
     (push ov (car st))
     ov))
 
-(defun tempel--named (st name)
+(defun tempel--named (st name &optional default)
   "Add new template field NAME to ST."
   (let ((ov (tempel--field st)))
     (overlay-put ov 'tempel--name name)
+    (when default (setf (alist-get name (cdr st)) (propertize default 'tempel--default t)))
     (when-let (str (alist-get name (cdr st)))
+      (when (get-text-property 0 'tempel--default str)
+        (overlay-put ov 'face 'tempel-default))
       (insert str)
       (move-overlay ov (overlay-start ov) (point)))))
 
@@ -216,6 +229,8 @@ BEG and END are the boundaries of the modification."
       ((cadr rest) (tempel--query st prompt (car rest)))
       ((car rest) (tempel--named st (car rest)))
       (t (tempel--field st))))
+    ;; EXTENSION: Name field with default value
+    (`(s ,name ,default) (tempel--named st name default))
     ;; EXTENSION: Query from minibuffer, Tempel extension!
     (`(q ,prompt ,name) (tempel--query st prompt name))
     ;; EXTENSION: Evaluate forms, Tempel extension!
