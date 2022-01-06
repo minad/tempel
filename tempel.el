@@ -174,6 +174,7 @@ INIT is the optional initial input."
     (overlay-put ov 'face 'tempel-field)
     (overlay-put ov 'before-string #(" " 0 1 (display (space :width (1)) face tempel-field)))
     (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
+    (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
     (overlay-put ov 'tempel--state st)
     (when name
@@ -260,10 +261,12 @@ INIT is the optional initial input."
           (inhibit-modification-hooks t))
       (push (make-overlay (point) (point)) (car st))
       (dolist (x template) (tempel--element st x region))
-      (push (make-overlay (point) (point)) (car st))
+      (push (make-overlay (point) (point) nil t t) (car st))
       (push st tempel--active)))
   ;; Jump to first field
-  (tempel-next 1))
+  (unless (cl-loop for ov in (caar tempel--active)
+                   thereis (eq (point) (overlay-start ov)))
+    (tempel-next 1)))
 
 (defun tempel--save ()
   "Save template file buffer."
@@ -300,11 +303,11 @@ INIT is the optional initial input."
       (dolist (ov (car st))
         (if (> dir 0)
             (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
-                       (> (overlay-start ov) pt))
+                       (> (overlay-end ov) pt))
               (setq next (min (or next most-positive-fixnum) (overlay-end ov))))
           (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
-                     (< (overlay-end ov) pt))
-            (setq next (max (or next most-negative-fixnum) (overlay-end ov)))))))
+                     (< (overlay-start ov) pt))
+            (setq next (max (or next most-negative-fixnum) (overlay-start ov)))))))
     next))
 
 (defun tempel-next (arg)
