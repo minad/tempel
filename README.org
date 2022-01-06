@@ -31,6 +31,8 @@ YASnippet library. Try Tempel only if you like tiny and simple packages and if
 you want to write templates in Lisp syntax. Tempel took inspiration from the
 [[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]] package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
 
+#+html: <table><tr><td><img src="https://github.com/minad/tempel/blob/screenshots/rst.gif?raw=true" align="left"></td><td><img src="https://github.com/minad/tempel/blob/screenshots/latex.gif?raw=true" align="left"></td><td><img src="https://github.com/minad/tempel/blob/screenshots/elisp.gif?raw=true" align="left"></td></tr></table>
+
 * Quick start
 
 As of 2022-01-05 the package is not yet available in a package repository
