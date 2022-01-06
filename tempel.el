@@ -63,10 +63,19 @@
 (defface tempel-form '((t :inherit region))
   "Face used for evaluated forms.")
 
-(defvar tempel--templates nil)
-(defvar tempel--modified nil)
-(defvar tempel--history nil)
-(defvar-local tempel--active nil)
+(defvar tempel--templates nil
+  "Templates loaded from the `tempel-file'.")
+
+(defvar tempel--modified nil
+  "Modification time of `tempel-file' at the last load.")
+
+(defvar tempel--history nil
+  "Completion history used by `tempel-insert'.")
+
+(defvar-local tempel--active nil
+  "List of active templates.
+Each template state is a pair, where the car is a list of overlays and
+the cdr is an alist of variable bindings.")
 
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
