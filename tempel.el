@@ -66,7 +66,7 @@
 (defvar tempel--templates nil)
 (defvar tempel--modified nil)
 (defvar tempel--history nil)
-(defvar-local tempel--overlays nil)
+(defvar-local tempel--active nil)
 
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
@@ -151,7 +151,6 @@ BEG and END are the boundaries of the modification."
     (overlay-put ov 'insert-behind-hooks (list #'tempel--update-field))
     (overlay-put ov 'tempel--state st)
     (push ov (car st))
-    (push ov tempel--overlays)
     ov))
 
 (defun tempel--named (st name)
@@ -211,26 +210,31 @@ BEG and END are the boundaries of the modification."
     (_ (tempel--form st element))))
 
 (defun tempel--insert (templates name region)
-  "Insert template NAME given the list of TEMPLATES and the REGION."
+  "Insert template NAME given the list of TEMPLATES and the current REGION."
   (when-let* ((name (intern-soft name))
               (template (cdr (assoc name templates))))
-    (setf (alist-get 'tempel--overlays minor-mode-overriding-map-alist) tempel-map)
-    (unless (eq buffer-undo-list t)
-      (push (list 'apply #'tempel-done) buffer-undo-list))
-    (save-excursion
-      ;; Split existing overlays, do not expand within existing field.
-      (dolist (ov tempel--overlays)
+    (tempel--activate template region)))
+
+(defun tempel--activate (template region)
+  "Activate TEMPLATE given the current REGION."
+  (setf (alist-get 'tempel--active minor-mode-overriding-map-alist) tempel-map)
+  (unless (eq buffer-undo-list t)
+    (push (list 'apply #'tempel-done) buffer-undo-list))
+  (save-excursion
+    ;; Split existing overlays, do not expand within existing field.
+    (dolist (st tempel--active)
+      (dolist (ov (car st))
         (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
-          (setf (overlay-end ov) (point))))
-      ;; Begin marker
-      (push (make-overlay (point) (point)) tempel--overlays)
-      (let ((st (cons nil nil))
-            (inhibit-modification-hooks t))
-        (dolist (x template) (tempel--element st x region)))
-      ;; End marker
-      (push (make-overlay (point) (point) nil nil t) tempel--overlays))
-    ;; Jump to first field
-    (tempel-next 1)))
+          (setf (overlay-end ov) (point)))))
+    ;; Activate template
+    (let ((st (cons nil nil))
+          (inhibit-modification-hooks t))
+      (push (make-overlay (point) (point)) (car st))
+      (dolist (x template) (tempel--element st x region))
+      (push (make-overlay (point) (point) nil nil t) (car st))
+      (push st tempel--active)))
+  ;; Jump to first field
+  (tempel-next 1))
 
 (defun tempel--save ()
   "Save template file buffer."
@@ -263,15 +267,15 @@ BEG and END are the boundaries of the modification."
   "Find next overlay in DIR."
   (let ((pt (point))
         (next nil))
-    (if (> dir 0)
-        (cl-loop for ov in tempel--overlays do
-                 (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
-                            (> (overlay-start ov) pt))
-                   (setq next (min (or next most-positive-fixnum) (overlay-end ov)))))
-      (cl-loop for ov in tempel--overlays do
-               (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
-                          (< (overlay-end ov) pt))
-                 (setq next (max (or next most-negative-fixnum) (overlay-end ov))))))
+    (dolist (st tempel--active)
+      (dolist (ov (car st))
+        (if (> dir 0)
+            (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
+                       (> (overlay-start ov) pt))
+              (setq next (min (or next most-positive-fixnum) (overlay-end ov))))
+          (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
+                     (< (overlay-end ov) pt))
+            (setq next (max (or next most-negative-fixnum) (overlay-end ov)))))))
     next))
 
 (defun tempel-next (arg)
@@ -291,10 +295,12 @@ BEG and END are the boundaries of the modification."
 (defun tempel-done ()
   "Template completion is done."
   (interactive)
-  (mapc #'delete-overlay tempel--overlays)
-  (setq tempel--overlays nil
+  ;; TODO disable only the topmost template?
+  (dolist (st tempel--active)
+    (mapc #'delete-overlay (car st)))
+  (setq tempel--active nil
         minor-mode-overriding-map-alist
-        (delq (assq-delete-all 'tempel--overlays minor-mode-overriding-map-alist)
+        (delq (assq-delete-all 'tempel--active minor-mode-overriding-map-alist)
               minor-mode-overriding-map-alist)))
 
 ;;;###autoload
