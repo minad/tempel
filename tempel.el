@@ -153,12 +153,11 @@ BEG and END are the boundaries of the modification."
                 (insert str)
                 (move-overlay other (overlay-start other) (point))))))))))
 
-(defun tempel--field (st &optional face)
-  "Add template field with FACE to ST."
+(defun tempel--field (st)
+  "Add template field to ST."
   (let ((ov (make-overlay (point) (point))))
-    (setq face (or face 'tempel-field))
-    (overlay-put ov 'face face)
-    (overlay-put ov 'before-string (propertize " " 'face face 'display '(space :width (1))))
+    (overlay-put ov 'face 'tempel-field)
+    (overlay-put ov 'before-string #(" " 0 1 (display (space :width (1)) face tempel-field)))
     (overlay-put ov 'modification-hooks (list #'tempel--update-field))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--update-field))
     (overlay-put ov 'tempel--state st)
@@ -175,13 +174,16 @@ BEG and END are the boundaries of the modification."
 
 (defun tempel--form (st form)
   "Add new template field evaluating FORM to ST."
-  (let ((ov (tempel--field st 'tempel-form)))
-    (overlay-put ov 'tempel--form form)
-    ;; Ignore variable errors, since some variables may not be defined yet.
+  (let ((beg (point)))
     (condition-case nil
         (insert (eval form (cdr st)))
+      ;; Ignore errors since some variables may not be defined yet.
       (void-variable nil))
-    (move-overlay ov (overlay-start ov) (point))))
+    (let ((ov (make-overlay beg (point) nil t)))
+      (overlay-put ov 'face 'tempel-form)
+      (overlay-put ov 'before-string #(" " 0 1 (display (space :width (1)) face tempel-form)))
+      (overlay-put ov 'tempel--form form)
+      (push ov (car st)))))
 
 (defun tempel--query (st prompt name)
   "Read input with PROMPT and assign to binding NAME in ST."
@@ -243,7 +245,7 @@ BEG and END are the boundaries of the modification."
           (inhibit-modification-hooks t))
       (push (make-overlay (point) (point)) (car st))
       (dolist (x template) (tempel--element st x region))
-      (push (make-overlay (point) (point) nil nil t) (car st))
+      (push (make-overlay (point) (point)) (car st))
       (push st tempel--active)))
   ;; Jump to first field
   (tempel-next 1))
