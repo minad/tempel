@@ -178,10 +178,10 @@ INIT is the optional initial input."
     (overlay-put ov 'tempel--state st)
     (when name
       (overlay-put ov 'tempel--name name)
-      (when init
-        (setf (alist-get name (cdr st)) init)))
-    (when-let (str (or init (and name (alist-get name (cdr st)))))
-      (insert str)
+      (setq init (or init (alist-get name (cdr st)) ""))
+      (setf (alist-get name (cdr st)) init))
+    (when (and init (not (equal init "")))
+      (insert init)
       (move-overlay ov (overlay-start ov) (point)))))
 
 (defun tempel--form (st form)
