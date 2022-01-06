@@ -84,6 +84,8 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
   (let ((map (make-sparse-keymap)))
     (define-key map [remap forward-paragraph] #'tempel-next)
     (define-key map [remap backward-paragraph] #'tempel-previous)
+    (define-key map [remap keyboard-quit] #'tempel-abort)
+    (define-key map [remap keyboard-escape-quit] #'tempel-abort)
     map)
   "Keymap to navigate across template markers.")
 
@@ -323,6 +325,18 @@ INIT is the optional initial input."
   "Move ARG fields backward and quit at the beginning."
   (interactive "p")
   (tempel-next (- arg)))
+
+(defun tempel-abort ()
+  "Abort template insertion."
+  (interactive)
+  ;; TODO quit only the topmost template?
+  (when tempel--active
+    (let ((beg (cl-loop for st in tempel--active minimize
+                        (cl-loop for ov in (car st) minimize (overlay-start ov))))
+          (end (cl-loop for st in tempel--active maximize
+                        (cl-loop for ov in (car st) maximize (overlay-end ov)))))
+      (tempel-done)
+      (delete-region beg end))))
 
 (defun tempel-done ()
   "Template completion is done."
