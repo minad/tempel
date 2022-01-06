@@ -52,12 +52,12 @@
 (defcustom tempel-field-prefix
   #(" " 0 1 (display (space :width (2)) face tempel-field))
   "Field indicator prefix string."
-  :type 'string)
+  :type '(choice (const nil) string))
 
 (defcustom tempel-form-prefix
   #(" " 0 1 (display (space :width (2)) face tempel-form))
   "Form indicator prefix string."
-  :type 'string)
+  :type '(choice (const nil) string))
 
 (defcustom tempel-insert-annotation 40
   "Annotation width for `tempel-insert'."
