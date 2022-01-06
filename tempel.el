@@ -70,6 +70,9 @@
 (defface tempel-field '((t :inherit highlight))
   "Face used for fields.")
 
+(defface tempel-default '((t :inherit (italic highlight)))
+  "Face used for default values.")
+
 (defface tempel-form '((t :inherit region))
   "Face used for evaluated forms.")
 
@@ -140,7 +143,16 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
   "Update field overlay OV.
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
-  (when (and after (>= beg (overlay-start ov)) (<= beg (overlay-end ov)))
+  (cond
+   ;; Overwrite default before modification
+   ((and (not after) (eq 'tempel-default (overlay-get ov 'face)))
+    (setq beg (overlay-start ov) end (overlay-end ov))
+    (goto-char beg)
+    (overlay-put ov 'face 'tempel-field)
+    (move-overlay ov beg beg)
+    (delete-region beg end))
+   ;; Update field after modification
+   ((and after (>= beg (overlay-start ov)) (<= beg (overlay-end ov)))
     (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
     (let ((st (overlay-get ov 'tempel--state)))
       (when-let (name (overlay-get ov 'tempel--name))
@@ -148,7 +160,7 @@ BEG and END are the boundaries of the modification."
               (buffer-substring-no-properties
                (overlay-start ov) (overlay-end ov))))
       (unless undo-in-progress
-        (template--synchronize-fields st ov)))))
+        (template--synchronize-fields st ov))))))
 
 (defun template--synchronize-fields (st current)
   "Synchronize fields of ST, except CURRENT overlay."
@@ -175,7 +187,10 @@ If OV is alive, move it."
           (goto-char beg)
           (delete-char (- end beg))
           (insert str)
-          (when ov (move-overlay ov beg (point))))))))
+          (when ov
+            (when (eq (overlay-get ov 'face) 'tempel-default)
+              (overlay-put ov 'face 'tempel-field))
+            (move-overlay ov beg (point))))))))
 
 (defun tempel--field (st &optional name init)
   "Add template field to ST.
@@ -194,6 +209,8 @@ INIT is the optional initial input."
       (setq init (or init (alist-get name (cdr st)) ""))
       (setf (alist-get name (cdr st)) init))
     (when (and init (not (equal init "")))
+      ;; TODO set the default properly
+      (overlay-put ov 'face 'tempel-default)
       (insert init)
       (move-overlay ov (overlay-start ov) (point)))))
 
@@ -315,10 +332,11 @@ INIT is the optional initial input."
     (dolist (st tempel--active)
       (dolist (ov (car st))
         (if (> dir 0)
-            (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
-                       (> (overlay-end ov) pt))
-              (setq next (min (or next most-positive-fixnum) (overlay-end ov))))
-          (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
+            (let ((end (if (eq 'tempel-default (overlay-get ov 'face))
+                           (overlay-start ov) (overlay-end ov))))
+              (when (and (not (overlay-get ov 'tempel--form)) (> end pt))
+                (setq next (min (or next most-positive-fixnum) end))))
+          (when (and (not (overlay-get ov 'tempel--form))
                      (< (overlay-start ov) pt))
             (setq next (max (or next most-negative-fixnum) (overlay-start ov)))))))
     next))
