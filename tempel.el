@@ -281,7 +281,7 @@ PROMPT is the optional prompt/default value."
          ((and (stringp prompt) noinsert) (read-string prompt))
          ((stringp prompt) (propertize prompt 'tempel--default t))
          ;; TEMPEL EXTENSION: Evaluate prompt
-         (t (eval prompt 'lexical))))
+         (t (eval prompt (cdr st)))))
   (if noinsert
       (setf (alist-get name (cdr st)) prompt)
     (tempel--field st name prompt)))
