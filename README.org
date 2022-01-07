@@ -126,5 +126,7 @@ Furthermore Tempel supports syntax extensions:
  - ~(q (FORM ...) NAME)~ Execute ~FORM~ and store the result in variable ~NAME~.
  - ~(p (FORM ...) <NAME>)~ Execute ~FORM~ and insert the result, optionally bind to ~NAME~.
  - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
+   Use caution with templates which execute arbitrary code!
 
-Use caution with templates which execute arbitrary code!
+The template element handlers are fully configurable. You can define your own
+handlers to the ~tempel-elements~ alist.

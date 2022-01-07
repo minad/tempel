@@ -62,6 +62,29 @@
   "Annotation width for `tempel-expand'."
   :type '(choice (const nil integer)))
 
+(defcustom tempel-elements
+  '((nil ignore ignore)
+    (n   temple--element-newline " ")
+    (n>  temple--element-newline-indent " ")
+    (>   temple--element-indent ignore)
+    (&   temple--element-newline-start " ")
+    (%   temple--element-newline-end " ")
+    (o   temple--element-newline-open " ")
+    (s   temple--element-named tempel--print-named)
+    ;; LEGACY: (r ...) and (r> ...) is legacy syntax from Tempo, use r instead.
+    (r   temple--element-region "_")
+    (r>  temple--element-region-indent "_")
+    ;; LEGACY: (p ...) and (P ...) is legacy syntax from Tempo, use q, s, or p instead.
+    ;; TEMPEL EXTENSION: (p (FORM...) <NAME>)
+    (p   temple--element-placeholder tempel--print-placeholder)
+    (P   temple--element-placeholder tempel--print-placeholder)
+    ;; TEMPEL EXTENSION: Query from minibuffer, (q "Prompt: " NAME), (b (FORM...) NAME)
+    (q   temple--element-query ignore)
+    ;; TEMPEL EXTENSION: Evaluate forms
+    (t   temple--element-default "_"))
+  "Alist of template elements."
+  :type 'alist)
+
 (defface tempel-field '((t :inherit highlight))
   "Face used for fields.")
 
@@ -85,6 +108,14 @@ to each overlay as the property `tempel--state'. Furthermore overlays
 may be named with `tempel--name' or carry an evaluatable Lisp expression
 `tempel--form'.")
 
+(defvar tempel--state nil
+  "State of the current template.
+This variable is only valid during dispatching.")
+
+(defvar tempel--region nil
+  "Current region bounds.
+This variable is only valid during dispatching.")
+
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap forward-paragraph] #'tempel-next)
@@ -104,17 +135,25 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
     (goto-char (point-min))
     (read (current-buffer))))
 
-(defun tempel--print-element (elt)
+(defun tempel--dispatch-print (elt)
   "Return string representation of template ELT."
-  (pcase elt
-    ('nil nil)
-    (`(q . ,_) nil)
-    ((pred stringp) elt)
-    (`(s ,name) (symbol-name name))
+  (let ((fun (or (and (stringp elt) elt)
+                 (caddr (assq (or (car-safe elt) elt) tempel-elements))
+                 (caddr (assq t tempel-elements))
+                 (error "Unknown template element %S" elt))))
+    (if (stringp fun) fun (funcall fun elt))))
+
+(defun tempel--print-named (elt)
+  "Print named template ELT."
+  (pcase-exhaustive elt
+    (`(s ,name) (symbol-name name))))
+
+(defun tempel--print-placeholder (elt)
+  "Print placeholder template ELT."
+  (pcase-exhaustive elt
+    ((or 'p 'P) "_")
     (`(,(or 'p 'P) ,_ ,name . ,noinsert)
-     (and (not (car noinsert)) (symbol-name name)))
-    ((or 'n 'n>) " ")
-    (_ "_")))
+     (and (not (car noinsert)) (symbol-name name)))))
 
 (defun tempel--annotate (templates width ellipsis sep name)
   "Annotate template NAME given the list of TEMPLATES.
@@ -127,7 +166,7 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
               "_+" #("_" 0 1 (face shadow))
               (propertize (replace-regexp-in-string
                            "\\s-+" " "
-                           (mapconcat #'tempel--print-element elts ""))
+                           (mapconcat #'tempel--dispatch-print elts ""))
                           'face 'completions-annotations))
              width 0 ?\s ellipsis))))
 
@@ -137,26 +176,25 @@ AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
   (when after
     (let ((st (overlay-get ov 'tempel--state)))
+      ;; Update overlay position
       (unless undo-in-progress
         (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
       (tempel--update-mark ov)
+      ;; Update bound value
       (when-let (name (overlay-get ov 'tempel--name))
         (setf (alist-get name (cdr st))
               (buffer-substring-no-properties
                (overlay-start ov) (overlay-end ov))))
+      ;; Synchronize other fields
       (unless undo-in-progress
-        (template--synchronize-fields st ov)))))
-
-(defun template--synchronize-fields (st current)
-  "Synchronize fields of ST, except CURRENT overlay."
-  (dolist (ov (car st))
-    (unless (eq ov current)
-      (save-excursion
-        (goto-char (overlay-start ov))
-        (let (x)
-          (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cdr st)))
-                      (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
-          (when x (tempel--replace (overlay-start ov) (overlay-end ov) ov x)))))))
+        (dolist (w (car st))
+          (unless (eq w ov)
+            (save-excursion
+              (goto-char (overlay-start w))
+              (let (x)
+                (setq x (or (and (setq x (overlay-get w 'tempel--form)) (eval x (cdr st)))
+                            (and (setq x (overlay-get w 'tempel--name)) (alist-get x (cdr st)))))
+                (when x (tempel--replace (overlay-start w) (overlay-end w) w x))))))))))
 
 (defun tempel--replace (beg end ov str)
   "Replace region beween BEG and END with STR.
@@ -187,77 +225,110 @@ If OV is alive, move it."
                           )
                       tempel-mark))))
 
-(defun tempel--field (st &optional name init)
-  "Add template field to ST.
+(defun tempel--insert-field (&optional name init)
+  "Insert editable template field.
 NAME is the optional field name.
 INIT is the optional initial input."
   (let ((ov (make-overlay (point) (point))))
-    (push ov (car st))
+    (push ov (car tempel--state))
     (overlay-put ov 'face 'tempel-field)
     (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
-    (overlay-put ov 'tempel--state st)
+    (overlay-put ov 'tempel--state tempel--state)
     (when name
       (overlay-put ov 'tempel--name name)
-      (setq init (or init (alist-get name (cdr st)) ""))
-      (setf (alist-get name (cdr st)) init))
+      (setq init (or init (alist-get name (cdr tempel--state)) ""))
+      (setf (alist-get name (cdr tempel--state)) init))
     (when (and init (not (equal init "")))
       (insert init)
       (move-overlay ov (overlay-start ov) (point)))
     (tempel--update-mark ov)))
 
-(defun tempel--form (st form)
-  "Add new template field evaluating FORM to ST."
+(defun tempel--query (prompt name)
+  "Read input with PROMPT and bind to NAME."
+  (setf (alist-get name (cdr tempel--state))
+        (if (stringp prompt)
+            (read-string prompt)
+          (eval prompt 'lexical-binding))))
+
+(defun temple--element-newline (_elt)
+  "Insert newline."
+  (insert "\n"))
+
+(defun temple--element-newline-indent (_elt)
+  "Insert newline and indent according to mode."
+  (insert "\n")
+  (indent-according-to-mode))
+
+(defun temple--element-indent (_elt)
+  "Indent according to mode."
+  (indent-according-to-mode))
+
+(defun temple--element-newline-start (_elt)
+  "Insert newline if there is only whitespace between line start and point."
+  (unless (or (bolp) (save-excursion (re-search-backward "^\\s-*\\=" nil t)))
+    (insert "\n")))
+
+(defun temple--element-newline-end (_elt)
+  "Insert newline if there is only whitespace between point and line end."
+  (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
+    (insert "\n")))
+
+(defun temple--element-newline-open (_elt)
+  "Insert open if there is only whitespace between point and line end."
+  (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
+    (open-line 1)))
+
+(defun temple--element--placeholder (elt)
+  "Handle placeholder ELT."
+  (pcase-exhaustive elt
+    ('p (tempel--insert-field))
+    (`(,(or 'p 'P) ,prompt . ,rest)
+     (if (cadr rest)
+         (tempel--query prompt (car rest))
+       (tempel--insert-field (car rest) (and (consp prompt)
+                                             (eval prompt 'lexical)))))))
+
+(defun temple--element-named (elt)
+  "Handle named placeholder ELT."
+  (pcase-exhaustive elt
+    (`(s ,name) (tempel--insert-field name))))
+
+(defun temple--element-region (elt)
+  "Handle region ELT."
+  (if tempel--region
+      (goto-char (cdr tempel--region))
+    (tempel--insert-field))
+  (pcase-exhaustive elt
+    ((or 'r `(r . ,_)))
+    ((and (or 'r> `(r> . ,_)) (guard tempel--region))
+     (indent-region (car tempel--region) (cdr tempel--region) nil))))
+
+(defun temple--element-query (elt)
+  "Handle query ELT."
+  (pcase-exhaustive elt
+    (`(q ,prompt ,name) (tempel--query prompt name))))
+
+(defun temple--element-default (form)
+  "Evaluate FORM and create insert dynamic template field."
   (let ((beg (point)))
     (condition-case nil
-        (insert (eval form (cdr st)))
+        (insert (eval form (cdr tempel--state)))
       ;; Ignore errors since some variables may not be defined yet.
       (void-variable nil))
     (let ((ov (make-overlay beg (point) nil t)))
       (overlay-put ov 'face 'tempel-form)
       (overlay-put ov 'tempel--form form)
-      (push ov (car st)))))
+      (push ov (car tempel--state)))))
 
-(defun tempel--query (st prompt name)
-  "Read input with PROMPT and assign to binding NAME in ST."
-  (setf (alist-get name (cdr st)) (if (stringp prompt)
-                                      (read-string prompt)
-                                    (eval prompt 'lexical-binding))))
-
-(defun tempel--element (st element region)
-  "Add template ELEMENT to ST given the REGION."
-  (pcase element
-    ('nil)
-    ('n (insert "\n"))
-    ('n> (insert "\n") (indent-according-to-mode))
-    ('> (indent-according-to-mode))
-    ((pred stringp) (insert element))
-    ('& (unless (or (bolp) (save-excursion (re-search-backward "^\\s-*\\=" nil t)))
-          (insert "\n")))
-    ('% (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
-          (insert "\n")))
-    ('o (unless (or region (eolp)
-		    (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
-	  (open-line 1)))
-    ('p (tempel--field st))
-    (`(s ,name) (tempel--field st name))
-    ;; LEGACY: (r ...) and (r> ...) is legacy syntax from Tempo, use r instead.
-    ((or 'r `(r . ,_)) (if region (goto-char (cdr region)) (tempel--field st)))
-    ((or 'r> `(r> . ,_)) (if (not region) (tempel--field st)
-                           (goto-char (cdr region))
-                           (indent-region (car region) (cdr region) nil)))
-    ;; LEGACY: (p ...) and (P ...) is legacy syntax from Tempo, use q, s, or p instead.
-    ;; TEMPEL EXTENSION: (p (FORM...) <NAME>)
-    (`(,(or 'p 'P) ,prompt . ,rest)
-     (if (cadr rest)
-         (tempel--query st prompt (car rest))
-       (tempel--field st (car rest) (and (consp prompt)
-                                         (eval prompt 'lexical)))))
-    ;; TEMPEL EXTENSION: Query from minibuffer, (q "Prompt: " name), (q (FORM...) name)
-    (`(q ,prompt ,name) (tempel--query st prompt name))
-    ;; TEMPEL EXTENSION: Evaluate forms
-    (_ (tempel--form st element))))
+(defun tempel--dispatch (elt)
+  "Dispatch template element ELT."
+  (if (stringp elt) (insert elt)
+    (funcall (or (cadr (assq (or (car-safe elt) elt) tempel-elements))
+                 (cadr (assq t tempel-elements))
+                 (error "Unknown template element %S" elt))
+             elt)))
 
 (defun tempel--insert (templates name region)
   "Insert template NAME given the list of TEMPLATES and the current REGION."
@@ -278,15 +349,16 @@ INIT is the optional initial input."
       (dolist (ov (car st))
         (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
           (setf (overlay-end ov) (point)))))
-    ;; Activate template
-    (let ((st (cons nil nil))
+    ;; Interpret template
+    (let ((tempel--state (cons nil nil))
+          (tempel--region region)
           (inhibit-modification-hooks t))
-      (push (make-overlay (point) (point)) (car st))
-      (overlay-put (caar st) 'face 'cursor) ;; TODO debug
-      (dolist (x template) (tempel--element st x region))
-      (push (make-overlay (point) (point) nil t t) (car st))
-      (overlay-put (caar st) 'face 'cursor) ;; TODO debug
-      (push st tempel--active)))
+      (push (make-overlay (point) (point)) (car tempel--state))
+      (overlay-put (caar tempel--state) 'face 'cursor) ;; TODO debug
+      (mapc #'tempel--dispatch template)
+      (push (make-overlay (point) (point) nil t t) (car tempel--state))
+      (overlay-put (caar tempel--state) 'face 'cursor) ;; TODO debug
+      (push tempel--state tempel--active)))
   ;; Jump to first field
   (unless (cl-loop for ov in (caar tempel--active)
                    thereis (and (overlay-get ov 'tempel--state)
