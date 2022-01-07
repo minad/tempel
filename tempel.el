@@ -131,7 +131,7 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 (defun tempel--expand-locations (locations)
   "Return the list of files sepecified by LOCATIONS.
 LOCATIONS is a list of files and directories."
-  (let (files)
+  (let ((files (if (listp locations) locations (list locations))))
     (dolist (file-or-dir locations)
       (if (file-directory-p file-or-dir)
 	  (dolist (file (directory-files file-or-dir t))
@@ -141,10 +141,7 @@ LOCATIONS is a list of files and directories."
 
 (defun tempel--load-templates ()
   "Return templates specified `tempel-template-locations'."
-  (let ((tempel-template-locations (if (listp tempel-template-locations)
-				       tempel-template-locations
-				     (list tempel-template-locations))))
-    (mapcan #'tempel--load (tempel--expand-locations tempel-template-locations))))
+  (mapcan #'tempel--load (tempel--expand-locations tempel-template-locations)))
 
 (defun tempel--annotate (templates width ellipsis sep name)
   "Annotate template NAME given the list of TEMPLATES.
