@@ -269,14 +269,8 @@ INIT is the optional initial input."
     ;; TEMPEL EXTENSION: Evaluate forms
     (_ (tempel--form st element))))
 
-(defun tempel--insert (templates name region)
-  "Insert template NAME given the list of TEMPLATES and the current REGION."
-  (when-let* ((name (intern-soft name))
-              (template (cdr (assoc name templates))))
-    (tempel--enable template region)))
-
-(defun tempel--enable (template region)
-  "Enable TEMPLATE given the current REGION."
+(defun tempel--insert (template region)
+  "Insert TEMPLATE given the current REGION."
   ;; TODO do we want to have the ability to reactivate snippets?
   (unless (eq buffer-undo-list t)
     (push (list 'apply #'tempel--disable) buffer-undo-list))
@@ -402,17 +396,20 @@ If INTERACTIVE is nil the function acts like a capf."
               :company-kind (lambda (_) 'snippet)
               :exit-function
               (lambda (name _status)
-                (delete-region (max (point-min) (- (point) (length name))) (point))
-                (tempel--insert templates name region))
+                (when-let* ((sym (intern-soft name))
+                            (template (alist-get sym templates)))
+                  (delete-region (max (point-min) (- (point) (length name))) (point))
+                  (tempel--insert template region)))
               :annotation-function
               (and tempel-expand-annotation
                    (apply-partially #'tempel--annotate
                                     templates tempel-expand-annotation nil " ")))))))
 
 ;;;###autoload
-(defun tempel-insert ()
-  "Insert template using `completing-read'."
-  (interactive)
+(defun tempel-insert (name)
+  "Insert template by NAME.
+If called interactively, select a template with `completing-read'."
+  (interactive (list nil))
   (let* ((templates (or (tempel--templates)
                         (error "Tempel: No templates for %s" major-mode)))
          (completion-extra-properties
@@ -420,9 +417,19 @@ If INTERACTIVE is nil the function acts like a capf."
                (list :annotation-function
                      (apply-partially
                       #'tempel--annotate templates tempel-insert-annotation t
-                      #("  " 1 2 (display (space :align-to (+ left 20))))))))
-         (name (completing-read "Template: " templates nil t nil 'tempel--history)))
-    (tempel--insert templates name (tempel--region))))
+                      #("  " 1 2 (display (space :align-to (+ left 20)))))))))
+    (unless name
+      (setq name (intern-soft (completing-read "Template: " templates
+                                               nil t nil 'tempel--history))))
+    (tempel--insert (or (alist-get name templates)
+                        (user-error "Template %s not found" name))
+                    (tempel--region))))
+
+;;;###autoload
+(defun tempel-key (key name &optional map)
+  "Bind KEY to NAME in MAP."
+  (define-key (or map global-map) (kbd key)
+    (lambda () (interactive) (tempel-insert name))))
 
 (provide 'tempel)
 ;;; tempel.el ends here
