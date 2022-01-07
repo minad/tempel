@@ -117,13 +117,12 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 (defun tempel--print-element (elt)
   "Return string representation of template ELT."
   (pcase elt
-    ('nil nil)
-    (`(q . ,_) nil)
     ((pred stringp) elt)
+    ((or 'nil `(q . ,_)) nil)
     (`(s ,name) (symbol-name name))
     (`(,(or 'p 'P) ,_ ,name . ,noinsert)
      (and (not (car noinsert)) (symbol-name name)))
-    ((or 'n 'n>) " ")
+    ((or 'n 'n> '> '& '% 'o) " ")
     (_ "_")))
 
 (defun tempel--annotate (templates width ellipsis sep name)
