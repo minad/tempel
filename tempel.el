@@ -327,12 +327,19 @@ INIT is the optional initial input."
 	      (y-or-n-p "Save modified template files? ")))
     (mapc #'save-buffer modified)))
 
+(defun tempel--template-files-modified-p ()
+  "Return non-nil if any template files have been modified since loading."
+  (cl-find-if (lambda (file)
+		(let ((mod (file-attribute-modification-time (file-attributes file))))
+		  (unless (equal tempel--modified mod)
+		    (setq tempel--templates (tempel--load-templates)
+			  tempel--modified mod))))
+	      (tempel--expand-locations tempel-template-locations)))
+
 (defun tempel--templates ()
   "Return templates for current mode."
-  (let ((mod (file-attribute-modification-time (file-attributes tempel-file))))
-    (unless (equal tempel--modified mod)
-      (setq tempel--templates (tempel--load-templates tempel-template-locations)
-            tempel--modified mod)))
+  (when (tempel--template-files-modified-p)
+    (setq tempel--templates (tempel--load-templates)))
   (let (result (templates tempel--templates))
     (while (and templates (symbolp (car templates)))
       (when (derived-mode-p (car templates))
