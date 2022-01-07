@@ -333,6 +333,10 @@ INIT is the optional initial input."
 			  tempel--modified mod))))
 	      (tempel--expand-locations tempel-template-locations)))
 
+(defun unpack-templates ()
+  "Return a list of (mode name expansion)."
+  (while ()))
+
 (defun tempel--templates ()
   "Return templates for current mode."
   (when (tempel--template-files-modified-p)
