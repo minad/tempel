@@ -62,10 +62,20 @@
   "Annotation width for `tempel-expand'."
   :type '(choice (const nil integer)))
 
-(defface tempel-field '((t :inherit highlight))
+(defface tempel-field
+  '((((class color) (min-colors 88) (background light))
+     :background "#fdf0ff" :foreground "#541f4f" :underline "#d5baff")
+    (((class color) (min-colors 88) (background dark))
+     :background "#230631" :foreground "#e5cfef" :underline "#7042a2")
+    (t :inherit highlight))
   "Face used for fields.")
 
-(defface tempel-form '((t :inherit region))
+(defface tempel-form
+  '((((class color) (min-colors 88) (background light))
+     :background "#ecf7ed" :foreground "#004000" :underline "#5ada88")
+    (((class color) (min-colors 88) (background dark))
+     :background "#001904" :foreground "#b8e2b8" :underline "#006800")
+    (t :inherit region))
   "Face used for evaluated forms.")
 
 (defvar tempel--templates nil
