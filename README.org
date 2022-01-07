@@ -29,7 +29,7 @@ first (last) field, the fields are finalized.
 
 Note that this package is not a competitor to the mature and widely used
 YASnippet library. Try Tempel only if you like small and simple packages. With
-Temple you write your templates in Lisp syntax, which from my perspective fits
+Tempel you write your templates in Lisp syntax, which from my perspective fits
 well to the hackable nature of Emacs. Tempel took inspiration from the
 [[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]] package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
 
@@ -119,10 +119,12 @@ important ones here:
  - ~%~ Insert newline if there is only whitespace between point and line end.
  - ~o~ Like ~%~ but leaves the point before newline.
  - ~(s NAME)~ Inserts a named field.
- - ~(p DEFAULT <NAME> <NONINS>)~ Insert a named field with a default value.
-   If ~NOINS~ is non-nil, do not insert and only bind the variable.
- - ~(r DEFAULT <NAME> <NOINS>)~ Insert region or act like ~(p ...)~.
- - ~(r> DEFAULT <NAME> <NOINS>)~ Act like ~(r ...)~, but indent region.
+ - ~(p PROMPT <NAME> <NONINS>)~ Insert an optionally named field with a prompt.
+   The ~PROMPT~ is displayed directly in the buffer as default value. If ~NOINSERT~
+   is non-nil, no field is inserted. Then the minibuffer is used for prompting
+   and the value is bound to ~NAME~.
+ - ~(r PROMPT <NAME> <NOINSERT>)~ Insert region or act like ~(p ...)~.
+ - ~(r> PROMPT <NAME> <NOINSERT>)~ Act like ~(r ...)~, but indent region.
 
 Furthermore Tempel supports syntax extensions:
 
