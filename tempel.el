@@ -456,5 +456,13 @@ If called interactively, select a template with `completing-read'."
          (tempel-insert ',name))
        (define-key ,(or map 'global-map) ,(kbd key) #',cmd))))
 
+;;;###autoload
+(defmacro tempel-abbrev (name &optional table)
+  "Define template abbrev NAME in abbrevation TABLE."
+  `(define-abbrev ,(or table global-abbrev-table)
+     ,(symbol-name name) ""
+     (lambda () (tempel-insert ',name))
+     :system t))
+
 (provide 'tempel)
 ;;; tempel.el ends here
