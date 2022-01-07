@@ -109,32 +109,32 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
     (goto-char (point-min))
     (read (current-buffer))))
 
+(defun tempel--print-element (elt)
+  "Return string representation of template ELT."
+  (pcase elt
+    ('nil nil)
+    (`(q . ,_) nil)
+    ((pred stringp) elt)
+    (`(s ,name) (symbol-name name))
+    (`(,(or 'p 'P) ,_ ,name . ,noinsert)
+     (and (not (car noinsert)) (symbol-name name)))
+    ((or 'n 'n>) " ")
+    (_ "_")))
+
 (defun tempel--annotate (templates width ellipsis sep name)
   "Annotate template NAME given the list of TEMPLATES.
 WIDTH, SEP and ELLIPSIS configure the formatting."
   (when-let* ((name (intern-soft name))
-              (def (cdr (assoc name templates))))
-    (concat
-     sep
-     (truncate-string-to-width
-      (replace-regexp-in-string
-       "_+" #("_" 0 1 (face shadow))
-       (propertize
-        (replace-regexp-in-string
-         "\\s-+" " "
-         (mapconcat (lambda (x)
-                      (pcase x
-                        ('nil nil)
-                        (`(q . ,_) nil)
-                        ((pred stringp) x)
-                        (`(s ,name) (symbol-name name))
-                        (`(,(or 'p 'P) ,_ ,name . ,noinsert)
-                         (and (not (car noinsert)) (symbol-name name)))
-                        ((or 'n 'n>) " ")
-                        (_ "_")))
-                    def ""))
-        'face 'completions-annotations))
-      width 0 ?\s ellipsis))))
+              (elts (cdr (assoc name templates))))
+    (concat sep
+            (truncate-string-to-width
+             (replace-regexp-in-string
+              "_+" #("_" 0 1 (face shadow))
+              (propertize (replace-regexp-in-string
+                           "\\s-+" " "
+                           (mapconcat #'tempel--print-element elts ""))
+                          'face 'completions-annotations))
+             width 0 ?\s ellipsis))))
 
 (defun tempel--field-modified (ov after beg end &optional _len)
   "Update field overlay OV.
@@ -157,9 +157,9 @@ BEG and END are the boundaries of the modification."
       (save-excursion
         (goto-char (overlay-start ov))
         (let (x)
-          (when-let (str (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cdr st)))
-                             (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
-            (tempel--replace (overlay-start ov) (overlay-end ov) ov str)))))))
+          (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cdr st)))
+                      (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
+          (when x (tempel--replace (overlay-start ov) (overlay-end ov) ov x)))))))
 
 (defun tempel--replace (beg end ov str)
   "Replace region beween BEG and END with STR.
@@ -235,10 +235,9 @@ INIT is the optional initial input."
     (`(s ,name) (tempel--field st name))
     ;; LEGACY: (r ...) and (r> ...) is legacy syntax from Tempo, use r instead.
     ((or 'r `(r . ,_)) (if region (goto-char (cdr region)) (tempel--field st)))
-    ((or 'r> `(r> . ,_))
-     (if (not region) (tempel--field st)
-       (goto-char (cdr region))
-       (indent-region (car region) (cdr region) nil)))
+    ((or 'r> `(r> . ,_)) (if (not region) (tempel--field st)
+                           (goto-char (cdr region))
+                           (indent-region (car region) (cdr region) nil)))
     ;; LEGACY: (p ...) and (P ...) is legacy syntax from Tempo, use q, s, or p instead.
     ;; TEMPEL EXTENSION: (p (FORM...) <NAME>)
     (`(,(or 'p 'P) ,prompt . ,rest)
@@ -312,18 +311,15 @@ INIT is the optional initial input."
 
 (defun tempel--find (dir)
   "Find next overlay in DIR."
-  (let ((pt (point))
-        (next nil))
-    (dolist (st tempel--active)
+  (let ((pt (point)) next)
+    (dolist (st tempel--active next)
       (dolist (ov (car st))
-        (if (> dir 0)
-            (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
-                       (> (overlay-end ov) pt))
-              (setq next (min (or next most-positive-fixnum) (overlay-end ov))))
-          (when (and (not (overlay-get ov 'tempel--form)) ;; Skip form
-                     (< (overlay-start ov) pt))
-            (setq next (max (or next most-negative-fixnum) (overlay-start ov)))))))
-    next))
+        (unless (overlay-get ov 'tempel--form)
+          (cond
+           ((and (> dir 0) (> (overlay-end ov) pt))
+            (setq next (min (or next (point-max)) (overlay-end ov))))
+           ((and (< dir 0) (< (overlay-start ov) pt))
+            (setq next (max (or next -1) (overlay-start ov))))))))))
 
 (defun tempel-next (arg)
   "Move ARG fields forward and quit at the end."
