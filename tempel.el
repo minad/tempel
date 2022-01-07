@@ -333,9 +333,15 @@ INIT is the optional initial input."
 			  tempel--modified mod))))
 	      (tempel--expand-locations tempel-template-locations)))
 
-(defun unpack-templates ()
+(defun unpack-templates (templates)
   "Return a list of (mode name expansion)."
-  (while ()))
+  (let (unpacked mode trigger expansion)
+    (while (and templates (symbolp (car templates)))
+      (push (list mode trigger expansion) unpacked))
+    (reverse unpacked)))
+
+(defun tempel--rebuild-templates (unpacked)
+  )
 
 (defun tempel--templates ()
   "Return templates for current mode."
@@ -415,7 +421,10 @@ INIT is the optional initial input."
 (defun tempel-update-templates (new old)
   "Update the existing templates."
   ;; Go through the old templates.
-  ()
+  (let ((unique))
+    (dolist ()
+      (when (push )))
+    ())
   (setq tempel--templates ()))
 
 ;;;###autoload
