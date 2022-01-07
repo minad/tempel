@@ -255,15 +255,17 @@ INIT is the optional initial input."
   "Insert template NAME given the list of TEMPLATES and the current REGION."
   (when-let* ((name (intern-soft name))
               (template (cdr (assoc name templates))))
-    (tempel--activate template region)))
+    (tempel--enable template region)))
 
-(defun tempel--activate (template region)
-  "Activate TEMPLATE given the current REGION."
-  (setf (alist-get 'tempel--active minor-mode-overriding-map-alist) tempel-map)
+(defun tempel--enable (template region)
+  "Enable TEMPLATE given the current REGION."
+  ;; TODO do we want to have the ability to reactivate snippets?
   (unless (eq buffer-undo-list t)
-    (push (list 'apply #'tempel-done) buffer-undo-list))
+    (push (list 'apply #'tempel--disable) buffer-undo-list))
+  (setf (alist-get 'tempel--active minor-mode-overriding-map-alist) tempel-map)
   (save-excursion
     ;; Split existing overlays, do not expand within existing field.
+    ;; TODO This will be causing issues. Think more about nested expansion.
     (dolist (st tempel--active)
       (dolist (ov (car st))
         (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
@@ -340,7 +342,7 @@ INIT is the optional initial input."
 (defun tempel-abort ()
   "Abort template insertion."
   (interactive)
-  ;; TODO quit only the topmost template?
+  ;; TODO abort only the topmost template?
   (when tempel--active
     (let ((beg (cl-loop for st in tempel--active minimize
                         (cl-loop for ov in (car st) minimize (overlay-start ov))))
@@ -349,16 +351,20 @@ INIT is the optional initial input."
       (tempel-done)
       (delete-region beg end))))
 
+(defun tempel--disable ()
+  "Disable last template."
+  (when-let (st (pop tempel--active))
+    (mapc #'delete-overlay (car st))
+    (unless tempel--active
+      (setq minor-mode-overriding-map-alist
+            (delq (assq-delete-all 'tempel--active minor-mode-overriding-map-alist)
+                  minor-mode-overriding-map-alist)))))
+
 (defun tempel-done ()
   "Template completion is done."
   (interactive)
   ;; TODO disable only the topmost template?
-  (dolist (st tempel--active)
-    (mapc #'delete-overlay (car st)))
-  (setq tempel--active nil
-        minor-mode-overriding-map-alist
-        (delq (assq-delete-all 'tempel--active minor-mode-overriding-map-alist)
-              minor-mode-overriding-map-alist)))
+  (while tempel--active (tempel--disable)))
 
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
@@ -383,7 +389,8 @@ If INTERACTIVE is nil the function acts like a capf."
                 (tempel--insert templates name region))
               :annotation-function
               (and tempel-expand-annotation
-                   (apply-partially #'tempel--annotate templates tempel-expand-annotation nil " ")))))))
+                   (apply-partially #'tempel--annotate
+                                    templates tempel-expand-annotation nil " ")))))))
 
 ;;;###autoload
 (defun tempel-insert ()
