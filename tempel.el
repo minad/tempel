@@ -79,7 +79,11 @@
   "Face used for evaluated forms.")
 
 (defface tempel-default
-  '((t :inherit tempel-field :slant italic))
+  '((((class color) (min-colors 88) (background light))
+     :background "#ebf6fa" :foreground "#0f3360" :underline "#005f88" :slant italic)
+    (((class color) (min-colors 88) (background dark))
+     :background "#041529" :foreground "#a8e5e5" :underline "#005f88" :slant italic)
+    (t :inherit highlight :slant italic))
   "Face used for default values.")
 
 (defvar tempel--templates nil
