@@ -153,12 +153,10 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
   (cond
-   ;; Overwrite default before modification
-   ((and (not after) (eq 'tempel-default (overlay-get ov 'face)))
-    (setq beg (overlay-start ov) end (overlay-end ov))
-    (goto-char beg)
-    (overlay-put ov 'face 'tempel-field)
-    (delete-region beg end))
+   ;; Erase default before modification if at beginning or end
+   ((and (not after) (eq 'tempel-default (overlay-get ov 'face))
+         (or (= beg (overlay-start ov)) (= end (overlay-end ov))))
+    (delete-region (overlay-start ov) (overlay-end ov)))
    ;; Update field after modification
    (after
     (let ((st (overlay-get ov 'tempel--state)))
@@ -170,6 +168,8 @@ BEG and END are the boundaries of the modification."
                (overlay-start ov) (overlay-end ov))))
       (unless undo-in-progress
         (template--synchronize-fields st ov)))))
+  (when (eq 'tempel-default (overlay-get ov 'face))
+    (overlay-put ov 'face 'tempel-field))
   (tempel--update-mark ov))
 
 (defun template--synchronize-fields (st current)
