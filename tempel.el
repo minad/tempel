@@ -45,9 +45,11 @@
   :group 'editing
   :prefix "tempel-")
 
-(defcustom tempel-file (expand-file-name "templates" user-emacs-directory)
-  "Path to the template file."
-  :type 'string)
+(defcustom tempel-template-locations nil
+  "A file or a list of files and/or directories to look for snippets in."
+  :type '(choice (string list)))
+
+(defvaralias 'tempel-file 'tempel-template-locations)
 
 (defcustom tempel-mark
   #(" " 0 1 (display (space :width (1)) face cursor))
@@ -125,6 +127,24 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
      (and (not (car noinsert)) (symbol-name name)))
     ((or 'n 'n>) " ")
     (_ "_")))
+
+(defun tempel--expand-locations (locations)
+  "Return the list of files sepecified by LOCATIONS.
+LOCATIONS is a list of files and directories."
+  (let (files)
+    (dolist (file-or-dir locations)
+      (if (file-directory-p file-or-dir)
+	  (dolist (file (directory-files file-or-dir t))
+	    (push file files))
+	(push file-or-dir files)))
+    (mapcar #'expand-file-name (reverse files))))
+
+(defun tempel--load-templates ()
+  "Return templates specified `tempel-template-locations'."
+  (let ((tempel-template-locations (if (listp tempel-template-locations)
+				       tempel-template-locations
+				     (list tempel-template-locations))))
+    (mapcan #'tempel--load (tempel--expand-locations tempel-template-locations))))
 
 (defun tempel--annotate (templates width ellipsis sep name)
   "Annotate template NAME given the list of TEMPLATES.
@@ -298,16 +318,20 @@ INIT is the optional initial input."
 
 (defun tempel--save ()
   "Save template file buffer."
-  (when-let (buf (get-file-buffer tempel-file))
-    (with-current-buffer buf
-      (when (and (buffer-modified-p) (y-or-n-p (format "Save file %s? " tempel-file)))
-        (save-buffer buf)))))
+  (let (modified)
+    (dolist (file (tempel--expand-locations))
+      (when-let (buff (get-file-buffer tempel-file))
+  	(push file modified)))
+    (when (or (and (= (length modified) 1)
+		   (y-or-n-p "Save template file %s? " (car modified)))
+	      (y-or-n-p "Save modified template files? ")))
+    (mapc #'save-buffer modified)))
 
 (defun tempel--templates ()
   "Return templates for current mode."
   (let ((mod (file-attribute-modification-time (file-attributes tempel-file))))
     (unless (equal tempel--modified mod)
-      (setq tempel--templates (tempel--load tempel-file)
+      (setq tempel--templates (tempel--load-templates tempel-template-locations)
             tempel--modified mod)))
   (let (result (templates tempel--templates))
     (while (and templates (symbolp (car templates)))
