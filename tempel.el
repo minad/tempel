@@ -425,11 +425,12 @@ If called interactively, select a template with `completing-read'."
                     (tempel--region))))
 
 ;;;###autoload
-(defun tempel-key (key name &optional map)
+(defmacro tempel-key (key name &optional map)
   "Bind KEY to NAME in MAP."
   (let ((cmd (intern (format "tempel-insert-%s" name))))
-    (fset cmd (lambda () (interactive) (tempel-insert name)))
-    (define-key (or map global-map) (kbd key) cmd)))
+    `(progn
+       (defun ,cmd () (interactive) (tempel-insert ',name))
+       (define-key ,(or map 'global-map) ,(kbd key) #',cmd))))
 
 (provide 'tempel)
 ;;; tempel.el ends here
