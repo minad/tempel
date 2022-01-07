@@ -404,6 +404,16 @@ INIT is the optional initial input."
   ;; TODO disable only the topmost template?
   (while tempel--active (tempel--disable)))
 
+;; Before this we would overwrite the previous templates. We should actually
+;; make sure that they are properly updated. In other words, the only values
+;; that are overwritten are old values whose mode and trigger are identical to
+;; that of a new value..
+(defun tempel-update-templates (new old)
+  "Update the existing templates."
+  ;; Go through the old templates.
+  ()
+  (setq tempel--templates ()))
+
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
   "Complete template at point.
@@ -461,8 +471,10 @@ If called interactively, select a template with `completing-read'."
        (define-key ,(or map 'global-map) ,(kbd key) #',cmd))))
 
 ;;;###autoload
-(defun tempel-define-template ()
-  (funcall `(lambda () (tempel-deftemplate ,name ,args))))
+(defun tempel-define-template (trigger mode)
+  "Define a template."
+  (tempel-update-templates)
+  (push (cons mode (cons trigger body))))
 
 ;;;###autoload
 (defun tempel-deftemplate (name args &rest body)
