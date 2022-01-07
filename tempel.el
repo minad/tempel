@@ -428,7 +428,10 @@ If called interactively, select a template with `completing-read'."
   "Bind KEY to NAME in MAP."
   (let ((cmd (intern (format "tempel-insert-%s" name))))
     `(progn
-       (defun ,cmd () (interactive) (tempel-insert ',name))
+       (defun ,cmd ()
+         ,(format "Insert template %s in the current buffer." name)
+         (interactive)
+         (tempel-insert ',name))
        (define-key ,(or map 'global-map) ,(kbd key) #',cmd))))
 
 (provide 'tempel)
