@@ -234,14 +234,14 @@ INIT is the optional initial input."
                                       (read-string prompt)
                                     (eval prompt 'lexical-binding))))
 
-(defun tempel--element (st element region)
-  "Add template ELEMENT to ST given the REGION."
-  (pcase element
+(defun tempel--element (st region elt)
+  "Add template ELT to ST given the REGION."
+  (pcase elt
     ('nil)
     ('n (insert "\n"))
     ('n> (insert "\n") (indent-according-to-mode))
     ('> (indent-according-to-mode))
-    ((pred stringp) (insert element))
+    ((pred stringp) (insert elt))
     ('& (unless (or (bolp) (save-excursion (re-search-backward "^\\s-*\\=" nil t)))
           (insert "\n")))
     ('% (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
@@ -265,7 +265,7 @@ INIT is the optional initial input."
     ;; TEMPEL EXTENSION: Query from minibuffer, (q "Prompt: " name), (q (FORM...) name)
     (`(q ,prompt ,name) (tempel--query st prompt name))
     ;; TEMPEL EXTENSION: Evaluate forms
-    (_ (tempel--form st element))))
+    (_ (tempel--form st elt))))
 
 (defun tempel--insert (template region)
   "Insert TEMPLATE given the current REGION."
@@ -285,7 +285,7 @@ INIT is the optional initial input."
           (inhibit-modification-hooks t))
       (push (make-overlay (point) (point)) (car st))
       (overlay-put (caar st) 'face 'cursor) ;; TODO debug
-      (dolist (x template) (tempel--element st x region))
+      (dolist (elt template) (tempel--element st region elt))
       (push (make-overlay (point) (point) nil t t) (car st))
       (overlay-put (caar st) 'face 'cursor) ;; TODO debug
       (push st tempel--active)))
