@@ -154,7 +154,7 @@ AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
   (cond
    ;; Erase default before modification if at beginning or end
-   ((and (not after) (eq 'tempel-default (overlay-get ov 'face))
+   ((and (not after) (overlay-get ov 'tempel--default)
          (or (= beg (overlay-start ov)) (= end (overlay-end ov))))
     (delete-region (overlay-start ov) (overlay-end ov)))
    ;; Update field after modification
@@ -168,8 +168,6 @@ BEG and END are the boundaries of the modification."
                (overlay-start ov) (overlay-end ov))))
       (unless undo-in-progress
         (template--synchronize-fields st ov)))))
-  (when (eq 'tempel-default (overlay-get ov 'face))
-    (overlay-put ov 'face 'tempel-field))
   (tempel--update-mark ov))
 
 (defun template--synchronize-fields (st current)
@@ -199,13 +197,14 @@ If OV is alive, move it."
           (insert str)
           (when ov
             (move-overlay ov beg (point))
-            (when (eq (overlay-get ov 'face) 'tempel-default)
-              (overlay-put ov 'face 'tempel-field))
             (tempel--update-mark ov)))))))
 
 (defun tempel--update-mark (ov)
   "Update field mark from OV."
   (unless (overlay-get ov 'tempel--form)
+    (when (overlay-get ov 'tempel--default)
+      (overlay-put ov 'tempel--default nil)
+      (overlay-put ov 'face 'tempel-field))
     (overlay-put ov 'before-string
                  (and (or (= (overlay-start ov) (overlay-end ov))
                           ;; TODO mark for blank fields?
@@ -228,12 +227,15 @@ INIT is the optional initial input."
       (insert init)
       (move-overlay ov (overlay-start ov) (point)))
     (tempel--update-mark ov)
-    (overlay-put ov 'face (if (and init (get-text-property 0 'tempel--default init))
-                              'tempel-default 'tempel-field))
+    (overlay-put ov 'tempel--state st)
     (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
-    (overlay-put ov 'tempel--state st)))
+    (overlay-put ov 'face 'tempel-field)
+    (when (and init (get-text-property 0 'tempel--default init))
+      (overlay-put ov 'face 'tempel-default)
+      (overlay-put ov 'tempel--default
+                   (if (string-match-p ": \\'" init) 'end 'start)))))
 
 (defun tempel--form (st form)
   "Add new template field evaluating FORM to ST."
@@ -345,7 +347,7 @@ PROMPT is the optional prompt/default value."
     (dolist (st tempel--active next)
       (dolist (ov (car st))
         (unless (overlay-get ov 'tempel--form)
-          (setq stop (if (or (< dir 0) (eq 'tempel-default (overlay-get ov 'face)))
+          (setq stop (if (or (< dir 0) (eq 'start (overlay-get ov 'tempel--default)))
                          (overlay-start ov) (overlay-end ov)))
           (cond
            ((and (> dir 0) (> stop pt))
