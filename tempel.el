@@ -235,7 +235,8 @@ INIT is the optional initial input."
     (when (and init (get-text-property 0 'tempel--default init))
       (overlay-put ov 'face 'tempel-default)
       (overlay-put ov 'tempel--default
-                   (if (string-match-p ": \\'" init) 'end 'start)))))
+                   (if (string-match-p ": \\'" init) 'end 'start)))
+    (template--synchronize-fields st ov)))
 
 (defun tempel--form (st form)
   "Add new template field evaluating FORM to ST."
