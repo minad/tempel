@@ -110,21 +110,23 @@ important ones here:
 
  - "string" Inserts a string literal.
  - ~p~ Inserts an unnamed placeholder field.
- - ~r~ Inserts the current region.
- - ~(s NAME)~ Inserts a named field.
  - ~n~ Inserts a newline.
  - ~>~ Indents with ~indent-according-to-mode~.
+ - ~r~ Inserts the current region.
  - ~r>~ The region, but indented.
  - ~n>~ Inserts a newline and indents.
  - ~&~ Insert newline if there is only whitespace between line start and point.
  - ~%~ Insert newline if there is only whitespace between point and line end.
  - ~o~ Like ~%~ but leaves the point before newline.
+ - ~(s NAME)~ Inserts a named field.
+ - ~(p DEFAULT <NAME> <NONINS>)~ Insert a named field with a default value.
+   If ~NOINS~ is non-nil, do not insert and only bind the variable.
+ - ~(r DEFAULT <NAME> <NOINS>)~ Insert region or act like ~(p ...)~.
+ - ~(r> DEFAULT <NAME> <NOINS>)~ Act like ~(r ...)~, but indent region.
 
 Furthermore Tempel supports syntax extensions:
 
- - ~(q PROMPT NAME)~ Query the user via ~read-string~ and store the result in variable ~NAME~.
- - ~(q (FORM ...) NAME)~ Execute ~FORM~ and store the result in variable ~NAME~.
- - ~(p (FORM ...) <NAME>)~ Execute ~FORM~ and insert the result, optionally bind to ~NAME~.
+ - ~(p FORM <NAME> <NONINS>)~ Like ~p~ described above, but ~FORM~ is evaluated.
  - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
 
 Use caution with templates which execute arbitrary code!

@@ -117,8 +117,8 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 (defun tempel--print-element (elt)
   "Return string representation of template ELT."
   (pcase elt
+    ('nil nil)
     ((pred stringp) elt)
-    ((or 'nil `(q . ,_)) nil)
     (`(s ,name) (symbol-name name))
     (`(,(or 'p 'P) ,_ ,name . ,noinsert)
      (and (not (car noinsert)) (symbol-name name)))
@@ -228,12 +228,6 @@ INIT is the optional initial input."
       (overlay-put ov 'tempel--form form)
       (push ov (car st)))))
 
-(defun tempel--query (st prompt name)
-  "Read input with PROMPT and assign to binding NAME in ST."
-  (setf (alist-get name (cdr st)) (if (stringp prompt)
-                                      (read-string prompt)
-                                    (eval prompt 'lexical-binding))))
-
 (defun tempel--element (st region elt)
   "Add template ELT to ST given the REGION."
   (pcase elt
@@ -248,24 +242,26 @@ INIT is the optional initial input."
           (insert "\n")))
     ('o (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
 	  (open-line 1)))
-    ('p (tempel--field st))
     (`(s ,name) (tempel--field st name))
-    ;; LEGACY: (r ...) and (r> ...) is legacy syntax from Tempo, use r instead.
-    ((or 'r `(r . ,_)) (if region (goto-char (cdr region)) (tempel--field st)))
-    ((or 'r> `(r> . ,_)) (if (not region) (tempel--field st)
-                           (goto-char (cdr region))
-                           (indent-region (car region) (cdr region) nil)))
-    ;; LEGACY: (p ...) and (P ...) is legacy syntax from Tempo, use q, s, or p instead.
-    ;; TEMPEL EXTENSION: (p (FORM...) <NAME>)
-    (`(,(or 'p 'P) ,prompt . ,rest)
-     (if (cadr rest)
-         (tempel--query st prompt (car rest))
-       (tempel--field st (car rest) (and (consp prompt)
-                                         (eval prompt 'lexical)))))
-    ;; TEMPEL EXTENSION: Query from minibuffer, (q "Prompt: " name), (q (FORM...) name)
-    (`(q ,prompt ,name) (tempel--query st prompt name))
-    ;; TEMPEL EXTENSION: Evaluate forms
-    (_ (tempel--form st elt))))
+    ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st rest))
+    ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
+     (if (not region) (apply #'tempel--placeholder st rest)
+       (goto-char (cdr region))
+       (when (eq (or (car-safe elt) elt) 'r>)
+         (indent-region (car region) (cdr region) nil))))
+    (_ (tempel--form st elt)))) ;; TEMPEL EXTENSION: Evaluate forms
+
+(defun tempel--placeholder (st &optional prompt name noinsert)
+  "Handle placeholder element and add field with NAME to ST.
+If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
+PROMPT is the optional prompt/default value."
+  (setq prompt
+        (if (and (stringp prompt) noinsert) (read-string prompt)
+          ;; TEMPEL EXTENSION: Evaluate prompt
+          (eval prompt 'lexical)))
+  (if noinsert
+      (setf (alist-get name (cdr st)) prompt)
+    (tempel--field st name prompt)))
 
 (defun tempel--insert (template region)
   "Insert TEMPLATE given the current REGION."
