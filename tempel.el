@@ -460,5 +460,19 @@ If called interactively, select a template with `completing-read'."
        (defun ,cmd () (interactive) (tempel-insert ',name))
        (define-key ,(or map 'global-map) ,(kbd key) #',cmd))))
 
+;;;###autoload
+(defun tempel-define-template ()
+  (funcall `(lambda () (tempel-deftemplate ,name ,args))))
+
+;;;###autoload
+(defun tempel-deftemplate (name args &rest body)
+  "Define a template.
+Name is the name of the template."
+  (let* ((trigger (car args))
+	 (mode (cadr args))
+	 (name ()))
+    `(progn (defun tempel-insert- ())
+	    ())))
+
 (provide 'tempel)
 ;;; tempel.el ends here
