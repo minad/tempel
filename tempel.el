@@ -62,6 +62,12 @@
   "Annotation width for `tempel-expand'."
   :type '(choice (const nil integer)))
 
+(defface tempel-field '((t :inherit highlight))
+  "Face used for fields.")
+
+(defface tempel-form '((t :inherit region))
+  "Face used for evaluated forms.")
+
 (defvar tempel--templates nil
   "Templates loaded from the `tempel-file'.")
 
@@ -125,17 +131,15 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
                           'face 'completions-annotations))
              width 0 ?\s ellipsis))))
 
-(defun tempel--field-modified (ov after beg end &optional _len)
+(defun tempel--field-modified (ov after _beg end &optional _len)
   "Update field overlay OV.
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
-  (when (and after (>= beg (overlay-start ov)) (<= beg (overlay-end ov)))
-    ;; TODO field marker
-    (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
-    (overlay-put ov 'before-string
-                 (and (= (overlay-start ov) (overlay-end ov))
-                      tempel-mark))
+  (when after
     (let ((st (overlay-get ov 'tempel--state)))
+      (unless undo-in-progress
+        (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
+      (tempel--update-mark ov)
       (when-let (name (overlay-get ov 'tempel--name))
         (setf (alist-get name (cdr st))
               (buffer-substring-no-properties
@@ -170,10 +174,18 @@ If OV is alive, move it."
           (insert str)
           (when ov
             (move-overlay ov beg (point))
-            (unless (overlay-get ov 'tempel--form)
-              (overlay-put ov 'before-string
-                           (and (= (overlay-start ov) (overlay-end ov))
-                                tempel-mark)))))))))
+            (tempel--update-mark ov)))))))
+
+(defun tempel--update-mark (ov)
+  "Update field mark from OV."
+  (unless (overlay-get ov 'tempel--form)
+    (overlay-put ov 'before-string
+                 (and (or (= (overlay-start ov) (overlay-end ov))
+                          ;; TODO mark for blank fields?
+                          ;;(string-blank-p (buffer-substring-no-properties
+                          ;;                 (overlay-start ov) (overlay-end ov)))
+                          )
+                      tempel-mark))))
 
 (defun tempel--field (st &optional name init)
   "Add template field to ST.
@@ -181,6 +193,7 @@ NAME is the optional field name.
 INIT is the optional initial input."
   (let ((ov (make-overlay (point) (point))))
     (push ov (car st))
+    (overlay-put ov 'face 'tempel-field)
     (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
@@ -189,10 +202,10 @@ INIT is the optional initial input."
       (overlay-put ov 'tempel--name name)
       (setq init (or init (alist-get name (cdr st)) ""))
       (setf (alist-get name (cdr st)) init))
-    (if (or (not init) (equal init ""))
-        (overlay-put ov 'before-string tempel-mark)
+    (when (and init (not (equal init "")))
       (insert init)
-      (move-overlay ov (overlay-start ov) (point)))))
+      (move-overlay ov (overlay-start ov) (point)))
+    (tempel--update-mark ov)))
 
 (defun tempel--form (st form)
   "Add new template field evaluating FORM to ST."
@@ -202,6 +215,7 @@ INIT is the optional initial input."
       ;; Ignore errors since some variables may not be defined yet.
       (void-variable nil))
     (let ((ov (make-overlay beg (point) nil t)))
+      (overlay-put ov 'face 'tempel-form)
       (overlay-put ov 'tempel--form form)
       (push ov (car st)))))
 
@@ -268,8 +282,10 @@ INIT is the optional initial input."
     (let ((st (cons nil nil))
           (inhibit-modification-hooks t))
       (push (make-overlay (point) (point)) (car st))
+      (overlay-put (caar st) 'face 'cursor) ;; TODO debug
       (dolist (x template) (tempel--element st x region))
       (push (make-overlay (point) (point) nil t t) (car st))
+      (overlay-put (caar st) 'face 'cursor) ;; TODO debug
       (push st tempel--active)))
   ;; Jump to first field
   (unless (cl-loop for ov in (caar tempel--active)
