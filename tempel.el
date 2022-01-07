@@ -49,14 +49,9 @@
   "Path to the template file."
   :type 'string)
 
-(defcustom tempel-field-prefix
-  #(" " 0 1 (display (space :width (2)) face tempel-field))
-  "Field indicator prefix string."
-  :type '(choice (const nil) string))
-
-(defcustom tempel-form-prefix
-  #(" " 0 1 (display (space :width (2)) face tempel-form))
-  "Form indicator prefix string."
+(defcustom tempel-mark
+  #(" " 0 1 (display (space :width (1)) face cursor))
+  "Field start indicator."
   :type '(choice (const nil) string))
 
 (defcustom tempel-insert-annotation 40
@@ -66,12 +61,6 @@
 (defcustom tempel-expand-annotation 20
   "Annotation width for `tempel-expand'."
   :type '(choice (const nil integer)))
-
-(defface tempel-field '((t :inherit highlight))
-  "Face used for fields.")
-
-(defface tempel-form '((t :inherit region))
-  "Face used for evaluated forms.")
 
 (defvar tempel--templates nil
   "Templates loaded from the `tempel-file'.")
@@ -141,7 +130,11 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
   (when (and after (>= beg (overlay-start ov)) (<= beg (overlay-end ov)))
+    ;; TODO field marker
     (move-overlay ov (overlay-start ov) (max end (overlay-end ov)))
+    (overlay-put ov 'before-string
+                 (and (= (overlay-start ov) (overlay-end ov))
+                      tempel-mark))
     (let ((st (overlay-get ov 'tempel--state)))
       (when-let (name (overlay-get ov 'tempel--name))
         (setf (alist-get name (cdr st))
@@ -175,7 +168,12 @@ If OV is alive, move it."
           (goto-char beg)
           (delete-char (- end beg))
           (insert str)
-          (when ov (move-overlay ov beg (point))))))))
+          (when ov
+            (move-overlay ov beg (point))
+            (unless (overlay-get ov 'tempel--form)
+              (overlay-put ov 'before-string
+                           (and (= (overlay-start ov) (overlay-end ov))
+                                tempel-mark)))))))))
 
 (defun tempel--field (st &optional name init)
   "Add template field to ST.
@@ -183,8 +181,6 @@ NAME is the optional field name.
 INIT is the optional initial input."
   (let ((ov (make-overlay (point) (point))))
     (push ov (car st))
-    (overlay-put ov 'face 'tempel-field)
-    (overlay-put ov 'before-string tempel-field-prefix)
     (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
@@ -193,7 +189,8 @@ INIT is the optional initial input."
       (overlay-put ov 'tempel--name name)
       (setq init (or init (alist-get name (cdr st)) ""))
       (setf (alist-get name (cdr st)) init))
-    (when (and init (not (equal init "")))
+    (if (or (not init) (equal init ""))
+        (overlay-put ov 'before-string tempel-mark)
       (insert init)
       (move-overlay ov (overlay-start ov) (point)))))
 
@@ -205,8 +202,6 @@ INIT is the optional initial input."
       ;; Ignore errors since some variables may not be defined yet.
       (void-variable nil))
     (let ((ov (make-overlay beg (point) nil t)))
-      (overlay-put ov 'face 'tempel-form)
-      (overlay-put ov 'before-string tempel-form-prefix)
       (overlay-put ov 'tempel--form form)
       (push ov (car st)))))
 
