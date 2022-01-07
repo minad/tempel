@@ -427,8 +427,9 @@ If called interactively, select a template with `completing-read'."
 ;;;###autoload
 (defun tempel-key (key name &optional map)
   "Bind KEY to NAME in MAP."
-  (define-key (or map global-map) (kbd key)
-    (lambda () (interactive) (tempel-insert name))))
+  (let ((cmd (intern (format "tempel-insert-%s" name))))
+    (fset cmd (lambda () (interactive) (tempel-insert name)))
+    (define-key (or map global-map) (kbd key) cmd)))
 
 (provide 'tempel)
 ;;; tempel.el ends here
