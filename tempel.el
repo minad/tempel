@@ -64,25 +64,25 @@
 
 (defface tempel-field
   '((((class color) (min-colors 88) (background light))
-     :background "#fdf0ff" :foreground "#541f4f" :underline "#d5baff")
+     :background "#fdf0ff" :foreground "#541f4f")
     (((class color) (min-colors 88) (background dark))
-     :background "#230631" :foreground "#e5cfef" :underline "#7042a2")
+     :background "#230631" :foreground "#e5cfef")
     (t :inherit highlight))
   "Face used for fields.")
 
 (defface tempel-form
   '((((class color) (min-colors 88) (background light))
-     :background "#ecf7ed" :foreground "#004000" :underline "#5ada88")
+     :background "#ecf7ed" :foreground "#004000")
     (((class color) (min-colors 88) (background dark))
-     :background "#001904" :foreground "#b8e2b8" :underline "#006800")
+     :background "#001904" :foreground "#b8e2b8")
     (t :inherit region))
   "Face used for evaluated forms.")
 
 (defface tempel-default
   '((((class color) (min-colors 88) (background light))
-     :background "#ebf6fa" :foreground "#0f3360" :underline "#005f88" :slant italic)
+     :background "#ebf6fa" :foreground "#0f3360" :slant italic)
     (((class color) (min-colors 88) (background dark))
-     :background "#041529" :foreground "#a8e5e5" :underline "#005f88" :slant italic)
+     :background "#041529" :foreground "#a8e5e5" :slant italic)
     (t :inherit highlight :slant italic))
   "Face used for default values.")
 
