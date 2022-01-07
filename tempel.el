@@ -29,7 +29,7 @@
 ;; library. Your templates are stored in the `tempel-file' (by default
 ;; the file "templates" in the `user-emacs-directory'). Bind the
 ;; commands `tempel-expand' or `tempel-insert' to some keys in your user
-;; configuration. You can jump with the keys M-up/down from field to
+;; configuration. You can jump with the keys M-{ and M-} from field to
 ;; field. `tempel-expands' works best with the Corfu completion UI,
 ;; while `tempel-insert' uses `completing-read' under the hood.
 
