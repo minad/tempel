@@ -477,18 +477,17 @@ If called interactively, select a template with `completing-read'."
 ;;;###autoload
 (defun tempel-define-template (trigger mode)
   "Define a template."
-  (tempel-update-templates)
   (push (cons mode (cons trigger body))))
 
 ;;;###autoload
-(defun tempel-deftemplate (name args &rest body)
-  "Define a template.
-Name is the name of the template."
-  (let* ((trigger (car args))
-	 (mode (cadr args))
-	 (name ()))
-    `(progn (defun tempel-insert- ())
-	    ())))
+;; (defmacro tempel-deftemplate (name args &rest body)
+;;   "Define a template.
+;; Name is the name of the template."
+;;   (let* ((trigger (car args))
+;; 	 (mode (cadr args))
+;; 	 (name ()))
+;;     `(progn (defun tempel-insert- ())
+;; 	    ())))
 
 (provide 'tempel)
 ;;; tempel.el ends here
