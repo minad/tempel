@@ -397,6 +397,21 @@ PROMPT is the optional prompt/default value."
   ;; TODO disable only the topmost template?
   (while tempel--active (tempel--disable)))
 
+(defun tempel--template-at-point-filter (cmd)
+  "If expandable template at point return CMD."
+  (when-let (templates (tempel--templates))
+    (let* ((region (tempel--region))
+           (bounds (or (and (not region) (bounds-of-thing-at-point 'symbol))
+                       (cons (point) (point))))
+           (str (buffer-substring (car bounds) (cdr bounds))))
+      (when (and (not tempel--active)
+                 (test-completion str templates))
+        cmd))))
+
+(defconst tempel-maybe-expand
+  '(menu-item "" tempel-expand :filter tempel--template-at-point-filter)
+  "Conditional key definition to potentially expand template.")
+
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
   "Complete template at point.
