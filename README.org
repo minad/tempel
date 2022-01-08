@@ -56,10 +56,11 @@ and has to be installed manually with ~package-install-file~.
     :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
            ("M-*" . tempel-insert))
     :init
-    ;; Make the Tempel templates available to the abbrev mechanism,
+    ;; Optionally make the Tempel templates available to Abbrev,
     ;; either locally or globally. `expand-abbrev' is bound to C-x '.
     ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
-    (tempel-global-abbrev-mode))
+    ;; (tempel-global-abbrev-mode)
+  )
 
   ;; Optional: Use the Corfu completion UI
   (use-package corfu
