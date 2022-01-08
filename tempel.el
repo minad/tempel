@@ -333,6 +333,8 @@ INIT is the optional initial input."
 			  tempel--modified mod))))
 	      (tempel--expand-locations tempel-template-locations)))
 
+;; Convenience function for returning a version of `tempel--templates' that's
+;; easier to loop through.
 (defun unpack-templates (templates)
   "Return a list of (mode name expansion)."
   (let (unpacked mode trigger expansion)
@@ -341,7 +343,7 @@ INIT is the optional initial input."
     (reverse unpacked)))
 
 (defun tempel--rebuild-templates (unpacked)
-  )
+  ())
 
 (defun tempel--templates ()
   "Return templates for current mode."
@@ -414,18 +416,21 @@ INIT is the optional initial input."
   ;; TODO disable only the topmost template?
   (while tempel--active (tempel--disable)))
 
+(defun tempel--same-template-p (template templates)
+  "Return non nil if a template has the same TRIGGER as something else in TEMPLATES."
+  (seq-find (lambda (template) (and (eq (car template)) (eq (car))))
+	    templates))
+
 ;; Before this we would overwrite the previous templates. We should actually
 ;; make sure that they are properly updated. In other words, the only values
 ;; that are overwritten are old values whose mode and trigger are identical to
 ;; that of a new value..
 (defun tempel-update-templates (new old)
   "Update the existing templates."
-  ;; Go through the old templates.
-  (let ((unique))
-    (dolist ()
-      (when (push )))
-    ())
-  (setq tempel--templates ()))
+  (let ((old tempel--templates)
+	(new (tempel--load-templates))
+	(non-duplicates (seq-filter (tempel--same-template-p new) old)))
+    (setq tempel--templates (append new non-duplicates))))
 
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
@@ -486,17 +491,7 @@ If called interactively, select a template with `completing-read'."
 ;;;###autoload
 (defun tempel-define-template (trigger mode)
   "Define a template."
-  (push (cons mode (cons trigger body))))
-
-;;;###autoload
-;; (defmacro tempel-deftemplate (name args &rest body)
-;;   "Define a template.
-;; Name is the name of the template."
-;;   (let* ((trigger (car args))
-;; 	 (mode (cadr args))
-;; 	 (name ()))
-;;     `(progn (defun tempel-insert- ())
-;; 	    ())))
+  (push (cons mode (cons trigger body)) tempel--templates))
 
 (provide 'tempel)
 ;;; tempel.el ends here
