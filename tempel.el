@@ -415,11 +415,12 @@ If INTERACTIVE is nil the function acts like a capf."
               :exclusive 'no
               :company-kind (lambda (_) 'snippet)
               :exit-function
-              (lambda (name _status)
-                (when-let* ((sym (intern-soft name))
-                            (template (alist-get sym templates)))
-                  (delete-region (max (point-min) (- (point) (length name))) (point))
-                  (tempel--insert template region)))
+              (lambda (name status)
+                (unless (eq status 'exact)
+                  (when-let* ((sym (intern-soft name))
+                              (template (alist-get sym templates)))
+                    (delete-region (max (point-min) (- (point) (length name))) (point))
+                    (tempel--insert template region))))
               :annotation-function
               (and tempel-expand-annotation
                    (apply-partially #'tempel--annotate
