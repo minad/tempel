@@ -120,7 +120,11 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
     (goto-char (point-max))
     (insert "\n)")
     (goto-char (point-min))
-    (read (current-buffer))))
+    (let ((templates (read (current-buffer))) result)
+      (while (and templates (symbolp (car templates)))
+        (push (cons (car templates) (seq-take-while #'consp (cdr templates))) result)
+        (setq templates (seq-drop-while #'consp (cdr templates))))
+      result)))
 
 (defun tempel--print-element (elt)
   "Return string representation of template ELT."
@@ -324,16 +328,15 @@ PROMPT is the optional prompt/default value."
 
 (defun tempel--templates ()
   "Return templates for current mode."
-  (let ((mod (file-attribute-modification-time (file-attributes tempel-file))))
+  (let ((mod (time-convert (file-attribute-modification-time
+                            (file-attributes tempel-file))
+                           'integer)))
     (unless (equal tempel--modified mod)
       (setq tempel--templates (tempel--load tempel-file)
             tempel--modified mod)))
-  (let (result (templates tempel--templates))
-    (while (and templates (symbolp (car templates)))
-      (when (derived-mode-p (car templates))
-        (push (seq-take-while #'consp (cdr templates)) result))
-      (setq templates (seq-drop-while #'consp (cdr templates))))
-    (apply #'append result)))
+  (cl-loop for x in tempel--templates
+           if (derived-mode-p (car x))
+           append (cdr x)))
 
 (defun tempel--region ()
   "Return region bounds."
