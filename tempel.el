@@ -415,6 +415,14 @@ PROMPT is the optional prompt/default value."
     (tempel--save)
     (or (completion-at-point) (user-error "%s: No completions" capf))))
 
+(defun tempel--completion-table (templates)
+  "Return a completion table for a list of TEMPLATES.
+The completion table specifies the category `tempel'."
+  (lambda (str pred action)
+    (if (eq action 'metadata)
+        '(metadata (category . tempel))
+      (complete-with-action action templates str pred))))
+
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
   "Expand exactly matching template name at point.
@@ -429,7 +437,8 @@ If INTERACTIVE is nil the function acts like a capf."
                 (sym (intern-soft name))
                 (template (assq sym templates)))
       (setq templates (list template))
-      (list (car bounds) (cdr bounds) templates
+      (list (car bounds) (cdr bounds)
+            (tempel--completion-table templates)
             :exclusive 'no
             :exit-function (apply-partially #'tempel--exit templates nil)))))
 
@@ -444,7 +453,8 @@ If INTERACTIVE is nil the function acts like a capf."
       (let* ((region (tempel--region))
              (bounds (or (and (not region) (bounds-of-thing-at-point 'symbol))
                          (cons (point) (point)))))
-        (list (car bounds) (cdr bounds) templates
+        (list (car bounds) (cdr bounds)
+              (tempel--completion-table templates)
               :exclusive 'no
               :company-kind (lambda (_) 'snippet)
               :exit-function (apply-partially #'tempel--exit templates region)
