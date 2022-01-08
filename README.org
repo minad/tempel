@@ -32,6 +32,11 @@ bindings are defined in the ~tempel-map~ keymap. You can customize them there. A
 soon as you move before (behind) the first (last) field, the fields are
 finalized.
 
+Tempel can hook into the abbrev mechanism of Emacs by enabling the
+~tempel-abbrev-mode~ in a buffer or by enabling the
+~tempel-global-abbrev-mode~. Then the Tempel templates will be available
+via ~expand-abbrev~ which is usually bound to ~C-x '~.
+
 Note that this package is not a competitor to the mature and widely used
 YASnippet library. Try Tempel only if you like small and simple packages. With
 Tempel you write your templates in Lisp syntax, which from my perspective fits
@@ -48,8 +53,13 @@ and has to be installed manually with ~package-install-file~.
 #+begin_src emacs-lisp
   ;; Bind the Tempel commands
   (use-package tempel
-    :bind (("M-+" . tempel-expand)
-           ("M-*" . tempel-insert)))
+    :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+           ("M-*" . tempel-insert))
+    :init
+    ;; Make the Tempel templates available to the abbrev mechanism,
+    ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+    ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+    (tempel-global-abbrev-mode))
 
   ;; Optional: Use the Corfu completion UI
   (use-package corfu
