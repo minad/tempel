@@ -429,7 +429,7 @@ The completion table specifies the category `tempel'."
 If INTERACTIVE is nil the function acts like a capf."
   (interactive (list t))
   (if interactive
-      (tempel--interactive #'tempel-exact)
+      (tempel--interactive #'tempel-expand)
     (when-let* ((templates (tempel--templates))
                 (bounds (bounds-of-thing-at-point 'symbol))
                 (name (buffer-substring-no-properties
@@ -495,12 +495,32 @@ If called interactively, select a template with `completing-read'."
        (define-key ,(or map 'global-map) ,(kbd key) #',cmd))))
 
 ;;;###autoload
-(defmacro tempel-abbrev (name &optional table)
-  "Define template abbrev NAME in abbrevation TABLE."
-  `(define-abbrev ,(or table global-abbrev-table)
-     ,(symbol-name name) ""
-     (lambda () (tempel-insert ',name))
-     :system t))
+(define-minor-mode tempel-abbrev-mode
+  "Install Tempel templates as abbrevs."
+  :group 'tempel
+  :global nil
+  (setq-local abbrev-minor-mode-table-alist
+              (assq-delete-all 'tempel-abbrev-mode abbrev-minor-mode-table-alist))
+  (when (eq abbrev-minor-mode-table-alist (default-value 'abbrev-minor-mode-table-alist))
+    (kill-local-variable 'abbrev-minor-mode-table-alist))
+  (when tempel-abbrev-mode
+    (let ((table (make-abbrev-table)))
+      (dolist (template (tempel--templates))
+        (define-abbrev table (symbol-name (car template)) ""
+          (apply-partially #'tempel--insert (cdr template) nil)
+          :system t))
+      (setq-local abbrev-minor-mode-table-alist
+                  (cons `(tempel-abbrev-mode . ,table)
+                        abbrev-minor-mode-table-alist)))))
+
+;;;###autoload
+(define-globalized-minor-mode tempel-global-abbrev-mode tempel-abbrev-mode
+  tempel--abbrev-on :group 'tempel)
+
+(defun tempel--abbrev-on ()
+  "Enable abbrev mode locally."
+  (unless (or noninteractive (eq (aref (buffer-name) 0) ?\s))
+    (tempel-abbrev-mode 1)))
 
 (provide 'tempel)
 ;;; tempel.el ends here
