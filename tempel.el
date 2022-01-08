@@ -204,17 +204,13 @@ If OV is alive, move it."
             (tempel--update-mark ov)))))))
 
 (defun tempel--update-mark (ov)
-  "Update field mark from OV."
+  "Update field mark and face of OV."
   (unless (overlay-get ov 'tempel--form)
     (when (overlay-get ov 'tempel--default)
       (overlay-put ov 'tempel--default nil)
       (overlay-put ov 'face 'tempel-field))
     (overlay-put ov 'before-string
-                 (and (or (= (overlay-start ov) (overlay-end ov))
-                          ;; TODO mark for blank fields?
-                          ;;(string-blank-p (buffer-substring-no-properties
-                          ;;                 (overlay-start ov) (overlay-end ov)))
-                          )
+                 (and (= (overlay-start ov) (overlay-end ov))
                       tempel-mark))))
 
 (defun tempel--field (st &optional name init)
