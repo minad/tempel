@@ -1,4 +1,4 @@
-;;; tempel.el --- Simple templates for Emacs -*- lexical-binding: t -*-
+;;; tempel.el --- Tempo text templates with in-buffer field editing -*- lexical-binding: t -*-
 
 ;; Author: Daniel Mendler
 ;; Created: 2022
@@ -43,7 +43,7 @@
   (require 'cl-lib))
 
 (defgroup tempel nil
-  "Simple templates"
+  "Tempo text templates with in-buffer field editing."
   :group 'editing
   :prefix "tempel-")
 
@@ -189,10 +189,10 @@ BEG and END are the boundaries of the modification."
               (buffer-substring-no-properties
                (overlay-start ov) (overlay-end ov))))
       (unless undo-in-progress
-        (template--synchronize-fields st ov)))))
+        (tempel--synchronize-fields st ov)))))
   (tempel--update-mark ov))
 
-(defun template--synchronize-fields (st current)
+(defun tempel--synchronize-fields (st current)
   "Synchronize fields of ST, except CURRENT overlay."
   (dolist (ov (car st))
     (unless (eq ov current)
@@ -254,7 +254,7 @@ INIT is the optional initial input."
       (overlay-put ov 'face 'tempel-default)
       (overlay-put ov 'tempel--default
                    (if (string-match-p ": \\'" init) 'end 'start)))
-    (template--synchronize-fields st ov)))
+    (tempel--synchronize-fields st ov)))
 
 (defun tempel--form (st form)
   "Add new template field evaluating FORM to ST."
