@@ -28,10 +28,12 @@
 ;; format is compatible with the template format of the Emacs Tempo
 ;; library. Your templates are stored in the `tempel-file' (by default
 ;; the file "templates" in the `user-emacs-directory'). Bind the
-;; commands `tempel-expand' or `tempel-insert' to some keys in your user
-;; configuration. You can jump with the keys M-{ and M-} from field to
-;; field. `tempel-expands' works best with the Corfu completion UI,
-;; while `tempel-insert' uses `completing-read' under the hood.
+;; commands `tempel-complete', `tempel-expand' or `tempel-insert' to
+;; some keys in your user configuration. You can jump with the keys M-{
+;; and M-} from field to field. `tempel-complete' and `tempel-expand'
+;; work best with the Corfu completion UI, while `tempel-insert' uses
+;; `completing-read' under the hood. You can also use `tempel-complete'
+;; and `tempel-expand' as `completion-at-point-functions'.
 
 ;;; Code:
 
@@ -58,8 +60,8 @@
   "Annotation width for `tempel-insert'."
   :type '(choice (const nil integer)))
 
-(defcustom tempel-expand-annotation 20
-  "Annotation width for `tempel-expand'."
+(defcustom tempel-complete-annotation 20
+  "Annotation width for `tempel-complete'."
   :type '(choice (const nil integer)))
 
 (defface tempel-field
@@ -151,6 +153,16 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
                            (mapconcat #'tempel--print-element elts ""))
                           'face 'completions-annotations))
              width 0 ?\s ellipsis))))
+
+(defun tempel--exit (templates region name status)
+  "Exit function for completion for template NAME and STATUS.
+TEMPLATES is the list of templates.
+REGION are the current region bouns"
+  (unless (eq status 'exact)
+    (when-let* ((sym (intern-soft name))
+                (template (alist-get sym templates)))
+      (delete-region (max (point-min) (- (point) (length name))) (point))
+      (tempel--insert template region))))
 
 (defun tempel--field-modified (ov after beg end &optional _len)
   "Update field overlay OV.
@@ -396,16 +408,38 @@ PROMPT is the optional prompt/default value."
   ;; TODO disable only the topmost template?
   (while tempel--active (tempel--disable)))
 
+(defun tempel--interactive (capf)
+  "Complete with CAPF."
+  (let ((completion-at-point-functions (list capf))
+        completion-cycle-threshold)
+    (tempel--save)
+    (or (completion-at-point) (user-error "%s: No completions" capf))))
+
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
-  "Complete template at point.
+  "Expand exactly matching template name at point.
 If INTERACTIVE is nil the function acts like a capf."
   (interactive (list t))
   (if interactive
-      (let (completion-cycle-threshold
-            (completion-at-point-functions (list #'tempel-expand)))
-        (tempel--save)
-        (or (completion-at-point) (user-error "Tempel: No completions")))
+      (tempel--interactive #'tempel-exact)
+    (when-let* ((templates (tempel--templates))
+                (bounds (bounds-of-thing-at-point 'symbol))
+                (name (buffer-substring-no-properties
+                       (car bounds) (cdr bounds)))
+                (sym (intern-soft name))
+                (template (assq sym templates)))
+      (setq templates (list template))
+      (list (car bounds) (cdr bounds) templates
+            :exclusive 'no
+            :exit-function (apply-partially #'tempel--exit templates nil)))))
+
+;;;###autoload
+(defun tempel-complete (&optional interactive)
+  "Complete template name at point and expand.
+If INTERACTIVE is nil the function acts like a capf."
+  (interactive (list t))
+  (if interactive
+      (tempel--interactive #'tempel-complete)
     (when-let (templates (tempel--templates))
       (let* ((region (tempel--region))
              (bounds (or (and (not region) (bounds-of-thing-at-point 'symbol))
@@ -413,17 +447,11 @@ If INTERACTIVE is nil the function acts like a capf."
         (list (car bounds) (cdr bounds) templates
               :exclusive 'no
               :company-kind (lambda (_) 'snippet)
-              :exit-function
-              (lambda (name status)
-                (unless (eq status 'exact)
-                  (when-let* ((sym (intern-soft name))
-                              (template (alist-get sym templates)))
-                    (delete-region (max (point-min) (- (point) (length name))) (point))
-                    (tempel--insert template region))))
+              :exit-function (apply-partially #'tempel--exit templates region)
               :annotation-function
-              (and tempel-expand-annotation
+              (and tempel-complete-annotation
                    (apply-partially #'tempel--annotate
-                                    templates tempel-expand-annotation nil " ")))))))
+                                    templates tempel-complete-annotation nil " ")))))))
 
 ;;;###autoload
 (defun tempel-insert (name)

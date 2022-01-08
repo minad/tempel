@@ -13,19 +13,24 @@ Tempel is a tiny template package for Emacs, which uses the syntax of the Emacs
 Tempo library. Tempo is an ancient temple. It is 27 years old, but still in good
 shape since it successfully resisted change over the decades. However it may
 look a bit dusty here and there. Therefore I present to you, Tempel, a
-modernized implementation of Tempo, in the form of two commands:
+modernized implementation of Tempo, in the form of three commands:
 
-+ ~tempel-expand~ expands a template at point in the buffer. If called
-  non-interactively the function behaves like a completion-at-point-function
-  (Capf). You may want to give my [[https://github.com/minad/corfu][Corfu]] completion at point UI a try.
++ ~tempel-complete~ completes a template name at point in the buffer and
+  subsequently expands the template. If called non-interactively the function behaves like a Capf and can be added
+  to ~completion-at-point-functions~.
++ ~tempel-expand~ expands an exactly matching template name at point in the buffer.
+  If called non-interactively the function behaves like a Capf and can be added
+  to ~completion-at-point-functions~.
 + ~tempel-insert~ selects a template by name and insert it into the current buffer.
 
-After inserting the template you can move between the visible template fields
-with the keys ~M-{~, ~M-}~ or ~C-up/down~ which are normally bound to
-~forward/backward-paragraph~. Tempel temporarily remaps these commands to
-~tempel-next~ and ~tempel-previous~. The key bindings are defined in the ~tempel-map~
-keymap. You can customize them there. As soon as you move before (behind) the
-first (last) field, the fields are finalized.
+For the completion at point commands ~tempel-complete~ and ~tempel-expand~, you may
+want to give my [[https://github.com/minad/corfu][Corfu]] completion at point popup UI a try. After inserting the
+template you can move between the visible template fields with the keys ~M-{~, ~M-}~
+or ~C-up/down~ which are normally bound to ~forward/backward-paragraph~. Tempel
+temporarily remaps these commands to ~tempel-next~ and ~tempel-previous~. The key
+bindings are defined in the ~tempel-map~ keymap. You can customize them there. As
+soon as you move before (behind) the first (last) field, the fields are
+finalized.
 
 Note that this package is not a competitor to the mature and widely used
 YASnippet library. Try Tempel only if you like small and simple packages. With
