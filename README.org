@@ -110,7 +110,7 @@ syntax elements follow.
 
   rst-mode
 
-  (title (make-string (length title) ?=) n (s title) n (make-string (length title) ?=) n)
+  (title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
 
   org-mode
 
