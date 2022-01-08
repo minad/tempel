@@ -154,6 +154,12 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
                           'face 'completions-annotations))
              width 0 ?\s ellipsis))))
 
+(defun tempel--delete-word (word)
+  "Delete WORD before point."
+  (let ((beg (max (point-min) (- (point) (length word)))))
+    (when (save-excursion (search-backward word beg 'noerror))
+      (delete-region beg (point)))))
+
 (defun tempel--exit (templates region name status)
   "Exit function for completion for template NAME and STATUS.
 TEMPLATES is the list of templates.
@@ -161,7 +167,7 @@ REGION are the current region bouns"
   (unless (eq status 'exact)
     (when-let* ((sym (intern-soft name))
                 (template (alist-get sym templates)))
-      (delete-region (max (point-min) (- (point) (length name))) (point))
+      (tempel--delete-word name)
       (tempel--insert template region))))
 
 (defun tempel--field-modified (ov after beg end &optional _len)
@@ -494,6 +500,11 @@ If called interactively, select a template with `completing-read'."
          (tempel-insert ',name))
        (define-key ,(or map 'global-map) ,(kbd key) #',cmd))))
 
+(defun tempel--abbrev-hook (name template)
+  "Abbreviation expansion hook for TEMPLATE with NAME."
+  (tempel--delete-word name)
+  (tempel--insert template nil))
+
 ;;;###autoload
 (define-minor-mode tempel-abbrev-mode
   "Install Tempel templates as abbrevs."
@@ -501,13 +512,14 @@ If called interactively, select a template with `completing-read'."
   :global nil
   (setq-local abbrev-minor-mode-table-alist
               (assq-delete-all 'tempel-abbrev-mode abbrev-minor-mode-table-alist))
-  (when (eq abbrev-minor-mode-table-alist (default-value 'abbrev-minor-mode-table-alist))
+  (when (eq abbrev-minor-mode-table-alist
+            (default-value 'abbrev-minor-mode-table-alist))
     (kill-local-variable 'abbrev-minor-mode-table-alist))
   (when tempel-abbrev-mode
     (let ((table (make-abbrev-table)))
       (dolist (template (tempel--templates))
-        (define-abbrev table (symbol-name (car template)) ""
-          (apply-partially #'tempel--insert (cdr template) nil)
+        (define-abbrev table (symbol-name (car template)) 'Template
+          (apply-partially #'tempel--abbrev-hook (symbol-name (car template)) (cdr template))
           :system t))
       (setq-local abbrev-minor-mode-table-alist
                   (cons `(tempel-abbrev-mode . ,table)
