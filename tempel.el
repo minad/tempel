@@ -66,6 +66,12 @@
   "Annotation width for `tempel-complete'."
   :type '(choice (const nil integer)))
 
+(defcustom tempel-user-elements nil
+  "List of user element functions.
+The function take a template element as argument and must return either
+nil or a new template element, which is subsequently evaluated."
+  :type 'hook)
+
 (defface tempel-field
   '((((class color) (min-colors 88) (background light))
      :background "#fdf0ff" :foreground "#541f4f")
@@ -292,7 +298,10 @@ INIT is the optional initial input."
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
-    (_ (tempel--form st elt)))) ;; TEMPEL EXTENSION: Evaluate forms
+    (_ (if-let (ret (run-hook-with-args-until-success 'tempel-user-elements elt))
+           (tempel--element st region ret)
+         ;; TEMPEL EXTENSION: Evaluate forms
+         (tempel--form st elt)))))
 
 (defun tempel--placeholder (st &optional prompt name noinsert)
   "Handle placeholder element and add field with NAME to ST.
