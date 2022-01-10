@@ -39,7 +39,6 @@
 
 ;;; Code:
 
-(require 'seq)
 (eval-when-compile
   (require 'subr-x)
   (require 'cl-lib))
@@ -132,8 +131,10 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
     (goto-char (point-min))
     (let ((templates (read (current-buffer))) result)
       (while (and templates (symbolp (car templates)))
-        (push (cons (car templates) (seq-take-while #'consp (cdr templates))) result)
-        (setq templates (seq-drop-while #'consp (cdr templates))))
+        (let ((mode (pop templates)) list)
+          (while (and templates (consp (car templates)))
+            (push (pop templates) list))
+          (push (cons mode (nreverse list)) result)))
       result)))
 
 (defun tempel--print-element (elt)
