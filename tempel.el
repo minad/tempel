@@ -366,7 +366,7 @@ PROMPT is the optional prompt/default value."
       (setq tempel--templates (tempel--load tempel-file)
             tempel--modified mod)))
   (cl-loop for x in tempel--templates
-           if (derived-mode-p (car x))
+           if (or (derived-mode-p (car x)) (eq (car x) 'fundamental-mode))
            append (cdr x)))
 
 (defun tempel--region ()
