@@ -1,6 +1,6 @@
-;;; tempel.el --- Tempo text templates with in-buffer field editing -*- lexical-binding: t -*-
+;;; tempel.el --- Tempo templates/snippets with in-buffer field editing -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021  Free Software Foundation, Inc.
+;; Copyright (C) 2022  Free Software Foundation, Inc.
 
 ;; Author: Daniel Mendler <mail@daniel-mendler.de>
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
@@ -44,7 +44,7 @@
   (require 'cl-lib))
 
 (defgroup tempel nil
-  "Tempo text templates with in-buffer field editing."
+  "Tempo templates/snippets with in-buffer field editing."
   :group 'editing
   :prefix "tempel-")
 
