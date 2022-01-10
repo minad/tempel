@@ -510,24 +510,27 @@ If INTERACTIVE is nil the function acts like a capf."
                                     templates tempel-complete-annotation nil " ")))))))
 
 ;;;###autoload
-(defun tempel-insert (name)
-  "Insert template by NAME.
+(defun tempel-insert (template-or-name)
+  "Insert TEMPLATE-OR-NAME.
 If called interactively, select a template with `completing-read'."
   (interactive (list nil))
-  (let* ((templates (or (tempel--templates)
-                        (error "Tempel: No templates for %s" major-mode)))
-         (completion-extra-properties
-          (and tempel-insert-annotation
-               (list :annotation-function
-                     (apply-partially
-                      #'tempel--annotate templates tempel-insert-annotation t
-                      #("  " 1 2 (display (space :align-to (+ left 20)))))))))
-    (unless name
-      (setq name (intern-soft (completing-read "Template: " templates
-                                               nil t nil 'tempel--history))))
-    (tempel--insert (or (alist-get name templates)
-                        (user-error "Template %s not found" name))
-                    (tempel--region))))
+  (tempel--insert
+   (if (consp template-or-name) template-or-name
+     (let* ((templates (or (tempel--templates)
+                           (error "Tempel: No templates for %s" major-mode)))
+            (completion-extra-properties
+             (and tempel-insert-annotation
+                  (list :annotation-function
+                        (apply-partially
+                         #'tempel--annotate templates tempel-insert-annotation t
+                         #("  " 1 2 (display (space :align-to (+ left 20)))))))))
+       (unless template-or-name
+         (setq template-or-name (intern-soft
+                                 (completing-read "Template: " templates
+                                                  nil t nil 'tempel--history))))
+       (or (and template-or-name (alist-get template-or-name templates))
+           (user-error "Template %s not found" template-or-name))))
+   (tempel--region)))
 
 ;;;###autoload
 (defmacro tempel-key (key name &optional map)
