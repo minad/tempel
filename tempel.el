@@ -285,6 +285,7 @@ INIT is the optional initial input."
     ('o (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
 	  (open-line 1)))
     (`(s ,name) (tempel--field st name))
+    (`(l . ,lst) (dolist (e lst) (tempel--element st region e)))
     ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region) (apply #'tempel--placeholder st rest)
