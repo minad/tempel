@@ -533,15 +533,20 @@ If called interactively, select a template with `completing-read'."
    (tempel--region)))
 
 ;;;###autoload
-(defmacro tempel-key (key name &optional map)
-  "Bind KEY to NAME in MAP."
-  (let ((cmd (intern (format "tempel-insert-%s" name))))
-    `(progn
-       (defun ,cmd ()
-         ,(format "Insert template %s in the current buffer." name)
-         (interactive)
-         (tempel-insert ',name))
-       (define-key ,(or map 'global-map) ,(kbd key) #',cmd))))
+(defmacro tempel-key (key template-or-name &optional map)
+  "Bind KEY to TEMPLATE-OR-NAME in MAP."
+  `(define-key ,(or map 'global-map) ,(kbd key)
+     ,(if (consp template-or-name)
+          `(lambda ()
+             (interactive)
+             (tempel-insert ',template-or-name))
+        (let ((cmd (intern (format "tempel-insert-%s" template-or-name))))
+          `(prog1 ',cmd
+             (defun ,cmd ()
+               ,(format "Insert template %s in the current buffer."
+                        template-or-name)
+               (interactive)
+               (tempel-insert ',template-or-name)))))))
 
 (defun tempel--abbrev-hook (name template)
   "Abbreviation expansion hook for TEMPLATE with NAME."
