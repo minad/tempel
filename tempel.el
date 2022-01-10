@@ -1,13 +1,15 @@
 ;;; tempel.el --- Tempo text templates with in-buffer field editing -*- lexical-binding: t -*-
 
-;; Author: Daniel Mendler
+;; Copyright (C) 2021  Free Software Foundation, Inc.
+
+;; Author: Daniel Mendler <mail@daniel-mendler.de>
+;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
-;; License: GPL-3.0-or-later
 ;; Version: 0.1
 ;; Package-Requires: ((emacs "27.1"))
 ;; Homepage: https://github.com/minad/tempel
 
-;; This file is not part of GNU Emacs.
+;; This file is part of GNU Emacs.
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
