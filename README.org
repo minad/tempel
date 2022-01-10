@@ -86,8 +86,8 @@ and has to be installed manually with ~package-install-file~.
 
 * Template file format
 
-The template file format is a Lisp file =templates= which is stored by default in
-the ~user-emacs-directory~ (=~/.config/emacs/templates=). The templates are defined
+The templates are defined in a Lisp file =templates= which is stored by default in
+the ~user-emacs-directory~ (=~/.config/emacs/templates=). The templates are written
 as Lisp expressions in the concise form of the Emacs Tempo syntax. The first
 element of the list is the name of the template. Behind the name, the Tempo
 syntax elements follow.
@@ -167,6 +167,32 @@ Furthermore Tempel supports syntax extensions:
  - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
 
 Use caution with templates which execute arbitrary code!
+
+* Adding template sources
+
+Tempel offers a flexible mechanism for providing the templates which are
+applicable to the current context. The variable ~tempel-template-sources~
+specifies a list of sources or a single source. A source can either be a
+function, which should return a list of applicable templates, or a variable name
+symbol of a variable which holds a list of templates, which apply to the current
+context. By default Tempel install the sources ~tempel--file-templates~ and the
+variable ~tempel-local-templates~.
+
+* Binding important to a key
+
+Important kemplates can be bound to a key with the small utility macro
+~tempel-key~ which accepts three arguments, a key, a template or name and
+optionally a map.
+
+#+begin_src emacs-lisp
+  (tempel-key "C-c t f" fun emacs-lisp-mode-map)
+  (tempel-key "C-c t d" (format-time-string "%Y-%m-%d"))
+#+end_src
+
+Internally ~tempel-key~ uses ~tempel-insert~ to trigger the insertion. Depending on
+the style of your user configuration you may want to write your own helper
+macros, which allow you to conveniently bind templates via [[https://github.com/jwiegley/use-package][use-package]], [[https://github.com/noctuid/general][general]]
+or similar keybinding packages.
 
 * Contributions
 
