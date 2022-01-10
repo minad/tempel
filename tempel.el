@@ -247,7 +247,7 @@ INIT is the optional initial input."
     (push ov (car st))
     (when name
       (overlay-put ov 'tempel--name name)
-      (setq init (or init (alist-get name (cdr st)) ""))
+      (setq init (or init (alist-get name (cdr st))))
       (setf (alist-get name (cdr st)) init))
     (when (and init (not (equal init "")))
       (insert init)
