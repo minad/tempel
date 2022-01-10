@@ -66,9 +66,16 @@
   :type '(choice (const nil integer)))
 
 (defcustom tempel-user-elements nil
-  "List of user element functions.
-The function take a template element as argument and must return either
+  "List of user element handler functions.
+The functions take a template element as argument and must return either
 nil or a new template element, which is subsequently evaluated."
+  :type 'hook)
+
+(defcustom tempel-template-sources
+  (list 'tempel-local-templates #'tempel--file-templates)
+  "List of template sources.
+A source can either be a function or a variable symbol. The functions
+must return a list of templates which apply to the buffer or context."
   :type 'hook)
 
 (defface tempel-field
@@ -95,10 +102,13 @@ nil or a new template element, which is subsequently evaluated."
     (t :inherit highlight :slant italic))
   "Face used for default values.")
 
-(defvar tempel--templates nil
+(defvar-local tempel-local-templates nil
+  "List of templates which apply to the current buffer.")
+
+(defvar tempel--file-templates nil
   "Templates loaded from the `tempel-file'.")
 
-(defvar tempel--modified nil
+(defvar tempel--file-modified nil
   "Modification time of `tempel-file' at the last load.")
 
 (defvar tempel--history nil
@@ -120,22 +130,6 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
     (define-key map [remap keyboard-escape-quit] #'tempel-abort)
     map)
   "Keymap to navigate across template markers.")
-
-(defun tempel--load (file)
-  "Load templates from FILE."
-  (with-temp-buffer
-    (insert "(\n")
-    (insert-file-contents file)
-    (goto-char (point-max))
-    (insert "\n)")
-    (goto-char (point-min))
-    (let ((templates (read (current-buffer))) result)
-      (while (and templates (symbolp (car templates)))
-        (let ((mode (pop templates)) list)
-          (while (and templates (consp (car templates)))
-            (push (pop templates) list))
-          (push (cons mode (nreverse list)) result)))
-      result)))
 
 (defun tempel--print-element (elt)
   "Return string representation of template ELT."
@@ -357,17 +351,46 @@ PROMPT is the optional prompt/default value."
       (when (and (buffer-modified-p) (y-or-n-p (format "Save file %s? " tempel-file)))
         (save-buffer buf)))))
 
-(defun tempel--templates ()
-  "Return templates for current mode."
+(defun tempel--file-read (file)
+  "Load templates from FILE."
+  (with-temp-buffer
+    (insert "(\n")
+    (insert-file-contents file)
+    (goto-char (point-max))
+    (insert "\n)")
+    (goto-char (point-min))
+    (let ((templates (read (current-buffer))) result)
+      (while (and templates (symbolp (car templates)))
+        (let ((mode (pop templates)) list)
+          (while (and templates (consp (car templates)))
+            (push (pop templates) list))
+          (push (cons mode (nreverse list)) result)))
+      result)))
+
+(defun tempel--file-templates ()
+  "Return templates defined in `tempel-file'."
   (let ((mod (time-convert (file-attribute-modification-time
                             (file-attributes tempel-file))
                            'integer)))
-    (unless (equal tempel--modified mod)
-      (setq tempel--templates (tempel--load tempel-file)
-            tempel--modified mod)))
-  (cl-loop for x in tempel--templates
+    (unless (equal tempel--file-modified mod)
+      (setq tempel--file-templates (tempel--file-read tempel-file)
+            tempel--file-modified mod)))
+  (cl-loop for x in tempel--file-templates
            if (or (derived-mode-p (car x)) (eq (car x) 'fundamental-mode))
            append (cdr x)))
+
+(defun tempel--templates ()
+  "Return templates for current mode."
+  (let (result)
+    (run-hook-wrapped
+     'tempel-template-sources
+     (lambda (fun)
+       (cond
+        ((functionp fun) (setq result (append result (funcall fun))))
+        ((boundp fun) (setq result (append result (symbol-value fun))))
+        (t (error "Template source is not a function or a variable: %S" fun)))
+       nil))
+    result))
 
 (defun tempel--region ()
   "Return region bounds."
