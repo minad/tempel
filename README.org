@@ -95,6 +95,10 @@ syntax elements follow.
 #+begin_src emacs-lisp
   ;; -*- mode: lisp -*-
 
+  fundamental-mode ;; Available everywhere
+
+  (today (format-time-string "%Y-%m-%d"))
+
   latex-mode
 
   (begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}" > n)
@@ -118,7 +122,6 @@ syntax elements follow.
 
   text-mode
 
-  (today (format-time-string "%Y-%m-%d"))
   (cut "--8<---------------cut here---------------start------------->8---" n r n
        "--8<---------------cut here---------------end--------------->8---" n)
   (asciibox "+-" (make-string (length str) ?-) "-+" n
