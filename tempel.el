@@ -329,11 +329,15 @@ PROMPT is the optional prompt/default value."
       (push (make-overlay (point) (point) nil t t) (car st))
       (overlay-put (caar st) 'face 'cursor) ;; TODO debug
       (push st tempel--active)))
-  ;; Jump to first field
-  (unless (cl-loop for ov in (caar tempel--active)
-                   thereis (and (overlay-get ov 'tempel--state)
-                                (eq (point) (overlay-start ov))))
-    (tempel-next 1)))
+  (if (cddaar tempel--active)
+      (unless (cl-loop for ov in (caar tempel--active)
+                       thereis (and (overlay-get ov 'tempel--state)
+                                    (eq (point) (overlay-start ov))))
+        ;; Jump to first field
+        (tempel-next 1))
+    ;; Disable right away
+    (goto-char (overlay-start (caaar tempel--active)))
+    (tempel--disable)))
 
 (defun tempel--save ()
   "Save template file buffer."
