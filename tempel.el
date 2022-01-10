@@ -124,6 +124,8 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
+    (define-key map [remap beginning-of-buffer] #'tempel-beginning)
+    (define-key map [remap end-of-buffer] #'tempel-end)
     (define-key map [remap forward-paragraph] #'tempel-next)
     (define-key map [remap backward-paragraph] #'tempel-previous)
     (define-key map [remap keyboard-quit] #'tempel-abort)
@@ -413,12 +415,23 @@ PROMPT is the optional prompt/default value."
            ((and (< dir 0) (< stop pt))
             (setq next (max (or next -1) stop)))))))))
 
+(defun tempel-beginning ()
+  "Move to beginning of the template."
+  (interactive)
+  (when-let (pos (tempel--beginning))
+    (if (= pos (point)) (tempel-done) (goto-char pos))))
+
+(defun tempel-end ()
+  "Move to end of the template."
+  (interactive)
+  (when-let (pos (tempel--end))
+    (if (= pos (point)) (tempel-done) (goto-char pos))))
+
 (defun tempel-next (arg)
   "Move ARG fields forward and quit at the end."
   (interactive "p")
-  (cl-loop for i below (abs arg)
-           for next = (tempel--find arg) do
-           (if next (goto-char next)
+  (cl-loop for i below (abs arg) do
+           (if-let (next (tempel--find arg)) (goto-char next)
              (tempel-done)
              (cl-return))))
 
@@ -427,17 +440,26 @@ PROMPT is the optional prompt/default value."
   (interactive "p")
   (tempel-next (- arg)))
 
+(defun tempel--beginning ()
+  "Return beginning of template markers."
+  (and tempel--active
+       (cl-loop for st in tempel--active minimize
+                (cl-loop for ov in (car st) minimize (overlay-start ov)))))
+
+(defun tempel--end ()
+  "Return end of template markers."
+  (and tempel--active
+       (cl-loop for st in tempel--active maximize
+                (cl-loop for ov in (car st) maximize (overlay-end ov)))))
+
 (defun tempel-abort ()
   "Abort template insertion."
   (interactive)
   ;; TODO abort only the topmost template?
-  (when tempel--active
-    (let ((beg (cl-loop for st in tempel--active minimize
-                        (cl-loop for ov in (car st) minimize (overlay-start ov))))
-          (end (cl-loop for st in tempel--active maximize
-                        (cl-loop for ov in (car st) maximize (overlay-end ov)))))
-      (tempel-done)
-      (delete-region beg end))))
+  (when-let ((beg (tempel--beginning))
+             (end (tempel--end)))
+    (tempel-done)
+    (delete-region beg end)))
 
 (defun tempel--disable ()
   "Disable last template."
