@@ -12,10 +12,11 @@
 * Introduction
 
 Tempel is a tiny template package for Emacs, which uses the syntax of the Emacs
-Tempo library. Tempo is an ancient temple. It is 27 years old, but still in good
-shape since it successfully resisted change over the decades. However it may
-look a bit dusty here and there. Therefore I present to you, Tempel, a
-modernized implementation of Tempo, in the form of three commands:
+Tempo library. Tempo is an ancient temple of the church of Emacs. It is 27 years
+old, but still in good shape since it successfully resisted change over the
+decades. However it may look a bit dusty here and there. Therefore I present to
+you, Tempel, a modernized implementation of Tempo, in the form of three
+commands:
 
 + ~tempel-complete~ completes a template name at point in the buffer and
   subsequently expands the template. If called non-interactively the function behaves like a Capf and can be added
