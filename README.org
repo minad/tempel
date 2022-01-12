@@ -115,7 +115,7 @@ syntax elements follow.
   (var "(defvar " p "\n  \"" p "\")" n n)
   (const "(defconst " p "\n  \"" p "\")" n n)
   (custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")" n n)
-  (face "(defface " p " '((t :inherit font-lock-" p "-face))\n  \"" p "\")" n n)
+  (face "(defface " p " '((t :inherit " p "))\n  \"" p "\")")
   (group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")" n n)
   (macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
   (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
@@ -136,9 +136,20 @@ syntax elements follow.
 
   (title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
 
+  java-mode
+
+  (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
+
   org-mode
 
   (title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en" n n)
+  (quote "#+begin_quote" n> r> n> "#+end_quote")
+  (example "#+begin_example" n> r> n> "#+end_example")
+  (center "#+begin_center" n> r> n> "#+end_center")
+  (comment "#+begin_comment" n> r> n> "#+end_comment")
+  (verse "#+begin_verse" n> r> n> "#+end_verse")
+  (src "#+begin_src " p n> r> n> "#+end_src")
+  (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src")
 #+end_src
 
 * Template syntax
