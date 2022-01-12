@@ -14,7 +14,7 @@
 Tempel is a tiny template package for Emacs, which uses the syntax of the Emacs
 Tempo library. Tempo is an ancient temple of the church of Emacs. It is 27 years
 old, but still in good shape since it successfully resisted change over the
-decades. However it may look a bit dusty here and there. Therefore I present to
+decades. However it may look a bit dusty here and there. Therefore we present to
 you, Tempel, a modernized implementation of Tempo, in the form of three
 commands:
 
@@ -50,14 +50,16 @@ well to the hackable nature of Emacs. Tempel took inspiration from the
 
 * Quick start
 
-As of 2022-01-05 the package is not yet available in a package repository
-and has to be installed manually with ~package-install-file~.
+The package is available on GNU ELPA and can be installed with =package-install=.
+In the following we show an example configuration, which relies on on
+=use-package=.
 
 #+begin_src emacs-lisp
-  ;; Bind the Tempel commands
+  ;; Configure Tempel
   (use-package tempel
     :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
            ("M-*" . tempel-insert))
+
     :init
 
     ;; Setup completion at point
@@ -70,6 +72,7 @@ and has to be installed manually with ~package-install-file~.
       ;; want to see all matches, but then Tempel will probably trigger too
       ;; often when you don't expect it.
       (add-hook 'completion-at-point-functions #'tempel-expand -1 'local))
+
     (add-hook 'prog-mode-hook 'tempel-setup-capf)
     (add-hook 'text-mode-hook 'tempel-setup-capf)
 
