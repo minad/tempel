@@ -103,26 +103,34 @@ syntax elements follow.
 
   (today (format-time-string "%Y-%m-%d"))
 
+  prog-mode
+
+  (fixme (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "FIXME ")
+  (todo (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "TODO ")
+  (bug (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "BUG ")
+  (hack (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "HACK ")
+
   latex-mode
 
-  (begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}" > n)
-  (enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}" > n)
-  (itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}" > n)
+  (begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}")
+  (frac "\\frac{" p "}{" p "}")
+  (enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}")
+  (itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}")
 
   emacs-lisp-mode
 
   (lambda "(lambda (" p ")" n> r> ")")
-  (var "(defvar " p "\n  \"" p "\")" n n)
-  (const "(defconst " p "\n  \"" p "\")" n n)
-  (custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")" n n)
+  (var "(defvar " p "\n  \"" p "\")")
+  (const "(defconst " p "\n  \"" p "\")")
+  (custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")")
   (face "(defface " p " '((t :inherit " p "))\n  \"" p "\")")
-  (group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")" n n)
-  (macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
-  (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")" n n)
+  (group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")")
+  (macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")")
+  (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")")
   (let "(let (" p ")" n> r> ")")
   (star "(let* (" p ")" n> r> ")")
   (rec "(letrec (" p ")" n> r> ")")
-  (command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive)" n> r> ")" n n)
+  (command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive)" n> r> ")")
 
   text-mode
 
