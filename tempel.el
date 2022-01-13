@@ -124,13 +124,11 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 
 (defvar tempel-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [remap beginning-of-buffer] #'tempel-template-beginning)
-    (define-key map [remap end-of-buffer] #'tempel-template-end)
-    (define-key map [remap forward-paragraph] #'tempel-next-field)
-    (define-key map [remap backward-paragraph] #'tempel-previous-field)
-    (define-key map [remap backward-sentence] #'tempel-field-beginning)
-    (define-key map [remap forward-sentence] #'tempel-field-end)
-    (define-key map [remap kill-sentence] #'tempel-kill-field)
+    (define-key map [remap beginning-of-buffer] #'tempel-beginning)
+    (define-key map [remap end-of-buffer] #'tempel-end)
+    (define-key map [remap forward-paragraph] #'tempel-next)
+    (define-key map [remap backward-paragraph] #'tempel-previous)
+    (define-key map [remap kill-sentence] #'tempel-kill)
     (define-key map [remap keyboard-quit] #'tempel-abort)
     (define-key map [remap keyboard-escape-quit] #'tempel-abort)
     map)
@@ -344,7 +342,7 @@ PROMPT is the optional prompt/default value."
                        thereis (and (overlay-get ov 'tempel--state)
                                     (eq (point) (overlay-start ov))))
         ;; Jump to first field
-        (tempel-next-field 1))
+        (tempel-next 1))
     ;; Disable right away
     (goto-char (overlay-start (caaar tempel--active)))
     (tempel--disable)))
@@ -418,13 +416,13 @@ PROMPT is the optional prompt/default value."
            ((and (< dir 0) (< stop pt))
             (setq next (max (or next -1) stop)))))))))
 
-(defun tempel-template-beginning ()
+(defun tempel-beginning ()
   "Move to beginning of the template."
   (interactive)
   (when-let (pos (tempel--beginning))
     (if (= pos (point)) (tempel-done) (goto-char pos))))
 
-(defun tempel-template-end ()
+(defun tempel-end ()
   "Move to end of the template."
   (interactive)
   (when-let (pos (tempel--end))
@@ -436,28 +434,14 @@ PROMPT is the optional prompt/default value."
                                   (min (point-max) (1+ (point))))
            thereis (and (overlay-get ov 'tempel--state) ov)))
 
-(defun tempel-field-beginning ()
-  "Move to beginning of the field."
-  (interactive)
-  (if-let (ov (tempel--field-at-point))
-      (goto-char (overlay-start ov))
-    (move-beginning-of-line nil)))
-
-(defun tempel-field-end ()
-  "Move to end of the field."
-  (interactive)
-  (if-let (ov (tempel--field-at-point))
-      (goto-char (overlay-end ov))
-    (move-end-of-line nil)))
-
-(defun tempel-kill-field ()
+(defun tempel-kill ()
   "Kill the field contents."
   (interactive)
   (if-let (ov (tempel--field-at-point))
       (kill-region (overlay-start ov) (overlay-end ov))
     (kill-sentence nil)))
 
-(defun tempel-next-field (arg)
+(defun tempel-next (arg)
   "Move ARG fields forward and quit at the end."
   (interactive "p")
   (cl-loop for i below (abs arg) do
@@ -465,10 +449,10 @@ PROMPT is the optional prompt/default value."
              (tempel-done)
              (cl-return))))
 
-(defun tempel-previous-field (arg)
+(defun tempel-previous (arg)
   "Move ARG fields backward and quit at the beginning."
   (interactive "p")
-  (tempel-next-field (- arg)))
+  (tempel-next (- arg)))
 
 (defun tempel--beginning ()
   "Return beginning of template markers."
@@ -635,10 +619,8 @@ If called interactively, select a template with `completing-read'."
     (tempel-abbrev-mode 1)))
 
 ;; Emacs 28: Do not show Tempel commands in M-X
-(dolist (sym (list #'tempel-next-field #'tempel-previous-field
-                   #'tempel-field-beginning #'tempel-field-end
-                   #'tempel-template-beginning #'tempel-template-end
-                   #'tempel-kill-field #'tempel-done #'tempel-abort))
+(dolist (sym (list #'tempel-next #'tempel-previous #'tempel-beginning
+                   #'tempel-end #'tempel-kill #'tempel-done #'tempel-abort))
   (put sym 'completion-predicate #'tempel--command-p))
 
 (defun tempel--command-p (_sym buffer)
