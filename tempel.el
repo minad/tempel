@@ -634,5 +634,16 @@ If called interactively, select a template with `completing-read'."
   (unless (or noninteractive (eq (aref (buffer-name) 0) ?\s))
     (tempel-abbrev-mode 1)))
 
+;; Emacs 28: Do not show Tempel commands in M-X
+(dolist (sym (list #'tempel-next-field #'tempel-previous-field
+                   #'tempel-field-beginning #'tempel-field-end
+                   #'tempel-template-beginning #'tempel-template-end
+                   #'tempel-kill-field #'tempel-done #'tempel-abort))
+  (put sym 'completion-predicate #'tempel--command-p))
+
+(defun tempel--command-p (_sym buffer)
+  "Return non-nil if Tempel is active in BUFFER."
+  (buffer-local-value 'tempel--active buffer))
+
 (provide 'tempel)
 ;;; tempel.el ends here
