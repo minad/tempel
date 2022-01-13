@@ -30,7 +30,7 @@ For the completion at point commands ~tempel-complete~ and ~tempel-expand~, you 
 want to give my [[https://github.com/minad/corfu][Corfu]] completion at point popup UI a try. After inserting the
 template you can move between the visible template fields with the keys ~M-{~, ~M-}~
 or ~C-up/down~ which are normally bound to ~forward/backward-paragraph~. Tempel
-temporarily remaps these commands to ~tempel-next~ and ~tempel-previous~. The key
+temporarily remaps these commands to ~tempel-next-field/previous-field~. The key
 bindings are defined in the ~tempel-map~ keymap. You can customize them there. As
 soon as you move before (behind) the first (last) field, the fields are
 finalized.
