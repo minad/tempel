@@ -72,7 +72,7 @@ nil or a new template element, which is subsequently evaluated."
   :type 'hook)
 
 (defcustom tempel-template-sources
-  (list 'tempel-local-templates #'tempel--file-templates)
+  (list #'tempel-file-templates)
   "List of template sources.
 A source can either be a function or a variable symbol. The functions
 must return a list of templates which apply to the buffer or context."
@@ -101,9 +101,6 @@ must return a list of templates which apply to the buffer or context."
      :background "#041529" :foreground "#a8e5e5" :slant italic)
     (t :inherit highlight :slant italic))
   "Face used for default values.")
-
-(defvar-local tempel-local-templates nil
-  "List of templates which apply to the current buffer.")
 
 (defvar tempel--file-templates nil
   "Templates loaded from the `tempel-file'.")
@@ -370,8 +367,8 @@ PROMPT is the optional prompt/default value."
           (push (cons mode (nreverse list)) result)))
       result)))
 
-(defun tempel--file-templates ()
-  "Return templates defined in `tempel-file'."
+(defun tempel-file-templates ()
+  "Load the templates defined in `tempel-file'."
   (let ((mod (time-convert (file-attribute-modification-time
                             (file-attributes tempel-file))
                            'integer)))
