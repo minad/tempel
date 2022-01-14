@@ -19,8 +19,8 @@ you, Tempel, a modernized implementation of Tempo, in the form of three
 commands:
 
 + ~tempel-complete~ completes a template name at point in the buffer and
-  subsequently expands the template. If called non-interactively the function behaves like a Capf and can be added
-  to ~completion-at-point-functions~.
+  subsequently expands the template. If called non-interactively the function
+  behaves like a Capf and can be added to ~completion-at-point-functions~.
 + ~tempel-expand~ expands an exactly matching template name at point in the buffer.
   If called non-interactively the function behaves like a Capf and can be added
   to ~completion-at-point-functions~.
@@ -36,9 +36,9 @@ soon as you move before (behind) the first (last) field, the fields are
 finalized.
 
 Tempel can hook into the abbrev mechanism of Emacs by enabling the
-~tempel-abbrev-mode~ in a buffer or by enabling the
-~tempel-global-abbrev-mode~. Then the Tempel templates will be available
-via ~expand-abbrev~ which is usually bound to ~C-x '~.
+~tempel-abbrev-mode~ in a buffer or by enabling the ~tempel-global-abbrev-mode~.
+Then the Tempel templates will be available via ~expand-abbrev~ which is usually
+bound to ~C-x '~.
 
 Note that this package is not a competitor to the mature and widely used
 YASnippet library. Try Tempel only if you like small and simple packages. With
@@ -90,11 +90,11 @@ In the following we show an example configuration, which relies on on
 
 * Template file format
 
-The templates are defined in a Lisp file =templates= which is stored by default in
-the ~user-emacs-directory~ (=~/.config/emacs/templates=). The templates are written
-as Lisp expressions in the concise form of the Emacs Tempo syntax. The first
-element of the list is the name of the template. Behind the name, the Tempo
-syntax elements follow.
+The templates are defined in a Lisp file which is stored by default in the
+~user-emacs-directory~ (=~/.config/emacs/templates=). The templates are written as
+lists in the concise form of the Emacs Tempo syntax. The first element of the
+list is the name of the template. Behind the name, the Tempo syntax elements
+follow.
 
 #+begin_src emacs-lisp
   ;; -*- mode: lisp -*-
@@ -163,8 +163,8 @@ syntax elements follow.
 * Template syntax
 
 All the Tempo syntax elements are fully supported. The syntax elements are
-described in detail in ~tempo-define-template~ are supported. We document the
-important ones here:
+described in detail in the docstring of ~tempo-define-template~ in tempo.el. We
+document the important ones here:
 
  - "string" Inserts a string literal.
  - ~p~ Inserts an unnamed placeholder field.
@@ -193,13 +193,23 @@ Use caution with templates which execute arbitrary code!
 
 * Adding template sources
 
-Tempel offers a flexible mechanism for providing the templates which are
+Tempel offers a flexible mechanism for providing the templates, which are
 applicable to the current context. The variable ~tempel-template-sources~
 specifies a list of sources or a single source. A source can either be a
-function, which should return a list of applicable templates, or a variable name
-symbol of a variable which holds a list of templates, which apply to the current
-context. By default Tempel install the sources ~tempel--file-templates~ and the
-variable ~tempel-local-templates~.
+function, which should return a list of applicable templates, or the symbol of a
+variable, which holds a list of templates, which apply to the current context.
+By default, Tempel configures only the source ~tempel-file-templates~. You may
+want to add global or local template variables to your user configuration:
+
+#+begin_src emacs-lisp
+  (defvar my-global-templates
+    '((example "Global example template"))
+    "My global templates.")
+  (defvar-local my-local-templates nil
+    "Buffer-local templates.")
+  (add-to-list 'tempel-template-sources 'my-global-templates)
+  (add-to-list 'tempel-template-sources 'my-local-templates)
+#+end_src
 
 * Binding important to a key
 
