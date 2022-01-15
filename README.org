@@ -230,17 +230,17 @@ or similar keybinding packages.
 
 * Alternatives
 
-There are many alternative packages which provide abbreviation or snippet expansion.
+There are plenty of alternative packages which provide abbreviation or snippet expansion.
 
-- abbrev.el (builtin)
-- skeleton.el (builtin)
-- tempo.el (builtin)
-- [[https://github.com/cdominik/cdlatex][cdlatex.el]]
-- [[https://github.com/ymarco/auto-activating-snippets][aas.el]]
-- [[https://github.com/jiahaowork/muban.el][muban.el]]
-- [[https://github.com/pkazmier/snippet.el][snippet.el]]
-- [[https://nschum.de/src/emacs/tempo-snippets/][tempo-snippets.el]]
-- [[https://github.com/joaotavora/yasnippet][yasnippet.el]]
+- abbrev.el: Abbreviation expansion, builtin
+- skeleton.el: Lisp syntax for templates, builtin
+- tempo.el: Lisp syntax for templates, builtin
+- [[https://github.com/cdominik/cdlatex][cdlatex.el]]: Fast LaTeX insertion
+- [[https://github.com/jiahaowork/muban.el][muban.el]]: Lightweight template expansion
+- [[https://github.com/joaotavora/yasnippet][yasnippet.el]]: The most popular Emacs template system
+- [[https://github.com/pkazmier/snippet.el][snippet.el]]: Original snippet mode
+- [[https://github.com/ymarco/auto-activating-snippets][aas.el]]: Auto activating snippets
+- [[https://nschum.de/src/emacs/tempo-snippets/][tempo-snippets.el]]: snippet.el-like interface for Tempo
 
 * Contributions
 
