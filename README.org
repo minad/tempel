@@ -227,6 +227,20 @@ the style of your user configuration you may want to write your own helper
 macros, which allow you to conveniently bind templates via [[https://github.com/jwiegley/use-package][use-package]], [[https://github.com/noctuid/general][general]]
 or similar keybinding packages.
 
+* Alternatives
+
+There are many alternative packages which provide abbreviation or snippet expansion.
+
+- abbrev.el (builtin)
+- skeleton.el (builtin)
+- tempo.el (builtin)
+- [[https://github.com/cdominik/cdlatex][cdlatex.el]]
+- [[https://github.com/ymarco/auto-activating-snippets][aas.el]]
+- [[https://github.com/jiahaowork/muban.el][muban.el]]
+- [[https://github.com/pkazmier/snippet.el][snippet.el]]
+- [[https://nschum.de/src/emacs/tempo-snippets/][tempo-snippets.el]]
+- [[https://github.com/joaotavora/yasnippet][yasnippet.el]]
+
 * Contributions
 
 Since this package is part of [[http://elpa.gnu.org/packages/marginalia.html][GNU ELPA]] contributions require a copyright
