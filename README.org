@@ -140,6 +140,7 @@ the template. Behind the name, the Tempo syntax elements follow.
   (asciibox "+-" (make-string (length str) ?-) "-+" n
             "| " (s str)                       " |" n
             "+-" (make-string (length str) ?-) "-+" n)
+  (rot13 (p "plain text" text) n "----" n (rot13 text))
 
   rst-mode
 
