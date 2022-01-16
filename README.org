@@ -141,6 +141,7 @@ the template. Behind the name, the Tempo syntax elements follow.
             "| " (s str)                       " |" n
             "+-" (make-string (length str) ?-) "-+" n)
   (rot13 (p "plain text" text) n "----" n (rot13 text))
+  (calc (p "taylor(sin(x),x=0,3)" formula) n "----" n (format "%s" (calc-eval formula)))
 
   rst-mode
 
