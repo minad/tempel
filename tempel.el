@@ -367,7 +367,7 @@ PROMPT is the optional prompt/default value."
             (push (pop data) plist))
           (while (consp (car data))
             (push (pop data) templates))
-          (push (list mode (nreverse plist) (nreverse templates)) result)))
+          (push `(,mode ,(nreverse plist) . ,(nreverse templates)) result)))
       result)))
 
 (defun tempel-file-templates ()
@@ -378,7 +378,7 @@ PROMPT is the optional prompt/default value."
     (unless (equal tempel--file-modified mod)
       (setq tempel--file-templates (tempel--file-read tempel-file)
             tempel--file-modified mod)))
-  (cl-loop for (mode plist templates) in tempel--file-templates
+  (cl-loop for (mode plist . templates) in tempel--file-templates
            if (or (derived-mode-p mode) (eq mode #'fundamental-mode))
            if (or (not (plist-member plist :condition))
                   (eval (plist-get plist :condition) 'lexical))
