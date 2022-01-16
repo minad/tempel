@@ -149,11 +149,7 @@ the template. Behind the name, the Tempo syntax elements follow.
 
   (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
 
-  c-mode
-  :condition
-  (save-match-data
-    (save-excursion
-      (re-search-backward "^\\w*$" (line-beginning-position) 'noerror)))
+  c-mode :condition (re-search-backward "^\\w*$" (line-beginning-position) 'noerror)
 
   (inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
   (incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")

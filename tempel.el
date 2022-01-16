@@ -379,9 +379,12 @@ PROMPT is the optional prompt/default value."
       (setq tempel--file-templates (tempel--file-read tempel-file)
             tempel--file-modified mod)))
   (cl-loop for (mode plist . templates) in tempel--file-templates
-           if (or (derived-mode-p mode) (eq mode #'fundamental-mode))
-           if (or (not (plist-member plist :condition))
-                  (eval (plist-get plist :condition) 'lexical))
+           if (and (or (derived-mode-p mode) (eq mode #'fundamental-mode))
+                   (or (not (plist-member plist :condition))
+                       (save-excursion
+                         (save-restriction
+                           (save-match-data
+                             (eval (plist-get plist :condition) 'lexical))))))
            append templates))
 
 (defun tempel--templates ()
