@@ -359,12 +359,15 @@ PROMPT is the optional prompt/default value."
     (goto-char (point-max))
     (insert "\n)")
     (goto-char (point-min))
-    (let ((templates (read (current-buffer))) result)
-      (while (and templates (symbolp (car templates)))
-        (let ((mode (pop templates)) list)
-          (while (and templates (consp (car templates)))
-            (push (pop templates) list))
-          (push (cons mode (nreverse list)) result)))
+    (let ((data (read (current-buffer))) result)
+      (while data
+        (let ((mode (pop data)) plist templates)
+          (while (keywordp (car data))
+            (push (pop data) plist)
+            (push (pop data) plist))
+          (while (consp (car data))
+            (push (pop data) templates))
+          (push (list mode (nreverse plist) (nreverse templates)) result)))
       result)))
 
 (defun tempel-file-templates ()
@@ -375,9 +378,11 @@ PROMPT is the optional prompt/default value."
     (unless (equal tempel--file-modified mod)
       (setq tempel--file-templates (tempel--file-read tempel-file)
             tempel--file-modified mod)))
-  (cl-loop for x in tempel--file-templates
-           if (or (derived-mode-p (car x)) (eq (car x) 'fundamental-mode))
-           append (cdr x)))
+  (cl-loop for (mode plist templates) in tempel--file-templates
+           if (or (derived-mode-p mode) (eq mode #'fundamental-mode))
+           if (or (not (plist-member plist :condition))
+                  (eval (plist-get plist :condition) 'lexical))
+           append templates))
 
 (defun tempel--templates ()
   "Return templates for current mode."
