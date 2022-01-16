@@ -126,7 +126,6 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
     (define-key map [remap forward-paragraph] #'tempel-next)
     (define-key map [remap backward-paragraph] #'tempel-previous)
     (define-key map [remap kill-sentence] #'tempel-kill)
-    (define-key map [remap keyboard-quit] #'tempel-abort)
     (define-key map [remap keyboard-escape-quit] #'tempel-abort)
     map)
   "Keymap to navigate across template fields.")
