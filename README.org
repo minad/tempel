@@ -157,8 +157,9 @@ follow.
   (center "#+begin_center" n> r> n> "#+end_center")
   (comment "#+begin_comment" n> r> n> "#+end_comment")
   (verse "#+begin_verse" n> r> n> "#+end_verse")
-  (src "#+begin_src " p n> r> n> "#+end_src")
-  (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src")
+  (src "#+begin_src " p n "#+end_src" (progn (tempel-done) (org-edit-src-code) nil))
+  (el "#+begin_src emacs-lisp" n "#+end_src" (ignore (org-edit-src-code)))
+  (py "#+begin_src python" n "#+end_src" (ignore (org-edit-src-code)))
 #+end_src
 
 * Template syntax
