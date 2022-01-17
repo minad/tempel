@@ -51,9 +51,9 @@ package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][Gi
 
 * Quick start
 
-The package is available on GNU ELPA and can be installed with =package-install=.
-In the following we show an example configuration, which relies on on
-=use-package=.
+The package is available on GNU ELPA and MELPA and can be installed with
+=package-install=. In the following we show an example configuration, which relies
+on on =use-package=.
 
 #+begin_src emacs-lisp
   ;; Configure Tempel
