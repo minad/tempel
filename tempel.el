@@ -368,7 +368,7 @@ PROMPT is the optional prompt/default value."
             (push (pop data) plist))
           (while (consp (car data))
             (push (pop data) templates))
-          (push `(,modes ,(nreverse plist) . ,(nreverse templates)) result)))
+          (push `(,(nreverse modes) ,(nreverse plist) . ,(nreverse templates)) result)))
       result)))
 
 (defun tempel-file-templates ()
