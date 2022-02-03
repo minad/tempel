@@ -118,6 +118,10 @@ the template. Behind the name, the Tempo syntax elements follow.
   (enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}")
   (itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}")
 
+  lisp-mode emacs-lisp-mode ;; Specify multiple modes
+
+  (lambda "(lambda (" p ")" n> r> ")")
+
   emacs-lisp-mode
 
   (lambda "(lambda (" p ")" n> r> ")")

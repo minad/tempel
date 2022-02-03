@@ -360,13 +360,15 @@ PROMPT is the optional prompt/default value."
     (goto-char (point-min))
     (let ((data (read (current-buffer))) result)
       (while data
-        (let ((mode (pop data)) plist templates)
+        (let (modes plist templates)
+          (while (and (symbolp (car data)) (not (keywordp (car data))))
+            (push (pop data) modes))
           (while (keywordp (car data))
             (push (pop data) plist)
             (push (pop data) plist))
           (while (consp (car data))
             (push (pop data) templates))
-          (push `(,mode ,(nreverse plist) . ,(nreverse templates)) result)))
+          (push `(,modes ,(nreverse plist) . ,(nreverse templates)) result)))
       result)))
 
 (defun tempel-file-templates ()
@@ -377,14 +379,17 @@ PROMPT is the optional prompt/default value."
     (unless (equal tempel--file-modified mod)
       (setq tempel--file-templates (tempel--file-read tempel-file)
             tempel--file-modified mod)))
-  (cl-loop for (mode plist . templates) in tempel--file-templates
-           if (and (or (derived-mode-p mode) (eq mode #'fundamental-mode))
-                   (or (not (plist-member plist :condition))
-                       (save-excursion
-                         (save-restriction
-                           (save-match-data
-                             (eval (plist-get plist :condition) 'lexical))))))
-           append templates))
+  (cl-loop
+   for (modes plist . templates) in tempel--file-templates
+   if (and
+       (cl-loop for m in modes
+                thereis (or (derived-mode-p m) (eq m #'fundamental-mode)))
+       (or (not (plist-member plist :condition))
+           (save-excursion
+             (save-restriction
+               (save-match-data
+                 (eval (plist-get plist :condition) 'lexical))))))
+   append templates))
 
 (defun tempel--templates ()
   "Return templates for current mode."
