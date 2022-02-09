@@ -258,5 +258,5 @@ There are plenty of alternative packages which provide abbreviation or snippet e
 
 * Contributions
 
-Since this package is part of [[http://elpa.gnu.org/packages/marginalia.html][GNU ELPA]] contributions require a copyright
+Since this package is part of [[http://elpa.gnu.org/packages/tempel.html][GNU ELPA]] contributions require a copyright
 assignment to the FSF.
