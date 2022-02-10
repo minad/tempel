@@ -223,9 +223,9 @@ want to add global or local template variables to your user configuration:
   (add-to-list 'tempel-template-sources 'my-local-templates)
 #+end_src
 
-* Binding important to a key
+* Binding important templates to a key
 
-Important kemplates can be bound to a key with the small utility macro
+Important templates can be bound to a key with the small utility macro
 ~tempel-key~ which accepts three arguments, a key, a template or name and
 optionally a map.
 
