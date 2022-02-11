@@ -201,7 +201,7 @@ BEG and END are the boundaries of the modification."
 
 (defun tempel--synchronize-fields (st current)
   "Synchronize fields of ST, except CURRENT overlay."
-  (dolist (ov (car st))
+  (dolist (ov (cdar st))
     (unless (eq ov current)
       (save-excursion
         (goto-char (overlay-start ov))
@@ -330,28 +330,27 @@ PROMPT is the optional prompt/default value."
       ;; Split existing overlays, do not expand within existing field.
       ;; TODO This will be causing issues. Think more about nested expansion.
       (dolist (st tempel--active)
-        (dolist (ov (car st))
+        (dolist (ov (cdar st))
           (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
             (setf (overlay-end ov) (point)))))
       ;; Activate template
       (let ((st (cons nil nil))
-            (inhibit-modification-hooks t))
-        (push (make-overlay (point) (point)) (car st))
-        (overlay-put (caar st) 'face 'cursor) ;; TODO debug
+            (inhibit-modification-hooks t)
+            (beg (point)))
         (while (and template (not (keywordp (car template))))
           (tempel--element st region (pop template)))
-        (push (make-overlay (point) (point) nil t t) (car st))
-        (overlay-put (caar st) 'face 'cursor) ;; TODO debug
+        (push (make-overlay beg (point) nil t) (car st))
+        ;;(overlay-put (caar st) 'face 'region) ;; TODO debug
         (push st tempel--active)))
-    (if (cddaar tempel--active)
-        (unless (cl-loop for ov in (caar tempel--active)
-                         thereis (and (overlay-get ov 'tempel--field)
-                                      (eq (point) (overlay-start ov))))
-          ;; Jump to first field
-          (tempel-next 1))
-      ;; Disable right away
-      (goto-char (overlay-start (caaar tempel--active)))
-      (tempel--disable))
+    (cond
+     ((cl-loop for ov in (caar tempel--active)
+               never (overlay-get ov 'tempel--field))
+      (goto-char (overlay-end (caaar tempel--active)))
+      (tempel--disable)) ;; Disable right away
+     ((cl-loop for ov in (caar tempel--active)
+               never (and (overlay-get ov 'tempel--field)
+                          (eq (point) (overlay-start ov))))
+      (tempel-next 1))) ;; Jump to first field
     (eval (plist-get plist :post) 'lexical)))
 
 (defun tempel--save ()
@@ -477,14 +476,12 @@ PROMPT is the optional prompt/default value."
 (defun tempel--beginning ()
   "Return beginning of template markers."
   (and tempel--active
-       (cl-loop for st in tempel--active minimize
-                (cl-loop for ov in (car st) minimize (overlay-start ov)))))
+       (cl-loop for st in tempel--active minimize (overlay-start (caar st)))))
 
 (defun tempel--end ()
   "Return end of template markers."
   (and tempel--active
-       (cl-loop for st in tempel--active maximize
-                (cl-loop for ov in (car st) maximize (overlay-end ov)))))
+       (cl-loop for st in tempel--active maximize (overlay-end (caar st)))))
 
 (defun tempel-abort ()
   "Abort template insertion."
