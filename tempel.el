@@ -115,7 +115,7 @@ must return a list of templates which apply to the buffer or context."
   "List of active templates.
 Each template state is a pair, where the car is a list of overlays and
 the cdr is an alist of variable bindings. The template state is attached
-to each overlay as the property `tempel--state'. Furthermore overlays
+to each overlay as the property `tempel--field'. Furthermore overlays
 may be named with `tempel--name' or carry an evaluatable Lisp expression
 `tempel--form'.")
 
@@ -188,7 +188,7 @@ BEG and END are the boundaries of the modification."
     (delete-region (overlay-start ov) (overlay-end ov)))
    ;; Update field after modification
    (after
-    (let ((st (overlay-get ov 'tempel--state)))
+    (let ((st (overlay-get ov 'tempel--field)))
       (unless undo-in-progress
         (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
       (when-let (name (overlay-get ov 'tempel--name))
@@ -252,7 +252,7 @@ INIT is the optional initial input."
       (insert init)
       (move-overlay ov (overlay-start ov) (point)))
     (tempel--update-mark ov)
-    (overlay-put ov 'tempel--state st)
+    (overlay-put ov 'tempel--field st)
     (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
@@ -345,7 +345,7 @@ PROMPT is the optional prompt/default value."
         (push st tempel--active)))
     (if (cddaar tempel--active)
         (unless (cl-loop for ov in (caar tempel--active)
-                         thereis (and (overlay-get ov 'tempel--state)
+                         thereis (and (overlay-get ov 'tempel--field)
                                       (eq (point) (overlay-start ov))))
           ;; Jump to first field
           (tempel-next 1))
@@ -452,7 +452,7 @@ PROMPT is the optional prompt/default value."
   "Return the field overlay at point."
   (cl-loop for ov in (overlays-in (max (point-min) (1- (point)))
                                   (min (point-max) (1+ (point))))
-           thereis (and (overlay-get ov 'tempel--state) ov)))
+           thereis (and (overlay-get ov 'tempel--field) ov)))
 
 (defun tempel-kill ()
   "Kill the field contents."
