@@ -95,7 +95,9 @@ The templates are defined in a Lisp file which is stored by default in the
 ~user-emacs-directory~ (=~/.config/emacs/templates=). The templates are grouped by
 major mode with an optional ~:condition~. Each template is a list in the concise
 form of the Emacs Tempo syntax. The first element of each list is the name of
-the template. Behind the name, the Tempo syntax elements follow.
+the template. Behind the name, the Tempo syntax elements follow. Pre- and
+post-expansion operations can be specified per template by the optional keys
+=:pre= and =:post=.
 
 #+begin_src emacs-lisp
   ;; -*- mode: lisp -*-
@@ -179,7 +181,8 @@ the template. Behind the name, the Tempo syntax elements follow.
   (comment "#+begin_comment" n> r> n> "#+end_comment")
   (verse "#+begin_verse" n> r> n> "#+end_verse")
   (src "#+begin_src " p n> r> n> "#+end_src")
-  (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src")
+  (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src"
+         :post (progn (tempel-done) (org-edit-src-code)))
 #+end_src
 
 * Template syntax

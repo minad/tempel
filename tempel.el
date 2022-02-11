@@ -318,35 +318,41 @@ PROMPT is the optional prompt/default value."
 
 (defun tempel--insert (template region)
   "Insert TEMPLATE given the current REGION."
-  ;; TODO do we want to have the ability to reactivate snippets?
-  (unless (eq buffer-undo-list t)
-    (push (list 'apply #'tempel--disable) buffer-undo-list))
-  (setf (alist-get 'tempel--active minor-mode-overriding-map-alist) tempel-map)
-  (save-excursion
-    ;; Split existing overlays, do not expand within existing field.
-    ;; TODO This will be causing issues. Think more about nested expansion.
-    (dolist (st tempel--active)
-      (dolist (ov (car st))
-        (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
-          (setf (overlay-end ov) (point)))))
-    ;; Activate template
-    (let ((st (cons nil nil))
-          (inhibit-modification-hooks t))
-      (push (make-overlay (point) (point)) (car st))
-      (overlay-put (caar st) 'face 'cursor) ;; TODO debug
-      (dolist (elt template) (tempel--element st region elt))
-      (push (make-overlay (point) (point) nil t t) (car st))
-      (overlay-put (caar st) 'face 'cursor) ;; TODO debug
-      (push st tempel--active)))
-  (if (cddaar tempel--active)
-      (unless (cl-loop for ov in (caar tempel--active)
-                       thereis (and (overlay-get ov 'tempel--state)
-                                    (eq (point) (overlay-start ov))))
-        ;; Jump to first field
-        (tempel-next 1))
-    ;; Disable right away
-    (goto-char (overlay-start (caaar tempel--active)))
-    (tempel--disable)))
+  (let ((plist template))
+    (while (and plist (not (keywordp (car plist))))
+      (pop plist))
+    (eval (plist-get plist :pre) 'lexical)
+    ;; TODO do we want to have the ability to reactivate snippets?
+    (unless (eq buffer-undo-list t)
+      (push (list 'apply #'tempel--disable) buffer-undo-list))
+    (setf (alist-get 'tempel--active minor-mode-overriding-map-alist) tempel-map)
+    (save-excursion
+      ;; Split existing overlays, do not expand within existing field.
+      ;; TODO This will be causing issues. Think more about nested expansion.
+      (dolist (st tempel--active)
+        (dolist (ov (car st))
+          (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
+            (setf (overlay-end ov) (point)))))
+      ;; Activate template
+      (let ((st (cons nil nil))
+            (inhibit-modification-hooks t))
+        (push (make-overlay (point) (point)) (car st))
+        (overlay-put (caar st) 'face 'cursor) ;; TODO debug
+        (while (and template (not (keywordp (car template))))
+          (tempel--element st region (pop template)))
+        (push (make-overlay (point) (point) nil t t) (car st))
+        (overlay-put (caar st) 'face 'cursor) ;; TODO debug
+        (push st tempel--active)))
+    (if (cddaar tempel--active)
+        (unless (cl-loop for ov in (caar tempel--active)
+                         thereis (and (overlay-get ov 'tempel--state)
+                                      (eq (point) (overlay-start ov))))
+          ;; Jump to first field
+          (tempel-next 1))
+      ;; Disable right away
+      (goto-char (overlay-start (caaar tempel--active)))
+      (tempel--disable))
+    (eval (plist-get plist :post) 'lexical)))
 
 (defun tempel--save ()
   "Save template file buffer."
