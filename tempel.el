@@ -177,6 +177,13 @@ REGION are the current region bouns"
       (tempel--delete-word name)
       (tempel--insert template region))))
 
+(defun tempel--range-modified (ov &rest _)
+  "Range overlay OV modified."
+  (when (= (overlay-start ov) (overlay-end ov))
+    (let ((st (overlay-get ov 'tempel--range)))
+      (setq tempel--active (cons st (delq st tempel--active)))
+      (tempel--disable))))
+
 (defun tempel--field-modified (ov after beg end &optional _len)
   "Update field overlay OV.
 AFTER is non-nil after the modification.
@@ -340,6 +347,8 @@ PROMPT is the optional prompt/default value."
         (while (and template (not (keywordp (car template))))
           (tempel--element st region (pop template)))
         (push (make-overlay beg (point) nil t) (car st))
+        (overlay-put (caar st) 'modification-hooks (list #'tempel--range-modified))
+        (overlay-put (caar st) 'tempel--range st)
         ;;(overlay-put (caar st) 'face 'region) ;; TODO debug
         (push st tempel--active)))
     (cond
