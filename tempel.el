@@ -208,14 +208,18 @@ BEG and END are the boundaries of the modification."
 
 (defun tempel--synchronize-fields (st current)
   "Synchronize fields of ST, except CURRENT overlay."
-  (dolist (ov (cdar st))
-    (unless (eq ov current)
-      (save-excursion
-        (goto-char (overlay-start ov))
-        (let (x)
-          (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cdr st)))
-                      (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
-          (when x (tempel--replace (overlay-start ov) (overlay-end ov) ov x)))))))
+  (let ((range (caar st)))
+    (dolist (ov (cdar st))
+      (unless (eq ov current)
+        (save-excursion
+          (goto-char (overlay-start ov))
+          (let (x)
+            (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cdr st)))
+                        (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
+            (when x (tempel--replace (overlay-start ov) (overlay-end ov) ov x)))))
+      ;; Move range overlay
+      (move-overlay range (overlay-start range)
+                    (max (overlay-end range) (overlay-end ov))))))
 
 (defun tempel--replace (beg end ov str)
   "Replace region beween BEG and END with STR.
@@ -343,13 +347,14 @@ PROMPT is the optional prompt/default value."
       ;; Activate template
       (let ((st (cons nil nil))
             (inhibit-modification-hooks t)
-            (beg (point)))
+            (range (point)))
         (while (and template (not (keywordp (car template))))
           (tempel--element st region (pop template)))
-        (push (make-overlay beg (point) nil t) (car st))
-        (overlay-put (caar st) 'modification-hooks (list #'tempel--range-modified))
-        (overlay-put (caar st) 'tempel--range st)
-        ;;(overlay-put (caar st) 'face 'region) ;; TODO debug
+        (setq range (make-overlay range (point) nil t))
+        (push range (car st))
+        (overlay-put range 'modification-hooks (list #'tempel--range-modified))
+        (overlay-put range 'tempel--range st)
+        ;;(overlay-put range 'face 'region) ;; TODO debug
         (push st tempel--active)))
     (cond
      ((cl-loop for ov in (caar tempel--active)
