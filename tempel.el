@@ -553,11 +553,21 @@ If INTERACTIVE is nil the function acts like a capf."
   (if interactive
       (tempel--interactive #'tempel-expand)
     (when-let* ((templates (tempel--templates))
-                (bounds (bounds-of-thing-at-point 'symbol))
-                (name (buffer-substring-no-properties
-                       (car bounds) (cdr bounds)))
-                (sym (intern-soft name))
-                (template (assq sym templates)))
+                (bounds    (bounds-of-thing-at-point 'symbol))
+                (name      (buffer-substring-no-properties
+                            (car bounds) (cdr bounds)))
+                (sym       (intern-soft name))
+                (template  (cl-loop for template in templates
+                             when (eq sym (cl-first template))
+                             collect template into candidates
+                             finally return
+                             (if (= 1 (length candidates))
+                                 (cl-first candidates)
+                               (let ((second-elt (completing-read (format "Candidates for %s: " name)
+                                                                  (mapcar #'cl-second candidates) nil t)))
+                                 (seq-find (lambda (elt)
+                                             (equal second-elt (cl-second elt)))
+                                           templates))))))
       (setq templates (list template))
       (list (car bounds) (cdr bounds)
             (tempel--completion-table templates)
