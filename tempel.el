@@ -135,6 +135,15 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
     map)
   "Keymap to navigate across template fields.")
 
+(defmacro tempel--inhibit-hooks (&rest body)
+  "Inhibit tempel hooks from running in BODY.
+We don't use `inhibit-modification-hooks' since this also prevents hooks
+from other packages from running."
+  (declare (indent 0))
+  `(cl-letf (((symbol-function #'tempel--field-modified) #'ignore)
+             ((symbol-function #'tempel--range-modified) #'ignore))
+     ,@body))
+
 (defun tempel--print-element (elt)
   "Return string representation of template ELT."
   (pcase elt
@@ -230,14 +239,15 @@ If OV is alive, move it."
       (unless (eq buffer-undo-list t)
         (push (list 'apply #'tempel--replace beg (+ beg (length str)) ov old)
               buffer-undo-list))
-      (with-silent-modifications
-        (save-excursion
-          (goto-char beg)
-          (delete-char (- end beg))
-          (insert str)
-          (when ov
-            (move-overlay ov beg (point))
-            (tempel--update-mark ov)))))))
+      (let ((buffer-undo-list t))
+        (tempel--inhibit-hooks
+          (save-excursion
+            (goto-char beg)
+            (delete-char (- end beg))
+            (insert str)
+            (when ov
+              (move-overlay ov beg (point))
+              (tempel--update-mark ov))))))))
 
 (defun tempel--update-mark (ov)
   "Update field mark and face of OV."
@@ -345,17 +355,16 @@ PROMPT is the optional prompt/default value."
           (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
             (setf (overlay-end ov) (point)))))
       ;; Activate template
-      (let ((st (cons nil nil))
-            (inhibit-modification-hooks t)
-            (range (point)))
-        (while (and template (not (keywordp (car template))))
-          (tempel--element st region (pop template)))
-        (setq range (make-overlay range (point) nil t))
-        (push range (car st))
-        (overlay-put range 'modification-hooks (list #'tempel--range-modified))
-        (overlay-put range 'tempel--range st)
-        ;;(overlay-put range 'face 'region) ;; TODO debug
-        (push st tempel--active)))
+      (let ((st (cons nil nil)) (range (point)))
+        (tempel--inhibit-hooks
+          (while (and template (not (keywordp (car template))))
+            (tempel--element st region (pop template)))
+          (setq range (make-overlay range (point) nil t))
+          (push range (car st))
+          (overlay-put range 'modification-hooks (list #'tempel--range-modified))
+          (overlay-put range 'tempel--range st)
+          ;;(overlay-put range 'face 'region) ;; TODO debug
+          (push st tempel--active))))
     (cond
      ((cl-loop for ov in (caar tempel--active)
                never (overlay-get ov 'tempel--field))
