@@ -304,7 +304,7 @@ INIT is the optional initial input."
     ('% (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
           (insert "\n")))
     ('o (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
-	  (open-line 1)))
+          (open-line 1)))
     (`(s ,name) (tempel--field st name))
     (`(l . ,lst) (dolist (e lst) (tempel--element st region e)))
     ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st rest))
@@ -390,7 +390,7 @@ PROMPT is the optional prompt/default value."
     (let ((data (read (current-buffer))) result)
       (while data
         (let (modes plist templates)
-          (while (and (symbolp (car data)) (not (keywordp (car data))))
+          (while (and (car data) (symbolp (car data)) (not (keywordp (car data))))
             (push (pop data) modes))
           (while (keywordp (car data))
             (push (pop data) plist)
