@@ -96,13 +96,13 @@ on on =use-package=.
 
 * Template file format
 
-The templates are defined in a Lisp file which is stored by default in the
-~user-emacs-directory~ (=~/.config/emacs/templates=). The templates are grouped by
-major mode with an optional ~:condition~. Each template is a list in the concise
-form of the Emacs Tempo syntax. The first element of each list is the name of
-the template. Behind the name, the Tempo syntax elements follow. Pre- and
-post-expansion operations can be specified per template by the optional keys
-=:pre= and =:post=.
+The templates are defined in a Lisp file configured by ~tempel-path~. By default
+the file or directory =~/.config/emacs/templates= is used. The templates are
+grouped by major mode with an optional ~:condition~. Each template is a list in
+the concise form of the Emacs Tempo syntax. The first element of each list is
+the name of the template. Behind the name, the Tempo syntax elements follow.
+Pre- and post-expansion operations can be specified per template by the optional
+keys =:pre= and =:post=.
 
 #+begin_src emacs-lisp
   ;; -*- mode: lisp -*-
@@ -228,7 +228,7 @@ applicable to the current context. The variable ~tempel-template-sources~
 specifies a list of sources or a single source. A source can either be a
 function, which should return a list of applicable templates, or the symbol of a
 variable, which holds a list of templates, which apply to the current context.
-By default, Tempel configures only the source ~tempel-file-templates~. You may
+By default, Tempel configures only the source ~tempel-path-templates~. You may
 want to add global or local template variables to your user configuration:
 
 #+begin_src emacs-lisp
