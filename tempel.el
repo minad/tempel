@@ -390,10 +390,19 @@ PROMPT is the optional prompt/default value."
 (defun tempel--save ()
   "Prompt to save modified files in `tempel-path'."
   (cl-loop
+   with all = nil
    for (file . _ts) in tempel--path-timestamps do
    (when-let (buf (get-file-buffer file))
      (with-current-buffer buf
-       (when (and (buffer-modified-p) (y-or-n-p (format "Save file %s? " file)))
+       (when (and (buffer-modified-p)
+                  (pcase (or all (read-answer
+                                  (format "Save file %s? " file)
+                                  '(("yes" ?y "save the file")
+                                    ("no"  ?n "skip the file")
+                                    ("all" ?! "save all modified files"))))
+                    ("yes" t)
+                    ("no" nil)
+                    ("all" (setq all "all"))))
          (save-buffer buf))))))
 
 (defun tempel--file-read (file)
