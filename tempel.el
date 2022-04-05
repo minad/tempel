@@ -50,7 +50,13 @@
 
 (defcustom tempel-path (expand-file-name "templates" user-emacs-directory)
   "A file or a list of files and/or directories, containing templates."
-  :type '(choice string (string list)))
+  :type '(choice string (repeat string)))
+
+(defcustom tempel-trigger-prefix nil
+  "Trigger string prefixes the template names.
+The trigger prefix must be entered first before the template name to
+trigger completion."
+  :type '(choice (const nil) string))
 
 (defcustom tempel-mark
   #(" " 0 1 (display (space :width (1)) face cursor))
@@ -193,6 +199,8 @@ REGION are the current region bouns"
     (when-let* ((sym (intern-soft name))
                 (template (alist-get sym templates)))
       (tempel--delete-word name)
+      (when tempel-trigger-prefix
+        (tempel--delete-word tempel-trigger-prefix))
       (tempel--insert template region))))
 
 (defun tempel--range-modified (ov &rest _)
@@ -575,6 +583,18 @@ The completion table specifies the category `tempel'."
         '(metadata (category . tempel))
       (complete-with-action action templates str pred))))
 
+(defun tempel--prefix-bounds ()
+  "Return prefix bounds."
+  (if tempel-trigger-prefix
+      (save-excursion
+        (let ((end (point))
+              (beg (re-search-backward
+                    (concat (regexp-quote tempel-trigger-prefix) "\\S-*")
+                    (line-beginning-position) 'noerror)))
+          (when beg
+            (cons (+ beg (length tempel-trigger-prefix)) end))))
+      (bounds-of-thing-at-point 'symbol)))
+
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
   "Expand exactly matching template name at point.
@@ -583,7 +603,7 @@ If INTERACTIVE is nil the function acts like a capf."
   (if interactive
       (tempel--interactive #'tempel-expand)
     (when-let* ((templates (tempel--templates))
-                (bounds (bounds-of-thing-at-point 'symbol))
+                (bounds (tempel--prefix-bounds))
                 (name (buffer-substring-no-properties
                        (car bounds) (cdr bounds)))
                 (sym (intern-soft name))
@@ -600,10 +620,13 @@ If INTERACTIVE is nil the function acts like a capf."
 If INTERACTIVE is nil the function acts like a capf."
   (interactive (list t))
   (if interactive
-      (tempel--interactive #'tempel-complete)
+      (progn
+        (when (and tempel-trigger-prefix (not (tempel--prefix-bounds)))
+          (insert tempel-trigger-prefix))
+        (tempel--interactive #'tempel-complete))
     (when-let (templates (tempel--templates))
       (let* ((region (tempel--region))
-             (bounds (or (and (not region) (bounds-of-thing-at-point 'symbol))
+             (bounds (or (and (not region) (tempel--prefix-bounds))
                          (cons (point) (point)))))
         (list (car bounds) (cdr bounds)
               (tempel--completion-table templates)

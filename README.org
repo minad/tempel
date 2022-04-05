@@ -62,6 +62,10 @@ on =use-package=.
 #+begin_src emacs-lisp
   ;; Configure Tempel
   (use-package tempel
+    ;; Require trigger prefix before template name when completing.
+    ;; :custom
+    ;; (tempel-trigger-prefix "<")
+
     :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
            ("M-*" . tempel-insert))
 
