@@ -627,7 +627,7 @@ If INTERACTIVE is nil the function acts like a capf."
     (when-let (templates (tempel--templates))
       (let* ((region (tempel--region))
              (bounds (or (and (not region) (tempel--prefix-bounds))
-                         (cons (point) (point)))))
+                         (and (not tempel-trigger-prefix) (cons (point) (point))))))
         (list (car bounds) (cdr bounds)
               (tempel--completion-table templates)
               :exclusive 'no
