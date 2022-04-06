@@ -636,6 +636,7 @@ If INTERACTIVE is nil the function acts like a capf."
               :company-prefix-length
               (and tempel-trigger-prefix
                    (save-excursion
+                     (goto-char (car bounds))
                      (search-forward tempel-trigger-prefix (cdr bounds) 'noerror) t)
                    t)
               :annotation-function
