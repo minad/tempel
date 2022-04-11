@@ -89,6 +89,10 @@ must return a list of templates which apply to the buffer or context."
 If a file is modified, added or removed, reload the templates."
   :type 'boolean)
 
+(defcustom tempel-local-mode-hook (list  #'tempel-org-src-block-mode)
+  "Hooks which return the local mode at point, e.g., in Org source blocks."
+  :type 'hook)
+
 (defface tempel-field
   '((((class color) (min-colors 88) (background light))
      :background "#fdf0ff" :foreground "#541f4f")
@@ -452,15 +456,35 @@ This is meant to be a source in `tempel-template-sources'."
               tempel--path-templates (mapcan #'tempel--file-read files)))))
   (cl-loop
    for (modes plist . templates) in tempel--path-templates
-   if (and
-       (cl-loop for m in modes
-                thereis (or (derived-mode-p m) (eq m #'fundamental-mode)))
-       (or (not (plist-member plist :condition))
-           (save-excursion
-             (save-restriction
-               (save-match-data
-                 (eval (plist-get plist :condition) 'lexical))))))
+   if (tempel--condition-p modes plist)
    append templates))
+
+(defun tempel--condition-p (modes plist)
+  "Return non-nil if one of MODES matches and the PLIST condition is satisfied."
+  (and
+   (cl-loop
+    for m in modes thereis
+    (or (eq m #'fundamental-mode)
+        (provided-mode-derived-p
+         (or (run-hook-with-args-until-success 'tempel-local-mode-hook)
+             major-mode)
+         m)))
+   (or (not (plist-member plist :condition))
+       (save-excursion
+         (save-restriction
+           (save-match-data
+             (eval (plist-get plist :condition) 'lexical)))))))
+
+(declare-function org-element-context "org-element")
+(declare-function org-src-get-lang-mode "org-src")
+(defun tempel-org-src-block-mode ()
+  "Return Org source block language mode when inside a source block."
+  (when-let* (((derived-mode-p 'org-mode))
+              (element (org-element-context))
+              ((eq 'src-block (car-safe element))))
+    (if-let (lang (plist-get (cadr element) :language))
+        (org-src-get-lang-mode lang)
+      #'fundamental-mode)))
 
 (defun tempel--templates ()
   "Return templates for current mode."
