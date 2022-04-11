@@ -89,7 +89,9 @@ must return a list of templates which apply to the buffer or context."
 If a file is modified, added or removed, reload the templates."
   :type 'boolean)
 
-(defcustom tempel-local-mode-hook (list  #'tempel-org-src-block-mode)
+(defcustom tempel-local-mode-hook
+  (list  #'tempel-org-src-block-mode
+         #'tempel-markdown-block-mode)
   "Hooks which return the local mode at point, e.g., in Org source blocks."
   :type 'hook)
 
@@ -485,6 +487,18 @@ This is meant to be a source in `tempel-template-sources'."
     (if-let (lang (plist-get (cadr element) :language))
         (org-src-get-lang-mode lang)
       #'fundamental-mode)))
+
+(declare-function markdown-code-block-at-point-p "markdown-mode")
+(declare-function markdown-code-block-lang "markdown-mode")
+(declare-function markdown-get-lang-mode "markdown-mode")
+(defun tempel-markdown-block-mode ()
+  "Return Markdown source block language mode when inside a source block."
+  (when (and (derived-mode-p 'markdown-mode) (markdown-code-block-at-point-p))
+    (save-excursion
+      (if-let* ((lang (markdown-code-block-lang))
+                (mode (markdown-get-lang-mode lang)))
+          mode
+        #'fundamental-mode))))
 
 (defun tempel--templates ()
   "Return templates for current mode."
