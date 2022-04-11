@@ -484,10 +484,8 @@ This is meant to be a source in `tempel-template-sources'."
   (when-let* (((derived-mode-p 'org-mode))
               (element (org-element-context))
               ((eq 'src-block (car-safe element))))
-    (if-let* ((lang (plist-get (cadr element) :language))
-              (mode (org-src-get-lang-mode lang))
-              ((fboundp mode)))
-        mode
+    (if-let (lang (plist-get (cadr element) :language))
+        (org-src-get-lang-mode lang)
       #'fundamental-mode)))
 
 (declare-function markdown-code-block-at-point-p "markdown-mode")
