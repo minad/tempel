@@ -40,7 +40,7 @@ soon as you move before (behind) the first (last) field, the fields are
 finalized.
 
 Tempel can hook into the abbrev mechanism of Emacs by enabling the
-~tempel-abbrev-mode~ in a buffer or by enabling the ~tempel-global-abbrev-mode~.
+~tempel-abbrev-mode~ in a buffer or by enabling the ~global-tempel-abbrev-mode~.
 Then the Tempel templates will be available via ~expand-abbrev~ which is usually
 bound to ~C-x '~.
 
@@ -90,13 +90,13 @@ on =use-package=.
     ;; Optionally make the Tempel templates available to Abbrev,
     ;; either locally or globally. `expand-abbrev' is bound to C-x '.
     ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
-    ;; (tempel-global-abbrev-mode)
+    ;; (global-tempel-abbrev-mode)
   )
 
   ;; Optional: Use the Corfu completion UI
   (use-package corfu
     :init
-    (corfu-global-mode))
+    (global-corfu-mode))
 #+end_src
 
 * Template file format
