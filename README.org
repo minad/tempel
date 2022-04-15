@@ -110,8 +110,6 @@ post-expansion operations can be specified per template by the optional keys
 =:pre= and =:post=.
 
 #+begin_src emacs-lisp
-  ;; -*- mode: lisp-data -*-
-
   fundamental-mode ;; Available everywhere
 
   (today (format-time-string "%Y-%m-%d"))
@@ -193,6 +191,12 @@ post-expansion operations can be specified per template by the optional keys
   (src "#+begin_src " p n> r> n> "#+end_src")
   (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src"
          :post (progn (tempel-done) (org-edit-src-code)))
+
+  ;; Local Variables:
+  ;; mode: lisp-data
+  ;; outline-regexp: "[a-z]"
+  ;; End:
+
 #+end_src
 
 * Template syntax
