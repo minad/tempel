@@ -117,9 +117,6 @@ If a file is modified, added or removed, reload the templates."
 (defvar tempel--path-templates nil
   "Templates loaded from the `tempel-path'.")
 
-(defvar tempel--path-timestamps nil
-  "Alist of files and modification times on the `tempel-path'.")
-
 (defvar tempel--history nil
   "Completion history used by `tempel-insert'.")
 
@@ -390,7 +387,7 @@ PROMPT is the optional prompt/default value."
   "Prompt to save modified files in `tempel-path'."
   (cl-loop
    with all = nil
-   for (file . _ts) in tempel--path-timestamps do
+   for (file . _ts) in (car tempel--path-templates) do
    (when-let (buf (get-file-buffer file))
      (with-current-buffer buf
        (when (and (buffer-modified-p)
@@ -441,11 +438,11 @@ This is meant to be a source in `tempel-template-sources'."
                       (file-attribute-modification-time
                        (file-attributes f))
                       'integer)))))
-      (unless (equal tempel--path-timestamps timestamps)
-        (setq tempel--path-timestamps timestamps
-              tempel--path-templates (mapcan #'tempel--file-read files)))))
+      (unless (equal (car tempel--path-templates) timestamps)
+        (setq tempel--path-templates (cons timestamps
+                                           (mapcan #'tempel--file-read files))))))
   (cl-loop
-   for (modes plist . templates) in tempel--path-templates
+   for (modes plist . templates) in (cdr tempel--path-templates)
    if (tempel--condition-p modes plist)
    append templates))
 
