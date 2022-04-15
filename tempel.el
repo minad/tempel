@@ -49,7 +49,8 @@
   :prefix "tempel-")
 
 (defcustom tempel-path (expand-file-name "templates" user-emacs-directory)
-  "A file or a list of files and/or directories, containing templates."
+  "A file or a list of files containing templates.
+The file paths can contain wildcards."
   :type '(choice string (repeat string)))
 
 (defcustom tempel-trigger-prefix nil
@@ -159,16 +160,6 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
      (and (not (car noinsert)) (symbol-name name)))
     ((or 'n 'n> '> '& '% 'o) " ")
     (_ "_")))
-
-(defun tempel--expand-path ()
-  "Return the list of files specified by `tempel-path'."
-  (let (files)
-    (dolist (path (if (listp tempel-path) tempel-path (list tempel-path)))
-      (when (file-exists-p path)
-        (if (file-directory-p path)
-            (setq files (nconc files (directory-files-recursively path "")))
-          (push path files))))
-    files))
 
 (defun tempel--annotate (templates width ellipsis sep name)
   "Annotate template NAME given the list of TEMPLATES.
@@ -439,14 +430,17 @@ PROMPT is the optional prompt/default value."
 Additionally, save any files in `tempel-template-sources' that have been
 modified since the last time this function was called.
 This is meant to be a source in `tempel-template-sources'."
-  (when tempel-auto-reload
-    (let* ((files (tempel--expand-path))
-           (timestamps (cl-loop
-                        for f in files collect
-                        (cons f (time-convert
-                                 (file-attribute-modification-time
-                                  (file-attributes f))
-                                 'integer)))))
+  (when (or (not tempel--path-templates) tempel-auto-reload)
+    (let* ((files
+            (cl-loop for path in (if (listp tempel-path) tempel-path (list tempel-path))
+                     nconc (file-expand-wildcards path t)))
+           (timestamps
+            (cl-loop
+             for f in files collect
+             (cons f (time-convert
+                      (file-attribute-modification-time
+                       (file-attributes f))
+                      'integer)))))
       (unless (equal tempel--path-timestamps timestamps)
         (setq tempel--path-timestamps timestamps
               tempel--path-templates (mapcan #'tempel--file-read files)))))

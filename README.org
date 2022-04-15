@@ -102,12 +102,12 @@ on =use-package=.
 * Template file format
 
 The templates are defined in a Lisp file configured by ~tempel-path~. By default
-the file or directory =~/.config/emacs/templates= is used. The templates are
-grouped by major mode with an optional ~:condition~. Each template is a list in
-the concise form of the Emacs Tempo syntax. The first element of each list is
-the name of the template. Behind the name, the Tempo syntax elements follow.
-Pre- and post-expansion operations can be specified per template by the optional
-keys =:pre= and =:post=.
+the file =~/.config/emacs/templates= is used. The templates are grouped by major
+mode with an optional ~:condition~. Each template is a list in the concise form of
+the Emacs Tempo syntax. The first element of each list is the name of the
+template. Behind the name, the Tempo syntax elements follow. Pre- and
+post-expansion operations can be specified per template by the optional keys
+=:pre= and =:post=.
 
 #+begin_src emacs-lisp
   ;; -*- mode: lisp-data -*-
