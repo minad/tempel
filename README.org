@@ -110,7 +110,7 @@ Pre- and post-expansion operations can be specified per template by the optional
 keys =:pre= and =:post=.
 
 #+begin_src emacs-lisp
-  ;; -*- mode: lisp -*-
+  ;; -*- mode: lisp-data -*-
 
   fundamental-mode ;; Available everywhere
 
