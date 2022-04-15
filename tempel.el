@@ -49,7 +49,7 @@
   :prefix "tempel-")
 
 (defcustom tempel-path (expand-file-name "templates" user-emacs-directory)
-  "A file or a list of files containing templates.
+  "A file or a list of template files.
 The file paths can contain wildcards."
   :type '(choice string (repeat string)))
 
