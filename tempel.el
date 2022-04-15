@@ -586,14 +586,14 @@ The completion table specifies the category `tempel'."
 (defun tempel--prefix-bounds ()
   "Return prefix bounds."
   (if tempel-trigger-prefix
-      (save-excursion
-        (let ((end (point))
-              (beg (re-search-backward
-                    (concat (regexp-quote tempel-trigger-prefix) "\\S-*")
-                    (line-beginning-position) 'noerror)))
-          (when beg
-            (cons (+ beg (length tempel-trigger-prefix)) end))))
-      (bounds-of-thing-at-point 'symbol)))
+      (let ((end (point))
+            (beg (save-excursion
+                   (search-backward tempel-trigger-prefix
+                                    (line-beginning-position) 'noerror))))
+        (when (and beg (save-excursion
+                         (not (re-search-backward "\\s-" beg 'noerror))))
+          (cons (+ beg (length tempel-trigger-prefix)) end)))
+    (bounds-of-thing-at-point 'symbol)))
 
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
