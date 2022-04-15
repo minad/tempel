@@ -456,11 +456,11 @@ This is meant to be a source in `tempel-template-sources'."
     for m in modes thereis
     (or (eq m #'fundamental-mode)
         (derived-mode-p m)))
-   (or (not (plist-member plist :condition))
+   (or (not (plist-member plist :when))
        (save-excursion
          (save-restriction
            (save-match-data
-             (eval (plist-get plist :condition) 'lexical)))))))
+             (eval (plist-get plist :when) 'lexical)))))))
 
 (defun tempel--templates ()
   "Return templates for current mode."

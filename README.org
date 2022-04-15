@@ -103,7 +103,7 @@ on =use-package=.
 
 The templates are defined in a Lisp file configured by ~tempel-path~. By default
 the file =~/.config/emacs/templates= is used. The templates are grouped by major
-mode with an optional ~:condition~. Each template is a list in the concise form of
+mode with an optional ~:when~ condition. Each template is a list in the concise form of
 the Emacs Tempo syntax. The first element of each list is the name of the
 template. Behind the name, the Tempo syntax elements follow. Pre- and
 post-expansion operations can be specified per template by the optional keys
@@ -177,7 +177,7 @@ post-expansion operations can be specified per template by the optional keys
 
   (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
 
-  c-mode :condition (re-search-backward "^\\w*$" (line-beginning-position) 'noerror)
+  c-mode :when (re-search-backward "^\\w*$" (line-beginning-position) 'noerror)
 
   (inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
   (incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
