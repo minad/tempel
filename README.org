@@ -2,7 +2,7 @@
 #+author: Daniel Mendler
 #+language: en
 #+export_file_name: tempel.texi
-#+texinfo_dir_category: Emacs
+#+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Tempel: (tempel).
 #+texinfo_dir_desc: Simple templates for Emacs
 
