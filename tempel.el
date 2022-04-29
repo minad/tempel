@@ -268,7 +268,8 @@ If OV is alive, move it."
 (defun tempel--field (st &optional name init)
   "Add template field to ST.
 NAME is the optional field name.
-INIT is the optional initial input."
+INIT is the optional initial input.
+Return the added field."
   (let ((ov (make-overlay (point) (point))))
     (push ov (car st))
     (when name
@@ -288,10 +289,12 @@ INIT is the optional initial input."
       (overlay-put ov 'face 'tempel-default)
       (overlay-put ov 'tempel--default
                    (if (string-match-p ": \\'" init) 'end 'start)))
-    (tempel--synchronize-fields st ov)))
+    (tempel--synchronize-fields st ov)
+    ov))
 
 (defun tempel--form (st form)
-  "Add new template field evaluating FORM to ST."
+  "Add new template field evaluating FORM to ST.
+Return the added field."
   (let ((beg (point)))
     (condition-case nil
         (insert (eval form (cdr st)))
@@ -300,7 +303,8 @@ INIT is the optional initial input."
     (let ((ov (make-overlay beg (point) nil t)))
       (overlay-put ov 'face 'tempel-form)
       (overlay-put ov 'tempel--form form)
-      (push ov (car st)))))
+      (push ov (car st))
+      ov)))
 
 (defun tempel--element (st region elt)
   "Add template ELT to ST given the REGION."
@@ -332,7 +336,8 @@ INIT is the optional initial input."
 (defun tempel--placeholder (st &optional prompt name noinsert)
   "Handle placeholder element and add field with NAME to ST.
 If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
-PROMPT is the optional prompt/default value."
+PROMPT is the optional prompt/default value.
+If a field was added, return it."
   (setq prompt
         (cond
          ((and (stringp prompt) noinsert) (read-string prompt))
@@ -340,7 +345,7 @@ PROMPT is the optional prompt/default value."
          ;; TEMPEL EXTENSION: Evaluate prompt
          (t (eval prompt (cdr st)))))
   (if noinsert
-      (setf (alist-get name (cdr st)) prompt)
+      (progn (setf (alist-get name (cdr st)) prompt) nil)
     (tempel--field st name prompt)))
 
 (defun tempel--insert (template region)
