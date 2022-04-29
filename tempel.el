@@ -324,7 +324,10 @@ Return the added field."
     (`(l . ,lst) (dolist (e lst) (tempel--element st region e)))
     ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
-     (if (not region) (apply #'tempel--placeholder st rest)
+     (if (not region)
+         (when-let (ov (apply #'tempel--placeholder st rest))
+           (unless rest
+             (overlay-put ov 'tempel--terminate t)))
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
