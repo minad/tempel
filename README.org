@@ -210,7 +210,8 @@ document the important ones here:
 - ~n~ Inserts a newline.
 - ~>~ Indents with ~indent-according-to-mode~.
 - ~r~ Inserts the current region.
-- ~r>~ The region, but indented.
+  If no region is active, quits the containing template when jumped to.
+- ~r>~ Acts like ~r~, but indent region.
 - ~n>~ Inserts a newline and indents.
 - ~&~ Insert newline if there is only whitespace between line start and point.
 - ~%~ Insert newline if there is only whitespace between point and line end.
