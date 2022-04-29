@@ -529,7 +529,12 @@ This is meant to be a source in `tempel-template-sources'."
   (cl-loop for i below (abs arg) do
            (if-let (next (tempel--find arg)) (goto-char next)
              (tempel-done)
-             (cl-return))))
+             (cl-return)))
+  ;; If the current field is marked as "terminating", disable its
+  ;; containing template right away.
+  (when-let* ((ov (tempel--field-at-point))
+              ((overlay-get ov 'tempel--terminate)))
+    (tempel--disable (overlay-get ov 'tempel--field))))
 
 (defun tempel-previous (arg)
   "Move ARG fields backward and quit at the beginning."
