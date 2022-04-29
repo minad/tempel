@@ -331,6 +331,8 @@ Return the added field."
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
+    ;; TEMPEL EXTENSION: Terminate template immediately
+    ('q (overlay-put (tempel--field st) 'tempel--terminate t))
     (_ (if-let (ret (run-hook-with-args-until-success 'tempel-user-elements elt))
            (tempel--element st region ret)
          ;; TEMPEL EXTENSION: Evaluate forms

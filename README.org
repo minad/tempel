@@ -228,6 +228,7 @@ Furthermore Tempel supports syntax extensions:
 
 - ~(p FORM <NAME> <NONINS>)~ Like ~p~ described above, but ~FORM~ is evaluated.
 - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
+- ~q~ Quits the containing template when jumped to.
 
 Use caution with templates which execute arbitrary code!
 
