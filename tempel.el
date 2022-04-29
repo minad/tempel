@@ -555,9 +555,10 @@ This is meant to be a source in `tempel-template-sources'."
     (tempel-done)
     (delete-region beg end)))
 
-(defun tempel--disable ()
-  "Disable last template."
-  (when-let (st (pop tempel--active))
+(defun tempel--disable (&optional st)
+  "Disable template ST, or last template."
+  (when (setq st (or st (car tempel--active)))
+    (setq tempel--active (delq st tempel--active))
     (mapc #'delete-overlay (car st))
     (unless tempel--active
       (setq minor-mode-overriding-map-alist
