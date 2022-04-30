@@ -329,7 +329,7 @@ Return the added field."
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
-    ;; TEMPEL EXTENSION: Terminate template immediately
+    ;; TEMPEL EXTENSION: Quit template immediately
     ('q (overlay-put (tempel--field st) 'tempel--quit t))
     (_ (if-let (ret (run-hook-with-args-until-success 'tempel-user-elements elt))
            (tempel--element st region ret)
@@ -533,7 +533,7 @@ This is meant to be a source in `tempel-template-sources'."
            (if-let (next (tempel--find arg)) (goto-char next)
              (tempel-done)
              (cl-return)))
-  ;; If the current field is marked as "terminating", disable its
+  ;; If the current field is marked as "quitting", disable its
   ;; containing template right away.
   (when-let* ((ov (tempel--field-at-point))
               ((overlay-get ov 'tempel--quit)))
