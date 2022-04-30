@@ -140,6 +140,7 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
     (define-key map [remap backward-paragraph] #'tempel-previous)
     (define-key map [remap forward-paragraph] #'tempel-next)
     ;; Use concrete keys because of org mode
+    (define-key map "\M-\r" #'tempel-done)
     (define-key map "\M-{" #'tempel-previous)
     (define-key map "\M-}" #'tempel-next)
     (define-key map [M-up] #'tempel-previous)
