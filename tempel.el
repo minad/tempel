@@ -194,9 +194,7 @@ REGION are the current region bouns"
 (defun tempel--range-modified (ov &rest _)
   "Range overlay OV modified."
   (when (and (not tempel--inhibit-hooks) (= (overlay-start ov) (overlay-end ov)))
-    (let ((st (overlay-get ov 'tempel--range)))
-      (setq tempel--active (cons st (delq st tempel--active)))
-      (tempel--disable))))
+    (tempel--disable (overlay-get ov 'tempel--range))))
 
 (defun tempel--field-modified (ov after beg end &optional _len)
   "Update field overlay OV.
@@ -361,7 +359,7 @@ If a field was added, return it."
     (eval (plist-get plist :pre) 'lexical)
     ;; TODO do we want to have the ability to reactivate snippets?
     (unless (eq buffer-undo-list t)
-      (push (list 'apply #'tempel--disable) buffer-undo-list))
+      (push '(apply tempel--disable) buffer-undo-list))
     (setf (alist-get 'tempel--active minor-mode-overriding-map-alist) tempel-map)
     (save-excursion
       ;; Split existing overlays, do not expand within existing field.
