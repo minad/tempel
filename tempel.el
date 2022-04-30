@@ -327,12 +327,12 @@ Return the added field."
      (if (not region)
          (when-let (ov (apply #'tempel--placeholder st rest))
            (unless rest
-             (overlay-put ov 'tempel--terminate t)))
+             (overlay-put ov 'tempel--quit t)))
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Terminate template immediately
-    ('q (overlay-put (tempel--field st) 'tempel--terminate t))
+    ('q (overlay-put (tempel--field st) 'tempel--quit t))
     (_ (if-let (ret (run-hook-with-args-until-success 'tempel-user-elements elt))
            (tempel--element st region ret)
          ;; TEMPEL EXTENSION: Evaluate forms
@@ -538,7 +538,7 @@ This is meant to be a source in `tempel-template-sources'."
   ;; If the current field is marked as "terminating", disable its
   ;; containing template right away.
   (when-let* ((ov (tempel--field-at-point))
-              ((overlay-get ov 'tempel--terminate)))
+              ((overlay-get ov 'tempel--quit)))
     (tempel--disable (overlay-get ov 'tempel--field))))
 
 (defun tempel-previous (arg)
