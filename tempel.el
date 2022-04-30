@@ -565,8 +565,10 @@ This is meant to be a source in `tempel-template-sources'."
 
 (defun tempel--disable (&optional st)
   "Disable template ST, or last template."
-  (when (setq st (or st (car tempel--active)))
-    (setq tempel--active (delq st tempel--active))
+  (if st
+      (setq tempel--active (delq st tempel--active))
+    (setq st (pop tempel--active)))
+  (when st
     (mapc #'delete-overlay (car st))
     (unless tempel--active
       (setq minor-mode-overriding-map-alist
