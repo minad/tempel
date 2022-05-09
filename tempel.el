@@ -561,8 +561,7 @@ This is meant to be a source in `tempel-template-sources'."
   (when-let ((beg (tempel--beginning))
              (end (tempel--end)))
     ;; TODO abort only the topmost template?
-    (while tempel--active
-      (tempel--disable))
+    (while tempel--active (tempel--disable))
     (delete-region beg end)))
 
 (defun tempel--disable (&optional st)
@@ -585,12 +584,10 @@ This is meant to be a source in `tempel-template-sources'."
 
 (defun tempel--done (&optional st)
   "Finalize template ST, or last template."
-  (let* ((st (or st (car tempel--active)))
-         (range (caar st))
-         (env (cdr st))
-         (buffer (current-buffer)))
-    (eval (overlay-get range 'tempel--post) env)
-    (with-current-buffer buffer
+  (let ((st (or st (car tempel--active)))
+        (buf (current-buffer)))
+    (eval (overlay-get (caar st) 'tempel--post) (cdr st))
+    (with-current-buffer buf
       (tempel--disable st))))
 
 (defun tempel--interactive (capf)
