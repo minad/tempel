@@ -379,18 +379,18 @@ If a field was added, return it."
         (push range (car st))
         (overlay-put range 'modification-hooks (list #'tempel--range-modified))
         (overlay-put range 'tempel--range st)
+        (overlay-put range 'tempel--post (plist-get plist :post))
         ;;(overlay-put range 'face 'region) ;; TODO debug
         (push st tempel--active)))
     (cond
      ((cl-loop for ov in (caar tempel--active)
                never (overlay-get ov 'tempel--field))
       (goto-char (overlay-end (caaar tempel--active)))
-      (tempel--disable)) ;; Disable right away
+      (tempel--done)) ;; Finalize right away
      ((cl-loop for ov in (caar tempel--active)
                never (and (overlay-get ov 'tempel--field)
                           (eq (point) (overlay-start ov))))
-      (tempel-next 1))) ;; Jump to first field
-    (eval (plist-get plist :post) 'lexical)))
+      (tempel-next 1))))) ;; Jump to first field
 
 (defun tempel--save ()
   "Prompt to save modified files in `tempel-path'."
@@ -538,7 +538,7 @@ This is meant to be a source in `tempel-template-sources'."
   ;; containing template right away.
   (when-let* ((ov (tempel--field-at-point))
               ((overlay-get ov 'tempel--quit)))
-    (tempel--disable (overlay-get ov 'tempel--field))))
+    (tempel--done (overlay-get ov 'tempel--field))))
 
 (defun tempel-previous (arg)
   "Move ARG fields backward and quit at the beginning."
@@ -558,10 +558,11 @@ This is meant to be a source in `tempel-template-sources'."
 (defun tempel-abort ()
   "Abort template insertion."
   (interactive)
-  ;; TODO abort only the topmost template?
   (when-let ((beg (tempel--beginning))
              (end (tempel--end)))
-    (tempel-done)
+    ;; TODO abort only the topmost template?
+    (while tempel--active
+      (tempel--disable))
     (delete-region beg end)))
 
 (defun tempel--disable (&optional st)
@@ -580,7 +581,17 @@ This is meant to be a source in `tempel-template-sources'."
   "Template completion is done."
   (interactive)
   ;; TODO disable only the topmost template?
-  (while tempel--active (tempel--disable)))
+  (while tempel--active (tempel--done)))
+
+(defun tempel--done (&optional st)
+  "Finalize template ST, or last template."
+  (let* ((st (or st (car tempel--active)))
+         (range (caar st))
+         (env (cdr st))
+         (buffer (current-buffer)))
+    (eval (overlay-get range 'tempel--post) env)
+    (with-current-buffer buffer
+      (tempel--disable st))))
 
 (defun tempel--interactive (capf)
   "Complete with CAPF."
