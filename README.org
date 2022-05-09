@@ -105,9 +105,12 @@ The templates are defined in a Lisp file configured by ~tempel-path~. By default
 the file =~/.config/emacs/templates= is used. The templates are grouped by major
 mode with an optional ~:when~ condition. Each template is a list in the concise form of
 the Emacs Tempo syntax. The first element of each list is the name of the
-template. Behind the name, the Tempo syntax elements follow. Pre- and
-post-expansion operations can be specified per template by the optional keys
-=:pre= and =:post=.
+template. Behind the name, the Tempo syntax elements follow.
+
+In addition, each template may specify a =:pre= and/or =:post= key with a FORM that is
+evaluated before the template is expanded or after it is finalized, respectively. The
+=:post= form is evaluated in the lexical scope of the template, which means that it can
+access the template's named fields.
 
 #+begin_src emacs-lisp
   fundamental-mode ;; Available everywhere
@@ -207,14 +210,12 @@ post-expansion operations can be specified per template by the optional keys
   (comment "#+begin_comment" n> r> n> "#+end_comment")
   (verse "#+begin_verse" n> r> n> "#+end_verse")
   (src "#+begin_src " p n> r> n> "#+end_src")
-  (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src"
-         :post (progn (tempel-done) (org-edit-src-code)))
+  (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src" :post (org-edit-src-code))
 
   ;; Local Variables:
   ;; mode: lisp-data
   ;; outline-regexp: "[a-z]"
   ;; End:
-
 #+end_src
 
 * Template syntax
