@@ -39,25 +39,22 @@ bindings are defined in the ~tempel-map~ keymap. You can customize them there. A
 soon as you move before (behind) the first (last) field, the fields are
 finalized.
 
-Tempel can hook into the abbrev mechanism of Emacs by enabling the
-~tempel-abbrev-mode~ in a buffer or by enabling the ~global-tempel-abbrev-mode~.
-Then the Tempel templates will be available via ~expand-abbrev~ which is usually
-bound to ~C-x '~.
+Tempel can hook into Abbrev by enabling the ~tempel-abbrev-mode~ in a buffer or by
+enabling the ~global-tempel-abbrev-mode~. Then the Tempel templates will be
+available via ~expand-abbrev~ which is usually bound to ~C-x '~.
 
-Note that this package is not a competitor to the mature and widely used
-YASnippet library, which comes with many readily available snippet collections.
-Try Tempel only if you like small and simple packages. With Tempel you write
-your templates in Lisp syntax, which from my perspective fits well to the
-hackable nature of Emacs. Tempel took inspiration from the [[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]]
-package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
+Note that this package does not come with readily available snippet collections,
+unlike the YASnippet library. Try Tempel if you like small and simple packages.
+With Tempel you write your templates in Lisp syntax, which from my perspective
+fits well to the hackable nature of Emacs. Tempel took inspiration from the
+[[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]] package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
 
 #+html: <table><tr><td><img src="https://github.com/minad/tempel/blob/screenshots/rst.gif?raw=true" align="left"></td><td><img src="https://github.com/minad/tempel/blob/screenshots/latex.gif?raw=true" align="left"></td><td><img src="https://github.com/minad/tempel/blob/screenshots/elisp.gif?raw=true" align="left"></td></tr></table>
 
 * Quick start
 
 The package is available on GNU ELPA and MELPA and can be installed with
-=package-install=. In the following we show an example configuration, which relies
-on =use-package=.
+=package-install=. The following example configuration relies on =use-package=.
 
 #+begin_src emacs-lisp
   ;; Configure Tempel
@@ -101,11 +98,11 @@ on =use-package=.
 
 * Template file format
 
-The templates are defined in a Lisp file configured by ~tempel-path~. By default
-the file =~/.config/emacs/templates= is used. The templates are grouped by major
-mode with an optional ~:when~ condition. Each template is a list in the concise form of
-the Emacs Tempo syntax. The first element of each list is the name of the
-template. Behind the name, the Tempo syntax elements follow.
+The templates are defined in a Lisp data file configured by ~tempel-path~. By
+default the file =~/.config/emacs/templates= is used. The templates are grouped by
+major mode with an optional ~:when~ condition. Each template is a list in the
+concise form of the Emacs Tempo syntax. The first element of each list is the
+name of the template. Behind the name, the Tempo syntax elements follow.
 
 In addition, each template may specify a =:pre= and/or =:post= key with a FORM that is
 evaluated before the template is expanded or after it is finalized, respectively. The
@@ -302,7 +299,7 @@ There are plenty of alternative packages which provide abbreviation or snippet e
 - [[https://github.com/xFA25E/skempo][skempo.el]]: Unifies the Skeleton and Tempo configuration
 - [[https://github.com/pkazmier/snippet.el][snippet.el]]: Original snippet mode
 - [[https://nschum.de/src/emacs/tempo-snippets/][tempo-snippets.el]]: snippet.el-like interface for Tempo
-- [[https://github.com/joaotavora/yasnippet][yasnippet.el]]: The most popular Emacs template system
+- [[https://github.com/joaotavora/yasnippet][yasnippet.el]]: The most popular template system
 
 * Contributions
 
