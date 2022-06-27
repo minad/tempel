@@ -346,6 +346,7 @@ If a field was added, return it."
         (cond
          ((and (stringp prompt) noinsert) (read-string prompt))
          ((stringp prompt) (propertize prompt 'tempel--default t))
+         ((symbolp prompt) (symbol-name prompt))
          ;; TEMPEL EXTENSION: Evaluate prompt
          (t (eval prompt (cdr st)))))
   (if noinsert
