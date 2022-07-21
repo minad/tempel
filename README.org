@@ -13,14 +13,17 @@
 #+html: <a href="https://stable.melpa.org/#/tempel"><img alt="MELPA Stable" src="https://stable.melpa.org/packages/tempel-badge.svg"/></a>
 #+html: <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg/1920px-Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg" align="right" width="30%">
 
-* Introduction
-
 Tempel is a tiny template package for Emacs, which uses the syntax of the Emacs
 Tempo library. Tempo is an ancient temple of the church of Emacs. It is 27 years
 old, but still in good shape since it successfully resisted change over the
-decades. However it may look a bit dusty here and there. Therefore we present to
-you, Tempel, a modernized implementation of Tempo, in the form of three
-commands:
+decades. However it may look a bit dusty here and there. Therefore we present
+Tempel, a modernized implementation of Tempo.
+
+#+toc: headlines 8
+
+* Template expansion
+
+Tempel comes with three commands for template expansion:
 
 + ~tempel-complete~ completes a template name at point in the buffer and
   subsequently expands the template. If called non-interactively the function
@@ -39,19 +42,9 @@ bindings are defined in the ~tempel-map~ keymap. You can customize them there. A
 soon as you move before (behind) the first (last) field, the fields are
 finalized.
 
-Tempel can hook into Abbrev by enabling the ~tempel-abbrev-mode~ in a buffer or by
-enabling the ~global-tempel-abbrev-mode~. Then the Tempel templates will be
-available via ~expand-abbrev~ which is usually bound to ~C-x '~.
-
-Note that this package does not come with readily available snippet collections,
-unlike the YASnippet library. Try Tempel if you like small and simple packages.
-With Tempel you write your templates in Lisp syntax, which from my perspective
-fits well to the hackable nature of Emacs. Tempel took inspiration from the
-[[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]] package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
-
 #+html: <table><tr><td><img src="https://github.com/minad/tempel/blob/screenshots/rst.gif?raw=true" align="left"></td><td><img src="https://github.com/minad/tempel/blob/screenshots/latex.gif?raw=true" align="left"></td><td><img src="https://github.com/minad/tempel/blob/screenshots/elisp.gif?raw=true" align="left"></td></tr></table>
 
-* Quick start
+* Configuration
 
 The package is available on GNU ELPA and MELPA and can be installed with
 =package-install=. The following example configuration relies on =use-package=.
@@ -268,6 +261,12 @@ want to add global or local template variables to your user configuration:
   (add-to-list 'tempel-template-sources 'my-local-templates)
 #+end_src
 
+* Hooking into the Abbrev mechanism
+
+Tempel can hook into Abbrev by enabling the ~tempel-abbrev-mode~ in a buffer or by
+enabling the ~global-tempel-abbrev-mode~. Then the Tempel templates will be
+available via ~expand-abbrev~ which is usually bound to ~C-x '~.
+
 * Binding important templates to a key
 
 Important templates can be bound to a key with the small utility macro
@@ -285,6 +284,12 @@ macros, which allow you to conveniently bind templates via [[https://github.com/
 or similar keybinding packages.
 
 * Alternatives
+
+Tempel does not come with readily available snippet collections, unlike the
+YASnippet library. Try Tempel if you like small and simple packages. With Tempel
+you write your templates in Lisp syntax, which from my perspective fits well to
+the hackable nature of Emacs. Tempel took inspiration from the [[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]]
+package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
 
 There are plenty of alternative packages which provide abbreviation or snippet expansion.
 
