@@ -226,7 +226,7 @@ document the important ones here:
 - ~%~ Insert newline if there is only whitespace between point and line end.
 - ~o~ Like ~%~ but leaves the point before newline.
 - ~(s NAME)~ Inserts a named field.
-- ~(p PROMPT <NAME> <NONINS>)~ Insert an optionally named field with a prompt.
+- ~(p PROMPT <NAME> <NOINSERT>)~ Insert an optionally named field with a prompt.
   The ~PROMPT~ is displayed directly in the buffer as default value. If ~NOINSERT~
   is non-nil, no field is inserted. Then the minibuffer is used for prompting
   and the value is bound to ~NAME~.
@@ -235,7 +235,7 @@ document the important ones here:
 
 Furthermore Tempel supports syntax extensions:
 
-- ~(p FORM <NAME> <NONINS>)~ Like ~p~ described above, but ~FORM~ is evaluated.
+- ~(p FORM <NAME> <NOINSERT>)~ Like ~p~ described above, but ~FORM~ is evaluated.
 - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
 - ~q~ Quits the containing template when jumped to.
 
