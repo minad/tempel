@@ -50,7 +50,10 @@
 
 (defcustom tempel-path (expand-file-name "templates" user-emacs-directory)
   "A file or a list of template files.
-The file paths can contain wildcards."
+The file paths can contain wildcards, e.g.,
+\"~/.config/emacs/templates/*/*.eld\", which matches all
+`lisp-data-mode' files in the subdirectories of the templates
+directory."
   :type '(choice string (repeat string)))
 
 (defcustom tempel-trigger-prefix nil
