@@ -104,6 +104,8 @@ evaluated before the template is expanded or after it is finalized, respectively
 access the template's named fields.
 
 #+begin_src emacs-lisp
+  ;; ~/.config/emacs/templates
+
   fundamental-mode ;; Available everywhere
 
   (today (format-time-string "%Y-%m-%d"))
