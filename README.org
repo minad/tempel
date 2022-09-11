@@ -81,6 +81,10 @@ The package is available on GNU ELPA and MELPA and can be installed with
     ;; either locally or globally. `expand-abbrev' is bound to C-x '.
     ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
     ;; (global-tempel-abbrev-mode)
+
+    ;; If using LSP we might need to run tempel-setup-capf after LSP completion
+    ;; setup to be able to expand before LSP completions.
+    ;; (advice-add 'lsp-completion-mode :after #'tempel-setup-capf)
   )
 
   ;; Optional: Use the Corfu completion UI
