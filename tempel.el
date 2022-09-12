@@ -721,9 +721,11 @@ If called interactively, select a template with `completing-read'."
   (when tempel-abbrev-mode
     (let ((table (make-abbrev-table)))
       (dolist (template (tempel--templates))
-        (define-abbrev table (symbol-name (car template)) 'Template
-          (apply-partially #'tempel--abbrev-hook (symbol-name (car template)) (cdr template))
-          :system t))
+        (let* ((name (symbol-name (car template)))
+               (hook (make-symbol name)))
+          (fset hook (apply-partially #'tempel--abbrev-hook name (cdr template)))
+          (put hook 'no-self-insert t)
+          (define-abbrev table name 'Template hook :system t)))
       (setq-local abbrev-minor-mode-table-alist
                   (cons `(tempel-abbrev-mode . ,table)
                         abbrev-minor-mode-table-alist)))))
