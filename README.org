@@ -7,8 +7,8 @@
 #+texinfo_dir_desc: Simple templates for Emacs
 
 #+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://github.com/minad/corfu/blob/screenshots/emacs.svg?raw=true"/></a>
-#+html: <a href="http://elpa.gnu.org/packages/tempel.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/tempel.svg"/></a>
-#+html: <a href="http://elpa.gnu.org/devel/tempel.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/tempel.svg"/></a>
+#+html: <a href="https://elpa.gnu.org/packages/tempel.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/tempel.svg"/></a>
+#+html: <a href="https://elpa.gnu.org/devel/tempel.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/tempel.svg"/></a>
 #+html: <a href="https://melpa.org/#/tempel"><img alt="MELPA" src="https://melpa.org/packages/tempel-badge.svg"/></a>
 #+html: <a href="https://stable.melpa.org/#/tempel"><img alt="MELPA Stable" src="https://stable.melpa.org/packages/tempel-badge.svg"/></a>
 #+html: <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg/1920px-Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg" align="right" width="30%">
@@ -311,5 +311,5 @@ There are plenty of alternative packages which provide abbreviation or snippet e
 
 * Contributions
 
-Since this package is part of [[http://elpa.gnu.org/packages/tempel.html][GNU ELPA]] contributions require a copyright
+Since this package is part of [[https://elpa.gnu.org/packages/tempel.html][GNU ELPA]] contributions require a copyright
 assignment to the FSF.
