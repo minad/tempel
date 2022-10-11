@@ -313,6 +313,7 @@ Return the added field."
   (pcase elt
     ('nil)
     ('n (insert "\n"))
+    ;; `indent-according-to-mode' fails sometimes in Org. Ignore errors.
     ('n> (insert "\n") (with-demoted-errors (indent-according-to-mode)))
     ('> (with-demoted-errors (indent-according-to-mode)))
     ((pred stringp) (insert elt))
@@ -589,6 +590,8 @@ This is meant to be a source in `tempel-template-sources'."
   "Finalize template ST, or last template."
   (let ((st (or st (car tempel--active)))
         (buf (current-buffer)))
+    ;; Ignore errors in post expansion to ensure that templates can be
+    ;; terminated gracefully.
     (with-demoted-errors
       (eval (overlay-get (caar st) 'tempel--post) (cdr st)))
     (with-current-buffer buf
