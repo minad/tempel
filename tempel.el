@@ -308,14 +308,19 @@ Return the added field."
       (push ov (car st))
       ov)))
 
+(defmacro tempel--protect (&rest body)
+  "Protect BODY, catch errors."
+  `(with-demoted-errors "Tempel Error: %S"
+     ,@body))
+
 (defun tempel--element (st region elt)
   "Add template ELT to ST given the REGION."
   (pcase elt
     ('nil)
     ('n (insert "\n"))
     ;; `indent-according-to-mode' fails sometimes in Org. Ignore errors.
-    ('n> (insert "\n") (with-demoted-errors (indent-according-to-mode)))
-    ('> (with-demoted-errors (indent-according-to-mode)))
+    ('n> (insert "\n") (tempel--protect (indent-according-to-mode)))
+    ('> (tempel--protect (indent-according-to-mode)))
     ((pred stringp) (insert elt))
     ('& (unless (or (bolp) (save-excursion (re-search-backward "^\\s-*\\=" nil t)))
           (insert "\n")))
@@ -592,8 +597,7 @@ This is meant to be a source in `tempel-template-sources'."
         (buf (current-buffer)))
     ;; Ignore errors in post expansion to ensure that templates can be
     ;; terminated gracefully.
-    (with-demoted-errors
-      (eval (overlay-get (caar st) 'tempel--post) (cdr st)))
+    (tempel--protect (eval (overlay-get (caar st) 'tempel--post) (cdr st)))
     (with-current-buffer buf
       (tempel--disable st))))
 
