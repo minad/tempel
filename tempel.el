@@ -313,8 +313,8 @@ Return the added field."
   (pcase elt
     ('nil)
     ('n (insert "\n"))
-    ('n> (insert "\n") (indent-according-to-mode))
-    ('> (indent-according-to-mode))
+    ('n> (insert "\n") (with-demoted-errors (indent-according-to-mode)))
+    ('> (with-demoted-errors (indent-according-to-mode)))
     ((pred stringp) (insert elt))
     ('& (unless (or (bolp) (save-excursion (re-search-backward "^\\s-*\\=" nil t)))
           (insert "\n")))
@@ -589,7 +589,8 @@ This is meant to be a source in `tempel-template-sources'."
   "Finalize template ST, or last template."
   (let ((st (or st (car tempel--active)))
         (buf (current-buffer)))
-    (eval (overlay-get (caar st) 'tempel--post) (cdr st))
+    (with-demoted-errors
+      (eval (overlay-get (caar st) 'tempel--post) (cdr st)))
     (with-current-buffer buf
       (tempel--disable st))))
 
