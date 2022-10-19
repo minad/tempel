@@ -244,6 +244,32 @@ Furthermore Tempel supports syntax extensions:
 
 Use caution with templates which execute arbitrary code!
 
+* Defining custom elements
+
+Tempel supports custom user elements via the configuration variable
+=tempel-user-elements=. As a demonstration we add the element =(i template)= to
+include templates by name in another template.
+
+#+begin_src emacs-lisp
+  (defun tempel-include (elt)
+    (when (eq (car-safe elt) 'i)
+      (if-let (template (alist-get (cadr elt) (tempel--templates)))
+          (cons 'l template)
+        (message "Template %s not found" (cadr elt))
+        nil)))
+  (add-to-list 'tempel-user-elements #'tempel-include)
+#+end_src
+
+The following example templates uses the newly defined include element.
+
+#+begin_src emacs-lisp
+  (header ";;; " (or (buffer-file-name) (buffer-name)) " -- " p
+          " -*- lexical-binding: t -*-" n n)
+  (provide "(provide '" (file-name-base (or (buffer-file-name) (buffer-name))) ")" n
+           ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name))) " ends here" n)
+  (package (i header) r n n (i provide))
+#+end_src
+
 * Adding template sources
 
 Tempel offers a flexible mechanism for providing the templates, which are
