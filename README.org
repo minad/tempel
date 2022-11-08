@@ -323,6 +323,7 @@ package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][Gi
 There are plenty of alternative packages which provide abbreviation or snippet expansion.
 
 - abbrev.el: Abbreviation expansion, builtin
+- expand.el: Abbreviation expansion, builtin
 - skeleton.el: Lisp syntax for templates, builtin
 - tempo.el: Lisp syntax for templates, builtin
 - [[https://github.com/ymarco/auto-activating-snippets][aas.el]]: Auto activating snippets
