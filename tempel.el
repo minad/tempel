@@ -151,6 +151,17 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
     map)
   "Keymap to navigate across template fields.")
 
+(defmacro tempel--rotate (list n)
+  "Rotate LIST N places to the right or to the left if N is negative."
+  `(let ((length (length ,list)))
+     (nconc ,list ,list)
+     (when (> ,n 0)
+       (cl-loop for i below (- length 2)
+                do (pop ,list)))
+     (pop ,list)
+     (setf (nthcdr length ,list) nil)
+     ,list))
+
 (defun tempel--print-element (elt)
   "Return string representation of template ELT."
   (pcase elt
@@ -316,7 +327,7 @@ Return the added field."
   `(with-demoted-errors "Tempel Error: %S"
      ,@body))
 
-(defun tempel--element (st index region elt)
+(defun tempel--element (st region elt)
   "Add template ELT to ST given the REGION with INDEX."
   (pcase elt
     ('nil)
@@ -331,26 +342,26 @@ Return the added field."
           (insert "\n")))
     ('o (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
           (open-line 1)))
-    (`(s ,name) (tempel--field st index name))
-    (`(l . ,lst) (dolist (e lst) (tempel--element st index region e)))
+    (`(s ,name) (tempel--field st name))
+    (`(l . ,lst) (dolist (e lst) (tempel--element st region e)))
     ;; not working for some reason
     ;; ((or 'p `(,(or 'p 'P `(,(or 'p 'P) ,index)) . ,rest)) (apply #'tempel--placeholder st index rest))
-    ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st index rest))
+    ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st :p rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
-         (when-let (ov (apply #'tempel--placeholder st -1 rest))
+         (when-let (ov (apply #'tempel--placeholder st :r rest))
            (unless rest
              (overlay-put ov 'tempel--quit t)))
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
-    ('q (overlay-put (tempel--field st index) 'tempel--quit t))
+    ('q (overlay-put (tempel--field st :q) 'tempel--quit t))
     (`(,tok . ,rest)
      (pcase tok
        (`(p ,index) (apply #'tempel--placeholder st index rest))))
     (_ (if-let (ret (run-hook-with-args-until-success 'tempel-user-elements elt))
-           (tempel--element st index region ret)
+           (tempel--element st region ret)
          ;; TEMPEL EXTENSION: Evaluate forms
          (tempel--form st elt)))))
 
@@ -368,6 +379,34 @@ If a field was added, return it."
   (if noinsert
       (progn (setf (alist-get name (cddr st)) prompt) nil)
     (tempel--field st index name prompt)))
+
+(defun tempel--renumber-fields (st)
+  "Renumber unindexed fields in ST."
+  (when (cadr st)
+    (let* ((is (cadr st))
+           (max (cl-loop for i in is
+                         maximize (if (numberp i) i -1)))
+           (end (+ max (length is))))
+      (setf (cadr st)
+            (cl-loop for i in (reverse (cadr st))
+                     collect (pcase i
+                               (:p (cl-incf max))
+                               (:r end)
+                               (:q (+ end 1))
+                               (i i)) into newlist
+                     finally return (reverse newlist))))
+    (let ((fields (cl-loop for ov in (car st)
+                           when (overlay-get ov 'tempel--field)
+                           collect ov)))
+      (cl-loop for ov in fields
+               when (overlay-get ov 'tempel--field)
+               for index in (cadr st)
+               when index
+               do (let ((i (overlay-get ov 'tempel--field-index)))
+                    (cond ((numberp i) nil)
+                          (t (overlay-put ov 'tempel--field-index index))))))
+    (setf (cadr st) (seq-uniq (sort (cadr st) #'<)))
+    (tempel--rotate (cadr st) 1)))
 
 (defun tempel--insert (template region)
   "Insert TEMPLATE given the current REGION."
@@ -388,19 +427,17 @@ If a field was added, return it."
             (setf (overlay-end ov) (point)))))
       ;; Activate template
       (let ((st (list nil nil))
-            (index -1)
             (range (point))
             (tempel--inhibit-hooks t))
         (while (and template (not (keywordp (car template))))
-          (tempel--element st index region (pop template))
-          (setf index (+ (apply #'max (or (cadr st) '(-1))) 1)))
+          (tempel--element st region (pop template)))
         (setq range (make-overlay range (point) nil t))
         (push range (car st))
         (overlay-put range 'modification-hooks (list #'tempel--range-modified))
         (overlay-put range 'tempel--range st)
         (overlay-put range 'tempel--post (plist-get plist :post))
         ;;(overlay-put range 'face 'region) ;; TODO debug
-        (setf (cadr st) (seq-uniq (sort (cadr st) #'<)))
+        (tempel--renumber-fields st)
         (push st tempel--active)))
     (cond
      ((cl-loop for ov in (caar tempel--active)
@@ -509,7 +546,7 @@ This is meant to be a source in `tempel-template-sources'."
   "Find next overlay in DIR."
   (let ((pt (point)) next stop)
     (dolist (st tempel--active next)
-      (let ((index (car (setf (cadr st) (-rotate (/ (* -1 dir) dir) (cadr st))))))
+      (let ((index (car (tempel--rotate (cadr st) (/ (* -1 dir) dir)))))
         (dolist (ov (car st))
           (unless (or (overlay-get ov 'tempel--form)
                       (not (overlay-get ov 'tempel--field-index))
