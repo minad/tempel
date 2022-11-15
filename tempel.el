@@ -216,7 +216,7 @@ BEG and END are the boundaries of the modification."
         (unless undo-in-progress
           (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
         (when-let (name (overlay-get ov 'tempel--name))
-          (setf (alist-get name (cdr st))
+          (setf (alist-get name (cddr st))
                 (buffer-substring-no-properties
                  (overlay-start ov) (overlay-end ov))))
         (unless undo-in-progress
@@ -231,8 +231,8 @@ BEG and END are the boundaries of the modification."
         (save-excursion
           (goto-char (overlay-start ov))
           (let (x)
-            (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cdr st)))
-                        (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
+            (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cddr st)))
+                        (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cddr st)))))
             (when x (tempel--replace (overlay-start ov) (overlay-end ov) ov x)))))
       ;; Move range overlay
       (move-overlay range (overlay-start range)
@@ -267,22 +267,25 @@ If OV is alive, move it."
                  (and (= (overlay-start ov) (overlay-end ov))
                       tempel-mark))))
 
-(defun tempel--field (st &optional name init)
+(defun tempel--field (st index &optional name init)
   "Add template field to ST.
+INDEX specifies the order of fields.
 NAME is the optional field name.
 INIT is the optional initial input.
 Return the added field."
   (let ((ov (make-overlay (point) (point))))
     (push ov (car st))
+    (push index (cadr st))
     (when name
       (overlay-put ov 'tempel--name name)
-      (setq init (or init (alist-get name (cdr st))))
-      (setf (alist-get name (cdr st)) init))
+      (setq init (or init (alist-get name (cddr st))))
+      (setf (alist-get name (cddr st)) init))
     (when (and init (not (equal init "")))
       (insert init)
       (move-overlay ov (overlay-start ov) (point)))
     (tempel--update-mark ov)
     (overlay-put ov 'tempel--field st)
+    (overlay-put ov 'tempel--field-index index)
     (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
     (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
@@ -299,7 +302,7 @@ Return the added field."
 Return the added field."
   (let ((beg (point)))
     (condition-case nil
-        (insert (eval form (cdr st)))
+        (insert (eval form (cddr st)))
       ;; Ignore errors since some variables may not be defined yet.
       (void-variable nil))
     (let ((ov (make-overlay beg (point) nil t)))
@@ -313,8 +316,8 @@ Return the added field."
   `(with-demoted-errors "Tempel Error: %S"
      ,@body))
 
-(defun tempel--element (st region elt)
-  "Add template ELT to ST given the REGION."
+(defun tempel--element (st index region elt)
+  "Add template ELT to ST given the REGION with INDEX."
   (pcase elt
     ('nil)
     ('n (insert "\n"))
@@ -328,26 +331,31 @@ Return the added field."
           (insert "\n")))
     ('o (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
           (open-line 1)))
-    (`(s ,name) (tempel--field st name))
-    (`(l . ,lst) (dolist (e lst) (tempel--element st region e)))
-    ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st rest))
+    (`(s ,name) (tempel--field st index name))
+    (`(l . ,lst) (dolist (e lst) (tempel--element st index region e)))
+    ;; not working for some reason
+    ;; ((or 'p `(,(or 'p 'P `(,(or 'p 'P) ,index)) . ,rest)) (apply #'tempel--placeholder st index rest))
+    ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st index rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
-         (when-let (ov (apply #'tempel--placeholder st rest))
+         (when-let (ov (apply #'tempel--placeholder st -1 rest))
            (unless rest
              (overlay-put ov 'tempel--quit t)))
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
-    ('q (overlay-put (tempel--field st) 'tempel--quit t))
+    ('q (overlay-put (tempel--field st index) 'tempel--quit t))
+    (`(,tok . ,rest)
+     (pcase tok
+       (`(p ,index) (apply #'tempel--placeholder st index rest))))
     (_ (if-let (ret (run-hook-with-args-until-success 'tempel-user-elements elt))
-           (tempel--element st region ret)
+           (tempel--element st index region ret)
          ;; TEMPEL EXTENSION: Evaluate forms
          (tempel--form st elt)))))
 
-(defun tempel--placeholder (st &optional prompt name noinsert)
-  "Handle placeholder element and add field with NAME to ST.
+(defun tempel--placeholder (st index &optional prompt name noinsert)
+  "Handle placeholder element and add field with NAME to ST as INDEX.
 If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
 PROMPT is the optional prompt/default value.
 If a field was added, return it."
@@ -356,10 +364,10 @@ If a field was added, return it."
          ((and (stringp prompt) noinsert) (read-string prompt))
          ((stringp prompt) (propertize prompt 'tempel--default t))
          ;; TEMPEL EXTENSION: Evaluate prompt
-         (t (eval prompt (cdr st)))))
+         (t (eval prompt (cddr st)))))
   (if noinsert
-      (progn (setf (alist-get name (cdr st)) prompt) nil)
-    (tempel--field st name prompt)))
+      (progn (setf (alist-get name (cddr st)) prompt) nil)
+    (tempel--field st index name prompt)))
 
 (defun tempel--insert (template region)
   "Insert TEMPLATE given the current REGION."
@@ -379,27 +387,27 @@ If a field was added, return it."
           (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
             (setf (overlay-end ov) (point)))))
       ;; Activate template
-      (let ((st (cons nil nil))
+      (let ((st (list nil nil))
+            (index -1)
             (range (point))
             (tempel--inhibit-hooks t))
         (while (and template (not (keywordp (car template))))
-          (tempel--element st region (pop template)))
+          (tempel--element st index region (pop template))
+          (setf index (+ (apply #'max (or (cadr st) '(-1))) 1)))
         (setq range (make-overlay range (point) nil t))
         (push range (car st))
         (overlay-put range 'modification-hooks (list #'tempel--range-modified))
         (overlay-put range 'tempel--range st)
         (overlay-put range 'tempel--post (plist-get plist :post))
         ;;(overlay-put range 'face 'region) ;; TODO debug
+        (setf (cadr st) (seq-uniq (sort (cadr st) #'<)))
         (push st tempel--active)))
     (cond
      ((cl-loop for ov in (caar tempel--active)
                never (overlay-get ov 'tempel--field))
       (goto-char (overlay-end (caaar tempel--active)))
       (tempel--done)) ;; Finalize right away
-     ((cl-loop for ov in (caar tempel--active)
-               never (and (overlay-get ov 'tempel--field)
-                          (eq (point) (overlay-start ov))))
-      (tempel-next 1))))) ;; Jump to first field
+     (t (tempel-next 1))))) ;; Jump to first field
 
 (defun tempel--save ()
   "Prompt to save modified files in `tempel-path'."
@@ -501,15 +509,18 @@ This is meant to be a source in `tempel-template-sources'."
   "Find next overlay in DIR."
   (let ((pt (point)) next stop)
     (dolist (st tempel--active next)
-      (dolist (ov (car st))
-        (unless (overlay-get ov 'tempel--form)
-          (setq stop (if (or (< dir 0) (eq 'start (overlay-get ov 'tempel--default)))
-                         (overlay-start ov) (overlay-end ov)))
-          (cond
-           ((and (> dir 0) (> stop pt))
-            (setq next (min (or next (point-max)) stop)))
-           ((and (< dir 0) (< stop pt))
-            (setq next (max (or next -1) stop)))))))))
+      (let ((index (car (setf (cadr st) (-rotate (/ (* -1 dir) dir) (cadr st))))))
+        (dolist (ov (car st))
+          (unless (or (overlay-get ov 'tempel--form)
+                      (not (overlay-get ov 'tempel--field-index))
+                      (not (= (overlay-get ov 'tempel--field-index) index)))
+            (setq stop (if (or (< dir 0) (eq 'start (overlay-get ov 'tempel--default)))
+                           (overlay-start ov) (overlay-end ov)))
+            (cond
+             ((>= stop pt)
+              (setq next (min (or next (point-max)) stop)))
+             ((< stop pt)
+              (setq next (max (or next -1) stop))))))))))
 
 (defun tempel-beginning ()
   "Move to beginning of the template."
@@ -597,7 +608,7 @@ This is meant to be a source in `tempel-template-sources'."
         (buf (current-buffer)))
     ;; Ignore errors in post expansion to ensure that templates can be
     ;; terminated gracefully.
-    (tempel--protect (eval (overlay-get (caar st) 'tempel--post) (cdr st)))
+    (tempel--protect (eval (overlay-get (caar st) 'tempel--post) (cddr st)))
     (with-current-buffer buf
       (tempel--disable st))))
 
