@@ -405,7 +405,10 @@ If a field was added, return it."
                do (let ((i (overlay-get ov 'tempel--field-index)))
                     (cond ((numberp i) nil)
                           (t (overlay-put ov 'tempel--field-index index))))))
-    (setf (cadr st) (seq-uniq (sort (cadr st) #'<)))
+    (setf (cadr st) (cl-loop for i in (sort (cadr st) #'<)
+                             when (not (member i ll))
+                             collect i into ll
+                             finally return ll))
     (tempel--rotate (cadr st) 1)))
 
 (defun tempel--insert (template region)
@@ -546,7 +549,7 @@ This is meant to be a source in `tempel-template-sources'."
   "Find next overlay in DIR."
   (let ((pt (point)) next stop)
     (dolist (st tempel--active next)
-      (let ((index (car (tempel--rotate (cadr st) (/ (* -1 dir) dir)))))
+      (let ((index (car (tempel--rotate (cadr st) (/ (- dir) (abs dir))))))
         (dolist (ov (car st))
           (unless (or (overlay-get ov 'tempel--form)
                       (not (overlay-get ov 'tempel--field-index))
