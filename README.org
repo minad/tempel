@@ -316,13 +316,13 @@ or similar keybinding packages.
 
 * Alternatives
 
-Tempel does not come with readily available snippet collections, unlike the
-YASnippet library. Try Tempel if you like small and simple packages. With Tempel
-you write your templates in Lisp syntax, which from my perspective fits well to
-the hackable nature of Emacs. Tempel took inspiration from the [[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]]
+There are plenty of alternative packages which provide abbreviation or snippet
+expansion. Try Tempel if you like small and simple packages. With Tempel you
+write your templates in Lisp syntax, which from my perspective fits well to the
+hackable nature of Emacs. Tempel took inspiration from the [[https://nschum.de/src/emacs/tempo-snippets/][Tempo-Snippets]]
 package by Nikolaj Schumacher ([[https://github.com/nschum/tempo-snippets.el][GitHub link]]).
 
-There are plenty of alternative packages which provide abbreviation or snippet expansion.
+List of alternatives (built-in or separate packages):
 
 - abbrev.el: Abbreviation expansion, builtin
 - expand.el: Abbreviation expansion, builtin
