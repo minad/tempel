@@ -454,7 +454,7 @@ This is meant to be a source in `tempel-template-sources'."
              for f in files collect
              (cons f (time-convert
                       (file-attribute-modification-time
-                       (file-attributes f))
+                       (file-attributes (file-truename f)))
                       'integer)))))
       (unless (equal (car tempel--path-templates) timestamps)
         (setq tempel--path-templates (cons timestamps
