@@ -49,7 +49,10 @@ and look at the provided key bindings. You can customize the key bindings there.
 * Configuration
 
 The package is available on GNU ELPA and MELPA and can be installed with
-=package-install=. The following example configuration relies on =use-package=.
+=package-install=. The following example configuration relies on =use-package=. For
+some ready-made templates check out the package [[https://github.com/Crandel/tempel-collection][tempel-collection]]. The
+collection is not comprehensive yet, but will certainly grow thanks to
+contributions.
 
 #+begin_src emacs-lisp
   ;; Configure Tempel
@@ -84,6 +87,10 @@ The package is available on GNU ELPA and MELPA and can be installed with
     ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
     ;; (global-tempel-abbrev-mode)
   )
+
+  ;; Optional: Add tempel-collection.
+  ;; The package is young and doesn't have comprehensive coverage.
+  (use-package tempel-collection)
 
   ;; Optional: Use the Corfu completion UI
   (use-package corfu
