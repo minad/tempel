@@ -234,8 +234,8 @@ document the important ones here:
   If no region is active, quits the containing template when jumped to.
 - ~r>~ Acts like ~r~, but indent region.
 - ~n>~ Inserts a newline and indents.
-- ~&~ Insert newline if there is only whitespace between line start and point.
-- ~%~ Insert newline if there is only whitespace between point and line end.
+- ~&~ Insert newline unless there is only whitespace between line start and point.
+- ~%~ Insert newline unless there is only whitespace between point and line end.
 - ~o~ Like ~%~ but leaves the point before newline.
 - ~(s NAME)~ Inserts a named field.
 - ~(p PROMPT <NAME> <NOINSERT>)~ Insert an optionally named field with a prompt.
