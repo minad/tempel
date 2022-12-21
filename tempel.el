@@ -299,7 +299,7 @@ Return the added field."
 Return the added field."
   (let ((beg (point)))
     (condition-case nil
-        (insert (eval form (cdr st)))
+        (insert (or (eval form (cdr st)) ""))
       ;; Ignore errors since some variables may not be defined yet.
       (void-variable nil))
     (let ((ov (make-overlay beg (point) nil t)))
