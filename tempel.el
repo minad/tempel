@@ -6,7 +6,7 @@
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
 ;; Version: 0.6
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Requires: ((emacs "27.1") (compat "29.1.1.1"))
 ;; Homepage: https://github.com/minad/tempel
 
 ;; This file is part of GNU Emacs.
@@ -26,19 +26,20 @@
 
 ;;; Commentary:
 
-;; Tempel implements a simple template/snippet system. The template
-;; format is compatible with the template format of the Emacs Tempo
-;; library. Your templates are stored in the `tempel-path' (by default
-;; the file "templates" in the `user-emacs-directory'). Bind the
-;; commands `tempel-complete', `tempel-expand' or `tempel-insert' to
-;; some keys in your user configuration. You can jump with the keys M-{
-;; and M-} from field to field. `tempel-complete' and `tempel-expand'
-;; work best with the Corfu completion UI, while `tempel-insert' uses
-;; `completing-read' under the hood. You can also use `tempel-complete'
-;; and `tempel-expand' as `completion-at-point-functions'.
+;; Tempel implements a simple template/snippet system.  The template format
+;; is compatible with the template format of the Emacs Tempo library.  Your
+;; templates are stored in the `tempel-path' (by default the file
+;; "templates" in the `user-emacs-directory').  Bind the commands
+;; `tempel-complete', `tempel-expand' or `tempel-insert' to some keys in
+;; your user configuration.  You can jump with the keys M-{ and M-} from
+;; field to field.  `tempel-complete' and `tempel-expand' work best with
+;; the Corfu completion UI, while `tempel-insert' uses `completing-read'
+;; under the hood.  You can also use `tempel-complete' and `tempel-expand'
+;; as `completion-at-point-functions'.
 
 ;;; Code:
 
+(require 'compat)
 (eval-when-compile
   (require 'subr-x)
   (require 'cl-lib))
@@ -84,7 +85,7 @@ nil or a new template element, which is subsequently evaluated."
 (defcustom tempel-template-sources
   (list #'tempel-path-templates)
   "List of template sources.
-A source can either be a function or a variable symbol. The functions
+A source can either be a function or a variable symbol.  The functions
 must return a list of templates which apply to the buffer or context."
   :type 'hook)
 
@@ -129,27 +130,25 @@ If a file is modified, added or removed, reload the templates."
 (defvar-local tempel--active nil
   "List of active templates.
 Each template state is a pair, where the car is a list of overlays and
-the cdr is an alist of variable bindings. The template state is attached
-to each overlay as the property `tempel--field'. Furthermore overlays
+the cdr is an alist of variable bindings.  The template state is attached
+to each overlay as the property `tempel--field'.  Furthermore overlays
 may be named with `tempel--name' or carry an evaluatable Lisp expression
 `tempel--form'.")
 
-(defvar tempel-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap beginning-of-buffer] #'tempel-beginning)
-    (define-key map [remap end-of-buffer] #'tempel-end)
-    (define-key map [remap kill-sentence] #'tempel-kill)
-    (define-key map [remap keyboard-escape-quit] #'tempel-abort)
-    (define-key map [remap backward-paragraph] #'tempel-previous)
-    (define-key map [remap forward-paragraph] #'tempel-next)
-    ;; Use concrete keys because of org mode
-    (define-key map "\M-\r" #'tempel-done)
-    (define-key map "\M-{" #'tempel-previous)
-    (define-key map "\M-}" #'tempel-next)
-    (define-key map [M-up] #'tempel-previous)
-    (define-key map [M-down] #'tempel-next)
-    map)
-  "Keymap to navigate across template fields.")
+(defvar-keymap tempel-map
+  :doc "Keymap to navigate across template fields."
+  "<remap> <beginning-of-buffer>" #'tempel-beginning
+  "<remap> <end-of-buffer>" #'tempel-end
+  "<remap> <kill-sentence>" #'tempel-kill
+  "<remap> <keyboard-escape-quit>" #'tempel-abort
+  "<remap> <backward-paragraph>" #'tempel-previous
+  "<remap> <forward-paragraph>" #'tempel-next
+  ;; Use concrete keys because of org mode
+  "M-RET" #'tempel-done
+  "M-{" #'tempel-previous
+  "M-}" #'tempel-next
+  "M-<up>" #'tempel-previous
+  "M-<down>" #'tempel-next)
 
 (defun tempel--print-element (elt)
   "Return string representation of template ELT."
@@ -290,7 +289,7 @@ Return the added field."
     (when (and init (get-text-property 0 'tempel--default init))
       (overlay-put ov 'face 'tempel-default)
       (overlay-put ov 'tempel--default
-                   (if (string-match-p ": \\'" init) 'end 'start)))
+                   (if (string-suffix-p ": " init) 'end 'start)))
     (tempel--synchronize-fields st ov)
     ov))
 
@@ -447,7 +446,7 @@ modified since the last time this function was called.
 This is meant to be a source in `tempel-template-sources'."
   (when (or (not tempel--path-templates) tempel-auto-reload)
     (let* ((files
-            (cl-loop for path in (if (listp tempel-path) tempel-path (list tempel-path))
+            (cl-loop for path in (ensure-list tempel-path)
                      nconc (file-expand-wildcards path t)))
            (timestamps
             (cl-loop
