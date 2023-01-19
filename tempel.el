@@ -700,7 +700,7 @@ If called interactively, select a template with `completing-read'."
 ;;;###autoload
 (defmacro tempel-key (key template-or-name &optional map)
   "Bind KEY to TEMPLATE-OR-NAME in MAP."
-  `(define-key ,(or map 'global-map) ,(kbd key)
+  `(define-key ,(or map 'global-map) ,(key-parse key)
      ,(if (consp template-or-name)
           `(lambda ()
              (interactive)
