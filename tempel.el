@@ -46,6 +46,8 @@
 
 (defgroup tempel nil
   "Tempo templates/snippets with in-buffer field editing."
+  :link '(url-link "https://github.com/minad/tempel")
+  :link '(info-link "(tempel)")
   :group 'editing
   :prefix "tempel-")
 
