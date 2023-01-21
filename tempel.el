@@ -46,9 +46,12 @@
 
 (defgroup tempel nil
   "Tempo templates/snippets with in-buffer field editing."
-  :link '(url-link "https://github.com/minad/tempel")
-  :link '(info-link "(tempel)")
-  :group 'editing
+  :link '(info-link :tag "Info Manual" "(tempel)")
+  :link '(url-link :tag "Homepage" "https://github.com/minad/tempel")
+  :link '(emacs-library-link :tag "Library Source" "tempel.el")
+  :group 'abbrev
+  :group 'tools
+  :group 'matching
   :prefix "tempel-")
 
 (defcustom tempel-path (expand-file-name "templates" user-emacs-directory)
