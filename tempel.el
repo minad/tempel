@@ -155,31 +155,40 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
   "M-<up>" #'tempel-previous
   "M-<down>" #'tempel-next)
 
-(defun tempel--print-element (elt)
-  "Return string representation of template ELT."
-  (pcase elt
-    ('nil nil)
-    ((pred stringp) elt)
-    (`(s ,name) (symbol-name name))
-    (`(,(or 'p 'P) ,_ ,name . ,noinsert)
-     (and (not (car noinsert)) (symbol-name name)))
-    ((or 'n 'n> '> '& '% 'o) " ")
-    (_ "_")))
+(defun tempel--print-template (elts)
+  "Print template ELTS."
+  (cl-loop
+   for elt in elts until (keywordp elt) concat
+   (pcase elt
+     ('nil nil)
+     ((pred stringp) (propertize elt 'face 'completions-annotations))
+     (`(s ,name) (propertize (symbol-name name) 'face 'completions-annotations))
+     (`(,(or 'p 'P) ,_ ,name . ,noinsert)
+      (and (not (car noinsert))
+           (propertize (symbol-name name) 'face 'completions-annotations)))
+     ('> #(" " 0 1 (face completions-annotations)))
+     ((or 'n 'n> '& '% 'o) #("\n" 0 1 (face completions-annotations)))
+     (_ #("_" 0 1 (face shadow))))))
 
 (defun tempel--annotate (templates width ellipsis sep name)
   "Annotate template NAME given the list of TEMPLATES.
 WIDTH, SEP and ELLIPSIS configure the formatting."
   (when-let ((name (intern-soft name))
              (elts (cdr (assoc name templates))))
-    (concat sep
-            (truncate-string-to-width
-             (replace-regexp-in-string
-              "_+" #("_" 0 1 (face shadow))
-              (propertize (replace-regexp-in-string
-                           "\\s-+" " "
-                           (mapconcat #'tempel--print-element elts ""))
-                          'face 'completions-annotations))
-             width 0 ?\s ellipsis))))
+    (concat sep (truncate-string-to-width
+                 (replace-regexp-in-string
+                  "[ \t\n\r]+" #(" " 0 1 (face completions-annotations))
+                  (tempel--print-template elts))
+                 width 0 ?\s ellipsis))))
+
+(defun tempel--doc-buffer (templates name)
+  "Create doc buffer for template NAME given the list of TEMPLATES."
+  (when-let ((name (intern-soft name))
+             (elts (cdr (assoc name templates))))
+    (with-current-buffer (get-buffer-create " *tempel-doc*")
+      (erase-buffer)
+      (insert (tempel--print-template elts))
+      (current-buffer))))
 
 (defun tempel--delete-word (word)
   "Delete WORD before point."
@@ -674,6 +683,8 @@ If INTERACTIVE is nil the function acts like a capf."
               :company-kind (lambda (_) 'snippet)
               :exit-function (apply-partially #'tempel--exit templates region)
               :company-prefix-length (and tempel-trigger-prefix t)
+              :company-doc-buffer
+              (apply-partially #'tempel--doc-buffer templates)
               :annotation-function
               (and tempel-complete-annotation
                    (apply-partially #'tempel--annotate
