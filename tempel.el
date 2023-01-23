@@ -182,14 +182,17 @@ WIDTH, SEP and ELLIPSIS configure the formatting."
                   (tempel--print-template elts))
                  width 0 ?\s ellipsis))))
 
-(defun tempel--doc-buffer (templates name)
-  "Create doc buffer for template NAME given the list of TEMPLATES."
+(defun tempel--info-buffer (templates fun name)
+  "Create info buffer for template NAME.
+FUN inserts the info into the buffer.
+TEMPLATES is the list of templates."
   (when-let ((name (intern-soft name))
              (elts (cdr (assoc name templates))))
-    (with-current-buffer (get-buffer-create " *tempel-doc*")
-      (erase-buffer)
-      (insert (tempel--print-template elts))
-      (current-buffer))))
+    (with-current-buffer (get-buffer-create " *tempel-info*")
+      (setq buffer-read-only t)
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (funcall fun elts)))))
 
 (defun tempel--delete-word (word)
   "Delete WORD before point."
@@ -685,7 +688,15 @@ If INTERACTIVE is nil the function acts like a capf."
               :exit-function (apply-partially #'tempel--exit templates region)
               :company-prefix-length (and tempel-trigger-prefix t)
               :company-doc-buffer
-              (apply-partially #'tempel--doc-buffer templates)
+              (apply-partially #'tempel--info-buffer templates
+                               (lambda (elts)
+                                 (insert (tempel--print-template elts))
+                                 (current-buffer)))
+              :company-location
+              (apply-partially #'tempel--info-buffer templates
+                               (lambda (elts)
+                                 (pp elts (current-buffer))
+                                 (list (current-buffer))))
               :annotation-function
               (and tempel-complete-annotation
                    (apply-partially #'tempel--annotate
