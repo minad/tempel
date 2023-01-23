@@ -167,7 +167,8 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
       (and (not (car noinsert))
            (propertize (symbol-name name) 'face 'completions-annotations)))
      ('> #(" " 0 1 (face completions-annotations)))
-     ((or 'n 'n> '& '% 'o) #("\n" 0 1 (face completions-annotations)))
+     ('n> #("\n " 0 2 (face completions-annotations)))
+     ((or 'n '& '% 'o) #("\n" 0 1 (face completions-annotations)))
      (_ #("_" 0 1 (face shadow))))))
 
 (defun tempel--annotate (templates width ellipsis sep name)
