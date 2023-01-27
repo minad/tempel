@@ -393,7 +393,7 @@ List of alternatives (built-in or separate packages):
 - [[https://github.com/tecosaur/LaTeX-auto-activating-snippets][laas.el]]: Latex auto activating snippets
 - [[https://github.com/jiahaowork/muban.el][muban.el]]: Lightweight template expansion
 - [[https://github.com/oantolin/placeholder][placeholder.el]]: Treat buffers as templates
-- [[https://github.com/xFA25E/skempo][skempo.el]]: Unifies Skeleton and Tempo configuration
+- [[https://github.com/xFA25E/tempo-abbrev][tempo-abbrev.el]]: Abbrev integration for Tempo
 - [[https://github.com/pkazmier/snippet.el][snippet.el]]: Original snippet mode, with inline expansion
 - [[https://nschum.de/src/emacs/tempo-snippets/][tempo-snippets.el]]: Interface like snippet.el for Tempo
 - [[https://github.com/joaotavora/yasnippet][yasnippet.el]]: Template system inspired by Textmate snippets
