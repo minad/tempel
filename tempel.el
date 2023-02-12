@@ -203,7 +203,7 @@ TEMPLATES is the list of templates."
 (defun tempel--exit (templates region name status)
   "Exit function for completion for template NAME and STATUS.
 TEMPLATES is the list of templates.
-REGION are the current region bouns"
+REGION are the current region bounds."
   (unless (eq status 'exact)
     (when-let ((sym (intern-soft name))
                (template (alist-get sym templates)))
