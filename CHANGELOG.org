@@ -1,0 +1,7 @@
+#+title: tempel.el - Changelog
+#+author: Daniel Mendler
+#+language: en
+
+* Version 0.7 (2023-02-15)
+
+- Start of changelog.
