@@ -651,7 +651,13 @@ The completion table specifies the category `tempel'."
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
   "Expand exactly matching template name at point.
-If INTERACTIVE is nil the function acts like a capf."
+This completion-at-point-function (Capf) returns only the single
+exactly matching templaten ame.  As a consequence the completion
+UI (e.g. Corfu) does not present the candidates for selection.
+If you want to select from a list of templates, use
+`tempel-complete' instead.  If INTERACTIVE is nil the function
+acts like a Capf, otherwise like an interactive completion
+command."
   (interactive (list t))
   (if interactive
       (tempel--interactive #'tempel-expand)
@@ -670,7 +676,11 @@ If INTERACTIVE is nil the function acts like a capf."
 ;;;###autoload
 (defun tempel-complete (&optional interactive)
   "Complete template name at point and expand.
-If INTERACTIVE is nil the function acts like a capf."
+This completion-at-point-function (Capf) returns a list of all
+possible template names, which are then displayed in the
+completion UI (e.g. Corfu) for selection.  See also
+`tempel-expand'.  If INTERACTIVE is nil the function acts like a
+Capf, otherwise like an interactive completion command."
   (interactive (list t))
   (if interactive
       (progn
