@@ -30,11 +30,16 @@ Tempel comes with three commands for template expansion:
 
 + ~tempel-complete~ completes a template name at point in the buffer and
   subsequently expands the template. If called non-interactively the function
-  behaves like a Capf and can be added to ~completion-at-point-functions~.
-+ ~tempel-expand~ expands an exactly matching template name at point in the buffer.
-  If called non-interactively the function behaves like a Capf and can be added
-  to ~completion-at-point-functions~.
-+ ~tempel-insert~ selects a template by name and insert it into the current buffer.
+  behaves like a Capf and can be added to ~completion-at-point-functions~. The
+  Capf returns a list of templates names which are presented by the completion
+  UI for selection.
++ ~tempel-expand~ expands an exactly matching template name at point in the
+  buffer. If called non-interactively the function behaves like a Capf and can
+  be added to ~completion-at-point-functions~. This Capf returns only the single
+  exactly matching template name, such that no selection in the completion UI is
+  possible.
++ ~tempel-insert~ selects a template by name via ~completing-read~ and insert it
+  into the current buffer.
 
 For the commands ~tempel-complete~ and ~tempel-expand~, you may want to give my
 [[https://github.com/minad/corfu][Corfu]] completion at point popup UI a try. After inserting the template you can
