@@ -392,6 +392,7 @@ List of alternatives (built-in or separate packages):
 - expand.el: Abbreviation expansion, builtin
 - skeleton.el: Lisp syntax for templates, builtin
 - tempo.el: Lisp syntax for templates, builtin
+- srecode.el: CEDET template manager and code generator, builtin
 - [[https://github.com/ymarco/auto-activating-snippets][aas.el]]: Auto activating snippets
 - [[https://github.com/cdominik/cdlatex][cdlatex.el]]: Fast LaTeX insertion
 - [[https://github.com/tecosaur/LaTeX-auto-activating-snippets][laas.el]]: Latex auto activating snippets
