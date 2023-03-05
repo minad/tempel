@@ -6,7 +6,7 @@
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
 ;; Version: 0.7
-;; Package-Requires: ((emacs "27.1") (compat "29.1.3.4"))
+;; Package-Requires: ((emacs "27.1") (compat "29.1.4.0"))
 ;; Homepage: https://github.com/minad/tempel
 
 ;; This file is part of GNU Emacs.
@@ -75,11 +75,11 @@ trigger completion."
 
 (defcustom tempel-insert-annotation 40
   "Annotation width for `tempel-insert'."
-  :type '(choice (const nil integer)))
+  :type '(choice (const nil natnum)))
 
 (defcustom tempel-complete-annotation 20
   "Annotation width for `tempel-complete'."
-  :type '(choice (const nil integer)))
+  :type '(choice (const nil natnum)))
 
 (defcustom tempel-user-elements nil
   "List of user element handler functions.
