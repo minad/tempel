@@ -487,6 +487,7 @@ This is meant to be a source in `tempel-template-sources'."
    (cl-loop
     for m in modes thereis
     (or (eq m #'fundamental-mode)
+       	(alist-get m major-mode-remap-alist)
         (derived-mode-p m)))
    (or (not (plist-member plist :when))
        (save-excursion
