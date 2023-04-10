@@ -8,7 +8,7 @@
 ;; Version: 0.7
 ;; Package-Requires: ((emacs "27.1") (compat "29.1.4.0"))
 ;; Homepage: https://github.com/minad/tempel
-;; Keywords: abbrev, extensions, languages, tools, wp
+;; Keywords: abbrev, languages, tools, wp
 
 ;; This file is part of GNU Emacs.
 
