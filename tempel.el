@@ -398,16 +398,16 @@ If a field was added, return it."
             (setf (overlay-end ov) (point)))))
       ;; Activate template
       (let ((st (cons nil nil))
-            (range (point))
+            (ov (point))
             (tempel--inhibit-hooks t))
         (while (and template (not (keywordp (car template))))
           (tempel--element st region (pop template)))
-        (setq range (make-overlay range (point) nil t))
-        (push range (car st))
-        (overlay-put range 'modification-hooks (list #'tempel--range-modified))
-        (overlay-put range 'tempel--range st)
-        (overlay-put range 'tempel--post (plist-get plist :post))
-        ;;(overlay-put range 'face 'region) ;; TODO debug
+        (setq ov (make-overlay ov (point) nil t))
+        (push ov (car st))
+        (overlay-put ov 'modification-hooks (list #'tempel--range-modified))
+        (overlay-put ov 'tempel--range st)
+        (overlay-put ov 'tempel--post (plist-get plist :post))
+        ;;(overlay-put ov 'face 'region) ;; TODO debug
         (push st tempel--active)))
     (cond
      ((cl-loop for ov in (caar tempel--active)
