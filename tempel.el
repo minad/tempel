@@ -257,7 +257,7 @@ BEG and END are the boundaries of the modification."
                     (max (overlay-end range) (overlay-end ov))))))
 
 (defun tempel--replace (beg end ov str)
-  "Replace region beween BEG and END with STR.
+  "Replace region between BEG and END with STR.
 If OV is alive, move it."
   (let ((old (buffer-substring-no-properties beg end)))
     (setq ov (and ov (overlay-buffer ov) ov))
