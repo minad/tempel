@@ -216,30 +216,32 @@ REGION are the current region bounds."
 (defun tempel--range-modified (ov &rest _)
   "Range overlay OV modified."
   (when (and (not tempel--inhibit-hooks) (= (overlay-start ov) (overlay-end ov)))
-    (tempel--disable (overlay-get ov 'tempel--range))))
+    (let (inhibit-modification-hooks)
+      (tempel--disable (overlay-get ov 'tempel--range)))))
 
 (defun tempel--field-modified (ov after beg end &optional _len)
   "Update field overlay OV.
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
   (unless tempel--inhibit-hooks
-    (cond
-     ;; Erase default before modification if at beginning or end
-     ((and (not after) (overlay-get ov 'tempel--default)
-           (or (= beg (overlay-start ov)) (= end (overlay-end ov))))
-      (delete-region (overlay-start ov) (overlay-end ov)))
-     ;; Update field after modification
-     (after
-      (let ((st (overlay-get ov 'tempel--field)))
-        (unless undo-in-progress
-          (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
-        (when-let (name (overlay-get ov 'tempel--name))
-          (setf (alist-get name (cdr st))
-                (buffer-substring-no-properties
-                 (overlay-start ov) (overlay-end ov))))
-        (unless undo-in-progress
-          (tempel--synchronize-fields st ov)))))
-    (tempel--update-mark ov)))
+    (let (inhibit-modification-hooks)
+      (cond
+       ;; Erase default before modification if at beginning or end
+       ((and (not after) (overlay-get ov 'tempel--default)
+             (or (= beg (overlay-start ov)) (= end (overlay-end ov))))
+        (delete-region (overlay-start ov) (overlay-end ov)))
+       ;; Update field after modification
+       (after
+        (let ((st (overlay-get ov 'tempel--field)))
+          (unless undo-in-progress
+            (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
+          (when-let (name (overlay-get ov 'tempel--name))
+            (setf (alist-get name (cdr st))
+                  (buffer-substring-no-properties
+                   (overlay-start ov) (overlay-end ov))))
+          (unless undo-in-progress
+            (tempel--synchronize-fields st ov)))))
+      (tempel--update-mark ov))))
 
 (defun tempel--synchronize-fields (st current)
   "Synchronize fields of ST, except CURRENT overlay."
