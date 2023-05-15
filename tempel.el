@@ -216,7 +216,8 @@ REGION are the current region bounds."
 (defun tempel--range-modified (ov &rest _)
   "Range overlay OV modified."
   (when (and (not tempel--inhibit-hooks) (= (overlay-start ov) (overlay-end ov)))
-    (let (inhibit-modification-hooks)
+    (let ((inhibit-modification-hooks nil)
+          (tempel--inhibit-hooks t))
       (tempel--disable (overlay-get ov 'tempel--range)))))
 
 (defun tempel--field-modified (ov after beg end &optional _len)
@@ -224,7 +225,8 @@ REGION are the current region bounds."
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
   (unless tempel--inhibit-hooks
-    (let (inhibit-modification-hooks)
+    (let ((inhibit-modification-hooks nil)
+          (tempel--inhibit-hooks t))
       (cond
        ;; Erase default before modification if at beginning or end
        ((and (not after) (overlay-get ov 'tempel--default)
@@ -253,22 +255,22 @@ BEG and END are the boundaries of the modification."
           (let (x)
             (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cdr st)))
                         (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
-            (when x (tempel--replace (overlay-start ov) (overlay-end ov) ov x)))))
+            (when x (tempel--synchronize-replace (overlay-start ov) (overlay-end ov) ov x)))))
       ;; Move range overlay
       (move-overlay range (overlay-start range)
                     (max (overlay-end range) (overlay-end ov))))))
 
-(defun tempel--replace (beg end ov str)
+(defun tempel--synchronize-replace (beg end ov str)
   "Replace region between BEG and END with STR.
 If OV is alive, move it."
   (let ((old (buffer-substring-no-properties beg end)))
     (setq ov (and ov (overlay-buffer ov) ov))
     (unless (equal str old)
       (unless (eq buffer-undo-list t)
-        (push (list 'apply #'tempel--replace beg (+ beg (length str)) ov old)
+        (push (list 'apply #'tempel--synchronize-replace
+                    beg (+ beg (length str)) ov old)
               buffer-undo-list))
-      (let ((buffer-undo-list t)
-            (tempel--inhibit-hooks t))
+      (let ((buffer-undo-list t))
         (save-excursion
           (goto-char beg)
           (delete-char (- end beg))
