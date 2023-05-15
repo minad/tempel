@@ -358,12 +358,12 @@ Return the added field."
      (if (not region)
          (when-let (ov (apply #'tempel--placeholder st rest))
            (unless rest
-             (overlay-put ov 'tempel--quit t)))
+             (overlay-put ov 'tempel--enter #'tempel--done)))
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
-    ('q (overlay-put (tempel--field st) 'tempel--quit t))
+    ('q (overlay-put (tempel--field st) 'tempel--enter #'tempel--done))
     (_ (if-let (ret (run-hook-with-args-until-success 'tempel-user-elements elt))
            (tempel--element st region ret)
          ;; TEMPEL EXTENSION: Evaluate forms
@@ -572,8 +572,8 @@ This is meant to be a source in `tempel-template-sources'."
   ;; If the current field is marked as "quitting", disable its
   ;; containing template right away.
   (when-let ((ov (tempel--field-at-point))
-             ((overlay-get ov 'tempel--quit)))
-    (tempel--done (overlay-get ov 'tempel--field))))
+             (fun (overlay-get ov 'tempel--enter)))
+    (funcall fun ov)))
 
 (defun tempel-previous (arg)
   "Move ARG fields backward and quit at the beginning."
@@ -617,9 +617,9 @@ This is meant to be a source in `tempel-template-sources'."
   ;; TODO disable only the topmost template?
   (while tempel--active (tempel--done)))
 
-(defun tempel--done (&optional st)
-  "Finalize template ST, or last template."
-  (let ((st (or st (car tempel--active)))
+(defun tempel--done (&optional ov)
+  "Finalize template associated with field OV, or last template."
+  (let ((st (if ov (overlay-get ov 'tempel--field) (car tempel--active)))
         (buf (current-buffer)))
     ;; Ignore errors in post expansion to ensure that templates can be
     ;; terminated gracefully.
