@@ -294,7 +294,8 @@ If OV is alive, move it."
 NAME is the optional field name.
 INIT is the optional initial input.
 Return the added field."
-  (let ((ov (make-overlay (point) (point))))
+  (let ((ov (make-overlay (point) (point)))
+        (hooks (list #'tempel--field-modified)))
     (push ov (car st))
     (when name
       (overlay-put ov 'tempel--name name)
@@ -305,9 +306,9 @@ Return the added field."
       (move-overlay ov (overlay-start ov) (point)))
     (tempel--update-mark ov)
     (overlay-put ov 'tempel--field st)
-    (overlay-put ov 'modification-hooks (list #'tempel--field-modified))
-    (overlay-put ov 'insert-in-front-hooks (list #'tempel--field-modified))
-    (overlay-put ov 'insert-behind-hooks (list #'tempel--field-modified))
+    (overlay-put ov 'modification-hooks hooks)
+    (overlay-put ov 'insert-in-front-hooks hooks)
+    (overlay-put ov 'insert-behind-hooks hooks)
     (overlay-put ov 'face 'tempel-field)
     (when (and init (get-text-property 0 'tempel--default init))
       (overlay-put ov 'face 'tempel-default)
@@ -657,7 +658,7 @@ The completion table specifies the category `tempel'."
 (defun tempel-expand (&optional interactive)
   "Expand exactly matching template name at point.
 This completion-at-point-function (Capf) returns only the single
-exactly matching templaten ame.  As a consequence the completion
+exactly matching template name.  As a consequence the completion
 UI (e.g. Corfu) does not present the candidates for selection.
 If you want to select from a list of templates, use
 `tempel-complete' instead.  If INTERACTIVE is nil the function
