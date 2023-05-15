@@ -356,9 +356,9 @@ Return the added field."
     ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
-         (when-let (ov (apply #'tempel--placeholder st rest))
-           (unless rest
-             (overlay-put ov 'tempel--enter #'tempel--done)))
+         (when-let ((ov (apply #'tempel--placeholder st rest))
+                    ((not rest)))
+           (overlay-put ov 'tempel--enter #'tempel--done))
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
