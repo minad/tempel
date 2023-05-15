@@ -2,6 +2,11 @@
 #+author: Daniel Mendler
 #+language: en
 
+* Development
+
+- Ensure that modification hooks are never inhibited during field modification,
+  which is needed for lsp-mode in order to keep the server synchronized.
+
 * Version 0.7 (2023-02-15)
 
 - Start of changelog.
