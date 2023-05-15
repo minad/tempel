@@ -569,8 +569,7 @@ This is meant to be a source in `tempel-template-sources'."
            (if-let (next (tempel--find arg)) (goto-char next)
              (tempel-done)
              (cl-return)))
-  ;; If the current field is marked as "quitting", disable its
-  ;; containing template right away.
+  ;; Run the enter action of the field.
   (when-let ((ov (tempel--field-at-point))
              (fun (overlay-get ov 'tempel--enter)))
     (funcall fun ov)))
