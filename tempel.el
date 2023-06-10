@@ -364,10 +364,18 @@ Return the added field."
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
     ('q (overlay-put (tempel--field st) 'tempel--enter #'tempel--done))
-    (_ (if-let (ret (run-hook-with-args-until-success 'tempel-user-elements elt))
-           (tempel--element st region ret)
+    (_ (unless (run-hook-wrapped 'tempel-user-elements #'tempel--user-element st region elt)
          ;; TEMPEL EXTENSION: Evaluate forms
          (tempel--form st elt)))))
+
+(defun tempel--user-element (fun st region elt)
+  "Evaluate user element FUN for ELT given state ST and REGION."
+  (condition-case nil
+      (when-let ((ret (funcall fun elt)))
+        (tempel--element st region ret)
+        t)
+    (wrong-number-of-arguments
+     (funcall fun st elt))))
 
 (defun tempel--placeholder (st &optional prompt name noinsert)
   "Handle placeholder element and add field with NAME to ST.
