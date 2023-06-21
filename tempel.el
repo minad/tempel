@@ -237,7 +237,7 @@ BEG and END are the boundaries of the modification."
         (let ((st (overlay-get ov 'tempel--field)))
           (unless undo-in-progress
             (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
-          (when-let (name (overlay-get ov 'tempel--name))
+          (when-let ((name (overlay-get ov 'tempel--name)))
             (setf (alist-get name (cdr st))
                   (buffer-substring-no-properties
                    (overlay-start ov) (overlay-end ov))))
@@ -364,7 +364,7 @@ Return the added field."
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
     ('q (overlay-put (tempel--field st) 'tempel--enter #'tempel--done))
-    (_ (if-let (ret (run-hook-with-args-until-success 'tempel-user-elements elt))
+    (_ (if-let ((ret (run-hook-with-args-until-success 'tempel-user-elements elt)))
            (tempel--element st region ret)
          ;; TEMPEL EXTENSION: Evaluate forms
          (tempel--form st elt)))))
@@ -429,7 +429,7 @@ If a field was added, return it."
   (cl-loop
    with all = nil
    for (file . _ts) in (car tempel--path-templates) do
-   (when-let (buf (get-file-buffer file))
+   (when-let ((buf (get-file-buffer file)))
      (with-current-buffer buf
        (when (and (buffer-modified-p)
                   (pcase (or all (read-answer
@@ -537,13 +537,13 @@ This is meant to be a source in `tempel-template-sources'."
 (defun tempel-beginning ()
   "Move to beginning of the template."
   (interactive)
-  (when-let (pos (tempel--beginning))
+  (when-let ((pos (tempel--beginning)))
     (if (= pos (point)) (tempel-done) (goto-char pos))))
 
 (defun tempel-end ()
   "Move to end of the template."
   (interactive)
-  (when-let (pos (tempel--end))
+  (when-let ((pos (tempel--end)))
     (if (= pos (point)) (tempel-done) (goto-char pos))))
 
 (defun tempel--field-at-point ()
@@ -558,7 +558,7 @@ This is meant to be a source in `tempel-template-sources'."
 (defun tempel-kill ()
   "Kill the field contents."
   (interactive)
-  (if-let (ov (tempel--field-at-point))
+  (if-let ((ov (tempel--field-at-point)))
       (kill-region (overlay-start ov) (overlay-end ov))
     (kill-sentence nil)))
 
@@ -566,7 +566,8 @@ This is meant to be a source in `tempel-template-sources'."
   "Move ARG fields forward and quit at the end."
   (interactive "p")
   (cl-loop for i below (abs arg) do
-           (if-let (next (tempel--find arg)) (goto-char next)
+           (if-let ((next (tempel--find arg)))
+               (goto-char next)
              (tempel-done)
              (cl-return)))
   ;; Run the enter action of the field.
