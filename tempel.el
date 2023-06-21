@@ -593,11 +593,12 @@ This is meant to be a source in `tempel-template-sources'."
 (defun tempel-abort ()
   "Abort template insertion."
   (interactive)
-  (when-let ((beg (tempel--beginning))
-             (end (tempel--end)))
-    ;; TODO abort only the topmost template?
-    (while tempel--active (tempel--disable))
-    (delete-region beg end)))
+  ;; TODO abort only the topmost template?
+  (while-let ((st (car tempel--active)))
+    (let ((beg (overlay-start (caar st)))
+          (end (overlay-end (caar st))))
+      (tempel--disable)
+      (delete-region beg end))))
 
 (defun tempel--disable (&optional st)
   "Disable template ST, or last template."
