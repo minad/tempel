@@ -61,48 +61,48 @@ collection is not comprehensive yet, but will certainly grow thanks to
 contributions.
 
 #+begin_src emacs-lisp
-  ;; Configure Tempel
-  (use-package tempel
-    ;; Require trigger prefix before template name when completing.
-    ;; :custom
-    ;; (tempel-trigger-prefix "<")
+;; Configure Tempel
+(use-package tempel
+  ;; Require trigger prefix before template name when completing.
+  ;; :custom
+  ;; (tempel-trigger-prefix "<")
 
-    :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
-           ("M-*" . tempel-insert))
+  :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+         ("M-*" . tempel-insert))
 
-    :init
+  :init
 
-    ;; Setup completion at point
-    (defun tempel-setup-capf ()
-      ;; Add the Tempel Capf to `completion-at-point-functions'.
-      ;; `tempel-expand' only triggers on exact matches. Alternatively use
-      ;; `tempel-complete' if you want to see all matches, but then you
-      ;; should also configure `tempel-trigger-prefix', such that Tempel
-      ;; does not trigger too often when you don't expect it. NOTE: We add
-      ;; `tempel-expand' *before* the main programming mode Capf, such
-      ;; that it will be tried first.
-      (setq-local completion-at-point-functions
-                  (cons #'tempel-expand
-                        completion-at-point-functions)))
+  ;; Setup completion at point
+  (defun tempel-setup-capf ()
+    ;; Add the Tempel Capf to `completion-at-point-functions'.
+    ;; `tempel-expand' only triggers on exact matches. Alternatively use
+    ;; `tempel-complete' if you want to see all matches, but then you
+    ;; should also configure `tempel-trigger-prefix', such that Tempel
+    ;; does not trigger too often when you don't expect it. NOTE: We add
+    ;; `tempel-expand' *before* the main programming mode Capf, such
+    ;; that it will be tried first.
+    (setq-local completion-at-point-functions
+                (cons #'tempel-expand
+                      completion-at-point-functions)))
 
-    (add-hook 'conf-mode-hook 'tempel-setup-capf)
-    (add-hook 'prog-mode-hook 'tempel-setup-capf)
-    (add-hook 'text-mode-hook 'tempel-setup-capf)
+  (add-hook 'conf-mode-hook 'tempel-setup-capf)
+  (add-hook 'prog-mode-hook 'tempel-setup-capf)
+  (add-hook 'text-mode-hook 'tempel-setup-capf)
 
-    ;; Optionally make the Tempel templates available to Abbrev,
-    ;; either locally or globally. `expand-abbrev' is bound to C-x '.
-    ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
-    ;; (global-tempel-abbrev-mode)
-  )
+  ;; Optionally make the Tempel templates available to Abbrev,
+  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+  ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+  ;; (global-tempel-abbrev-mode)
+)
 
-  ;; Optional: Add tempel-collection.
-  ;; The package is young and doesn't have comprehensive coverage.
-  (use-package tempel-collection)
+;; Optional: Add tempel-collection.
+;; The package is young and doesn't have comprehensive coverage.
+(use-package tempel-collection)
 
-  ;; Optional: Use the Corfu completion UI
-  (use-package corfu
-    :init
-    (global-corfu-mode))
+;; Optional: Use the Corfu completion UI
+(use-package corfu
+  :init
+  (global-corfu-mode))
 #+end_src
 
 * Template file format
@@ -120,162 +120,162 @@ evaluated before the template is expanded or after it is finalized, respectively
 access the template's named fields.
 
 #+begin_src emacs-lisp
-  ;; ~/.config/emacs/templates
+;; ~/.config/emacs/templates
 
-  fundamental-mode ;; Available everywhere
+fundamental-mode ;; Available everywhere
 
-  (today (format-time-string "%Y-%m-%d"))
+(today (format-time-string "%Y-%m-%d"))
 
-  prog-mode
+prog-mode
 
-  (fixme (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "FIXME ")
-  (todo (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "TODO ")
-  (bug (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "BUG ")
-  (hack (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "HACK ")
+(fixme (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "FIXME ")
+(todo (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "TODO ")
+(bug (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "BUG ")
+(hack (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "HACK ")
 
-  latex-mode
+latex-mode
 
-  (abstract "\\begin{abstract}\n" r> n> "\\end{abstract}")
-  (align "\\begin{align}\n" r> n> "\\end{align}")
-  (alignn "\\begin{align*}\n" r> n> "\\end{align*}")
-  (gather "\\begin{gather}\n" r> n> "\\end{gather}")
-  (gatherr "\\begin{gather*}\n" r> n> "\\end{gather*}")
-  (appendix "\\begin{appendix}\n" r> n> "\\end{appendix}")
-  (begin "\\begin{" (s env) "}" r> n> "\\end{" (s env) "}")
-  (center "\\begin{center}\n" r> n> "\\end{center}")
-  (displaymath "\\begin{displaymath}\n" r> n> "\\end{displaymath}")
-  (document "\\begin{document}\n" r> n> "\\end{document}")
-  (enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}")
-  (equation "\\begin{equation}" r> n> "\\end{equation}")
-  (flushleft "\\begin{flushleft}" r> n> "\\end{flushleft}")
-  (flushright "\\begin{flushright}" r> n> "\\end{flushright}")
-  (frac "\\frac{" p "}{" q "}")
-  (fussypar "\\begin{fussypar}" r> n> "\\end{fussypar}")
-  (itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}")
-  (letter "\\begin{letter}\n" r> n> "\\end{letter}")
-  (math "\\begin{math}\n" r> n> "\\end{math}")
-  (minipage "\\begin{minipage}[t]{0.5\linewidth}\n" r> n> "\\end{minipage}")
-  (quotation "\\begin{quotation}\n" r> n> "\\end{quotation}")
-  (quote "\\begin{quote}\n" r> n> "\\end{quote}")
-  (sloppypar "\\begin{sloppypar}\n" r> n> "\\end{sloppypar}")
-  (theindex "\\begin{theindex}\n" r> n> "\\end{theindex}")
-  (trivlist "\\begin{trivlist}\n" r> n> "\\end{trivlist}")
-  (verbatim "\\begin{verbatim}\n" r> n> "\\end{verbatim}")
-  (verbatimm "\\begin{verbatim*}\n" r> n> "\\end{verbatim*}")
+(abstract "\\begin{abstract}\n" r> n> "\\end{abstract}")
+(align "\\begin{align}\n" r> n> "\\end{align}")
+(alignn "\\begin{align*}\n" r> n> "\\end{align*}")
+(gather "\\begin{gather}\n" r> n> "\\end{gather}")
+(gatherr "\\begin{gather*}\n" r> n> "\\end{gather*}")
+(appendix "\\begin{appendix}\n" r> n> "\\end{appendix}")
+(begin "\\begin{" (s env) "}" r> n> "\\end{" (s env) "}")
+(center "\\begin{center}\n" r> n> "\\end{center}")
+(displaymath "\\begin{displaymath}\n" r> n> "\\end{displaymath}")
+(document "\\begin{document}\n" r> n> "\\end{document}")
+(enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}")
+(equation "\\begin{equation}" r> n> "\\end{equation}")
+(flushleft "\\begin{flushleft}" r> n> "\\end{flushleft}")
+(flushright "\\begin{flushright}" r> n> "\\end{flushright}")
+(frac "\\frac{" p "}{" q "}")
+(fussypar "\\begin{fussypar}" r> n> "\\end{fussypar}")
+(itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}")
+(letter "\\begin{letter}\n" r> n> "\\end{letter}")
+(math "\\begin{math}\n" r> n> "\\end{math}")
+(minipage "\\begin{minipage}[t]{0.5\linewidth}\n" r> n> "\\end{minipage}")
+(quotation "\\begin{quotation}\n" r> n> "\\end{quotation}")
+(quote "\\begin{quote}\n" r> n> "\\end{quote}")
+(sloppypar "\\begin{sloppypar}\n" r> n> "\\end{sloppypar}")
+(theindex "\\begin{theindex}\n" r> n> "\\end{theindex}")
+(trivlist "\\begin{trivlist}\n" r> n> "\\end{trivlist}")
+(verbatim "\\begin{verbatim}\n" r> n> "\\end{verbatim}")
+(verbatimm "\\begin{verbatim*}\n" r> n> "\\end{verbatim*}")
 
-  texinfo-mode
+texinfo-mode
 
-  (defmac "@defmac " p n> r> "@end defmac")
-  (defun "@defun " p n> r> "@end defun")
-  (defvar "@defvar " p n> r> "@end defvar")
-  (example "@example " p n> r> "@end example")
-  (lisp "@lisp " p n> r> "@end lisp")
-  (bullet "@itemize @bullet{}" n> r> "@end itemize")
-  (code "@code{" p "}")
-  (var "@var{" p "}")
+(defmac "@defmac " p n> r> "@end defmac")
+(defun "@defun " p n> r> "@end defun")
+(defvar "@defvar " p n> r> "@end defvar")
+(example "@example " p n> r> "@end example")
+(lisp "@lisp " p n> r> "@end lisp")
+(bullet "@itemize @bullet{}" n> r> "@end itemize")
+(code "@code{" p "}")
+(var "@var{" p "}")
 
-  lisp-mode emacs-lisp-mode ;; Specify multiple modes
+lisp-mode emacs-lisp-mode ;; Specify multiple modes
 
-  (lambda "(lambda (" p ")" n> r> ")")
+(lambda "(lambda (" p ")" n> r> ")")
 
-  emacs-lisp-mode
+emacs-lisp-mode
 
-  (autoload ";;;###autoload")
-  (pt "(point)")
-  (var "(defvar " p "\n  \"" p "\")")
-  (local "(defvar-local " p "\n  \"" p "\")")
-  (const "(defconst " p "\n  \"" p "\")")
-  (custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")")
-  (face "(defface " p " '((t :inherit " p "))\n  \"" p "\")")
-  (group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")")
-  (macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")")
-  (alias "(defalias '" p " '" p ")")
-  (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")")
-  (iflet "(if-let (" p ")" n> r> ")")
-  (whenlet "(when-let (" p ")" n> r> ")")
-  (whilelet "(while-let (" p ")" n> r> ")")
-  (andlet "(and-let* (" p ")" n> r> ")")
-  (cond "(cond" n "(" q "))" >)
-  (pcase "(pcase " (p "scrutinee") n "(" q "))" >)
-  (let "(let (" p ")" n> r> ")")
-  (lett "(let* (" p ")" n> r> ")")
-  (pcaselet "(pcase-let (" p ")" n> r> ")")
-  (pcaselett "(pcase-let* (" p ")" n> r> ")")
-  (rec "(letrec (" p ")" n> r> ")")
-  (dotimes "(dotimes (" p ")" n> r> ")")
-  (dolist "(dolist (" p ")" n> r> ")")
-  (loop "(cl-loop for " p " in " p " do" n> r> ")")
-  (command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive" p ")" n> r> ")")
-  (advice "(defun " (p "adv" name) " (&rest app)" n> p n> "(apply app))" n>
-          "(advice-add #'" (p "fun") " " (p ":around") " #'" (s name) ")")
-  (header ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
-          " -- " p " -*- lexical-binding: t -*-" n
-          ";;; Commentary:" n ";;; Code:" n n)
-  (provide "(provide '" (file-name-base (or (buffer-file-name) (buffer-name))) ")" n
-           ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
-           " ends here" n)
+(autoload ";;;###autoload")
+(pt "(point)")
+(var "(defvar " p "\n  \"" p "\")")
+(local "(defvar-local " p "\n  \"" p "\")")
+(const "(defconst " p "\n  \"" p "\")")
+(custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")")
+(face "(defface " p " '((t :inherit " p "))\n  \"" p "\")")
+(group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")")
+(macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")")
+(alias "(defalias '" p " '" p ")")
+(fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")")
+(iflet "(if-let (" p ")" n> r> ")")
+(whenlet "(when-let (" p ")" n> r> ")")
+(whilelet "(while-let (" p ")" n> r> ")")
+(andlet "(and-let* (" p ")" n> r> ")")
+(cond "(cond" n "(" q "))" >)
+(pcase "(pcase " (p "scrutinee") n "(" q "))" >)
+(let "(let (" p ")" n> r> ")")
+(lett "(let* (" p ")" n> r> ")")
+(pcaselet "(pcase-let (" p ")" n> r> ")")
+(pcaselett "(pcase-let* (" p ")" n> r> ")")
+(rec "(letrec (" p ")" n> r> ")")
+(dotimes "(dotimes (" p ")" n> r> ")")
+(dolist "(dolist (" p ")" n> r> ")")
+(loop "(cl-loop for " p " in " p " do" n> r> ")")
+(command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive" p ")" n> r> ")")
+(advice "(defun " (p "adv" name) " (&rest app)" n> p n> "(apply app))" n>
+        "(advice-add #'" (p "fun") " " (p ":around") " #'" (s name) ")")
+(header ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
+        " -- " p " -*- lexical-binding: t -*-" n
+        ";;; Commentary:" n ";;; Code:" n n)
+(provide "(provide '" (file-name-base (or (buffer-file-name) (buffer-name))) ")" n
+         ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
+         " ends here" n)
 
-  eshell-mode
+eshell-mode
 
-  (for "for " (p "i") " in " p " { " q " }")
-  (while "while { " p " } { " q " }")
-  (until "until { " p " } { " q " }")
-  (if "if { " p " } { " q " }")
-  (ife "if { " p " } { " p " } { " q " }")
-  (unl "unless { " p " } { " q " }")
-  (unle "unless { " p " } { " p " } { " q " }")
+(for "for " (p "i") " in " p " { " q " }")
+(while "while { " p " } { " q " }")
+(until "until { " p " } { " q " }")
+(if "if { " p " } { " q " }")
+(ife "if { " p " } { " p " } { " q " }")
+(unl "unless { " p " } { " q " }")
+(unle "unless { " p " } { " p " } { " q " }")
 
-  text-mode
+text-mode
 
-  (box "┌─" (make-string (length str) ?─) "─┐" n
-       "│ " (s str)                       " │" n
-       "└─" (make-string (length str) ?─) "─┘" n)
-  (abox "+-" (make-string (length str) ?-) "-+" n
-        "| " (s str)                       " |" n
-        "+-" (make-string (length str) ?-) "-+" n)
-  (cut "--8<---------------cut here---------------start------------->8---" n r n
-       "--8<---------------cut here---------------end--------------->8---" n)
-  (rot13 (p "plain text" text) n "----" n (rot13 text))
-  (calc (p "taylor(sin(x),x=0,3)" formula) n "----" n (format "%s" (calc-eval formula)))
+(box "┌─" (make-string (length str) ?─) "─┐" n
+     "│ " (s str)                       " │" n
+     "└─" (make-string (length str) ?─) "─┘" n)
+(abox "+-" (make-string (length str) ?-) "-+" n
+      "| " (s str)                       " |" n
+      "+-" (make-string (length str) ?-) "-+" n)
+(cut "--8<---------------cut here---------------start------------->8---" n r n
+     "--8<---------------cut here---------------end--------------->8---" n)
+(rot13 (p "plain text" text) n "----" n (rot13 text))
+(calc (p "taylor(sin(x),x=0,3)" formula) n "----" n (format "%s" (calc-eval formula)))
 
-  rst-mode
+rst-mode
 
-  (title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
+(title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
 
-  java-mode
+java-mode
 
-  (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
+(class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
 
-  c-mode :when (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
+c-mode :when (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
 
-  (inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
-  (incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
+(inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
+(incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
 
-  org-mode
+org-mode
 
-  (caption "#+caption: ")
-  (drawer ":" p ":" n r ":end:")
-  (begin "#+begin_" (s name) n> r> n "#+end_" name)
-  (quote "#+begin_quote" n> r> n "#+end_quote")
-  (sidenote "#+begin_sidenote" n> r> n "#+end_sidenote")
-  (marginnote "#+begin_marginnote" n> r> n "#+end_marginnote")
-  (example "#+begin_example" n> r> n "#+end_example")
-  (center "#+begin_center" n> r> n "#+end_center")
-  (ascii "#+begin_export ascii" n> r> n "#+end_export")
-  (html "#+begin_export html" n> r> n "#+end_export")
-  (latex "#+begin_export latex" n> r> n "#+end_export")
-  (comment "#+begin_comment" n> r> n "#+end_comment")
-  (verse "#+begin_verse" n> r> n "#+end_verse")
-  (src "#+begin_src " q n> r> n "#+end_src")
-  (gnuplot "#+begin_src gnuplot :var data=" (p "table") " :file " (p "plot.png") n> r> n "#+end_src" :post (org-edit-src-code))
-  (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src" :post (org-edit-src-code))
-  (inlsrc "src_" p "{" q "}")
-  (title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en")
+(caption "#+caption: ")
+(drawer ":" p ":" n r ":end:")
+(begin "#+begin_" (s name) n> r> n "#+end_" name)
+(quote "#+begin_quote" n> r> n "#+end_quote")
+(sidenote "#+begin_sidenote" n> r> n "#+end_sidenote")
+(marginnote "#+begin_marginnote" n> r> n "#+end_marginnote")
+(example "#+begin_example" n> r> n "#+end_example")
+(center "#+begin_center" n> r> n "#+end_center")
+(ascii "#+begin_export ascii" n> r> n "#+end_export")
+(html "#+begin_export html" n> r> n "#+end_export")
+(latex "#+begin_export latex" n> r> n "#+end_export")
+(comment "#+begin_comment" n> r> n "#+end_comment")
+(verse "#+begin_verse" n> r> n "#+end_verse")
+(src "#+begin_src " q n> r> n "#+end_src")
+(gnuplot "#+begin_src gnuplot :var data=" (p "table") " :file " (p "plot.png") n> r> n "#+end_src" :post (org-edit-src-code))
+(elisp "#+begin_src emacs-lisp" n> r> n "#+end_src" :post (org-edit-src-code))
+(inlsrc "src_" p "{" q "}")
+(title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en")
 
-  ;; Local Variables:
-  ;; mode: lisp-data
-  ;; outline-regexp: "[a-z]"
-  ;; End:
+;; Local Variables:
+;; mode: lisp-data
+;; outline-regexp: "[a-z]"
+;; End:
 #+end_src
 
 * Template syntax
@@ -318,23 +318,23 @@ Tempel supports custom user elements via the configuration variable
 include templates by name in another template.
 
 #+begin_src emacs-lisp
-  (defun tempel-include (elt)
-    (when (eq (car-safe elt) 'i)
-      (if-let (template (alist-get (cadr elt) (tempel--templates)))
-          (cons 'l template)
-        (message "Template %s not found" (cadr elt))
-        nil)))
-  (add-to-list 'tempel-user-elements #'tempel-include)
+(defun tempel-include (elt)
+  (when (eq (car-safe elt) 'i)
+    (if-let (template (alist-get (cadr elt) (tempel--templates)))
+        (cons 'l template)
+      (message "Template %s not found" (cadr elt))
+      nil)))
+(add-to-list 'tempel-user-elements #'tempel-include)
 #+end_src
 
 The following example templates uses the newly defined include element.
 
 #+begin_src emacs-lisp
-  (header ";;; " (or (buffer-file-name) (buffer-name)) " -- " p
-          " -*- lexical-binding: t -*-" n n)
-  (provide "(provide '" (file-name-base (or (buffer-file-name) (buffer-name))) ")" n
-           ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name))) " ends here" n)
-  (package (i header) r n n (i provide))
+(header ";;; " (or (buffer-file-name) (buffer-name)) " -- " p
+        " -*- lexical-binding: t -*-" n n)
+(provide "(provide '" (file-name-base (or (buffer-file-name) (buffer-name))) ")" n
+         ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name))) " ends here" n)
+(package (i header) r n n (i provide))
 #+end_src
 
 * Adding template sources
@@ -348,13 +348,13 @@ By default, Tempel configures only the source ~tempel-path-templates~. You may
 want to add global or local template variables to your user configuration:
 
 #+begin_src emacs-lisp
-  (defvar my-global-templates
-    '((example "Global example template"))
-    "My global templates.")
-  (defvar-local my-local-templates nil
-    "Buffer-local templates.")
-  (add-to-list 'tempel-template-sources 'my-global-templates)
-  (add-to-list 'tempel-template-sources 'my-local-templates)
+(defvar my-global-templates
+  '((example "Global example template"))
+  "My global templates.")
+(defvar-local my-local-templates nil
+  "Buffer-local templates.")
+(add-to-list 'tempel-template-sources 'my-global-templates)
+(add-to-list 'tempel-template-sources 'my-local-templates)
 #+end_src
 
 * Hooking into the Abbrev mechanism
@@ -370,8 +370,8 @@ Important templates can be bound to a key with the small utility macro
 optionally a map.
 
 #+begin_src emacs-lisp
-  (tempel-key "C-c t f" fun emacs-lisp-mode-map)
-  (tempel-key "C-c t d" (format-time-string "%Y-%m-%d"))
+(tempel-key "C-c t f" fun emacs-lisp-mode-map)
+(tempel-key "C-c t d" (format-time-string "%Y-%m-%d"))
 #+end_src
 
 Internally ~tempel-key~ uses ~tempel-insert~ to trigger the insertion. Depending on
