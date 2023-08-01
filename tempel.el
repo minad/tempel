@@ -228,8 +228,8 @@ BEG and END are the boundaries of the modification."
     (let ((inhibit-modification-hooks nil)
           (tempel--inhibit-hooks t))
       (cond
-       ;; Erase default before modification if BEG and END are at the same
-       ;; point, and are at the beginning or end of the field.
+       ;; Erase default text before modification when typing over it at the
+       ;; beginning or end. Deleting or editing inside preserves the text.
        ((and (not after) (overlay-get ov 'tempel--default) (eq beg end)
              (or (= beg (overlay-start ov)) (= end (overlay-end ov))))
         (delete-region (overlay-start ov) (overlay-end ov)))
