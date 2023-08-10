@@ -789,8 +789,9 @@ If called interactively, select a template with `completing-read'."
                         abbrev-minor-mode-table-alist)))))
 
 ;;;###autoload
-(define-globalized-minor-mode global-tempel-abbrev-mode tempel-abbrev-mode
-  tempel--abbrev-on :group 'tempel)
+(define-globalized-minor-mode global-tempel-abbrev-mode
+  tempel-abbrev-mode tempel--abbrev-on
+  :group 'tempel)
 
 (defun tempel--abbrev-on ()
   "Enable abbrev mode locally."
