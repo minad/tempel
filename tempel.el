@@ -764,7 +764,8 @@ If called interactively, select a template with `completing-read'."
 (defun tempel--abbrev-hook (name template)
   "Abbreviation expansion hook for TEMPLATE with NAME."
   (tempel--delete-word name)
-  (tempel--insert template nil))
+  (tempel--insert template nil)
+  t)
 
 ;;;###autoload
 (define-minor-mode tempel-abbrev-mode
