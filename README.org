@@ -122,6 +122,9 @@ is evaluated before the template is expanded or after it is finalized,
 respectively. The =:post= form is evaluated in the lexical scope of the template,
 which means that it can access the template's named fields.
 
+The following examples are written on
+a single line, but this is is of course not a requirement. Strings can even contain line breaks, which can be useful if you want to write complex templates.
+
 #+begin_src emacs-lisp
 ;; ~/.config/emacs/templates
 
