@@ -2,6 +2,11 @@
 #+author: Daniel Mendler
 #+language: en
 
+* Development
+
+- Bugfix: Fix =no-self-insert= of =tempel-abbrev-mode=.
+- Bugfix: Only replace default field if not modifying a region.
+
 * Version 0.8 (2023-07-02)
 
 - Ensure that modification hooks are never inhibited during field modification,
