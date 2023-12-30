@@ -609,9 +609,7 @@ This is meant to be a source in `tempel-template-sources'."
   (when st
     (mapc #'delete-overlay (car st))
     (unless tempel--active
-      (setq minor-mode-overriding-map-alist
-            (delq (assq-delete-all 'tempel--active minor-mode-overriding-map-alist)
-                  minor-mode-overriding-map-alist)))))
+      (cl-callf2 assq-delete-all 'tempel--active minor-mode-overriding-map-alist))))
 
 (defun tempel-done ()
   "Template completion is done."
