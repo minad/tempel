@@ -494,7 +494,9 @@ This is meant to be a source in `tempel-template-sources'."
    (cl-loop
     for m in modes thereis
     (or (eq m #'fundamental-mode)
-        (derived-mode-p m)))
+        (derived-mode-p m)
+        (when-let ((remap (alist-get m (bound-and-true-p major-mode-remap-alist))))
+          (derived-mode-p remap))))
    (or (not (plist-member plist :when))
        (save-excursion
          (save-restriction
