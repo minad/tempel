@@ -2,7 +2,7 @@
 #+author: Daniel Mendler
 #+language: en
 
-* Development
+* Version 1.1 (2024-02-16)
 
 - Respect ~major-mode-remap-alist~ on Emacs 29 when looking up templates.
 
