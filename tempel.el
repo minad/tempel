@@ -133,6 +133,11 @@ If a file is modified, added or removed, reload the templates."
 (defvar tempel--inhibit-hooks nil
   "Inhibit tempel modification change hooks from running.")
 
+(defvar tempel--pending-field-edit nil
+  "Internal variable to supress repeated calls of
+`tempel--field-modified' when an edit overlaps multiple field
+boundaries.")
+
 (defvar-local tempel--active nil
   "List of active templates.
 Each template state is a pair, where the car is a list of overlays and
@@ -237,7 +242,8 @@ start of OV, and likewise for overlays added to ST after OV."
   "Update field overlay OV.
 AFTER is non-nil after the modification.
 BEG and END are the boundaries of the modification."
-  (unless tempel--inhibit-hooks
+  (unless (or tempel--inhibit-hooks (xor after tempel--pending-field-edit))
+    (setq tempel--pending-field-edit (not after))
     (let ((inhibit-modification-hooks nil)
           (tempel--inhibit-hooks t))
       (cond
