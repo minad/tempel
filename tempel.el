@@ -279,7 +279,8 @@ BEG and END are the boundaries of the modification."
             (tempel--sync-replace (overlay-start ov)
                                   (overlay-end ov) ov str))))
       ;; Move range overlay
-      (move-overlay range (overlay-start range)
+      (move-overlay range
+                    (min (overlay-start range) (overlay-start ov))
                     (max (overlay-end range) (overlay-end ov))))))
 
 (defun tempel--sync-replace (beg end ov str)
@@ -320,7 +321,7 @@ Return the added field."
   (let ((st (car tempel--active))
         (ov (make-overlay (point) (point)))
         (hooks (list #'tempel--field-modified)))
-    (push ov (car st))
+    (push ov (cdar st))
     (when name
       (overlay-put ov 'tempel--name name)
       (setq init (or init (alist-get name (cdr st))))
@@ -339,6 +340,7 @@ Return the added field."
       (overlay-put ov 'tempel--default
                    (if (string-suffix-p ": " init) 'end 'start)))
     (tempel--sync-fields st ov)
+    (goto-char (overlay-end ov))
     ov))
 
 (defun tempel--form (form initial)
@@ -348,7 +350,7 @@ Return the added field."
   (let ((ov (make-overlay (- (point) (length initial)) (point) nil t)))
     (overlay-put ov 'face 'tempel-form)
     (overlay-put ov 'tempel--form form)
-    (push ov (caar tempel--active))
+    (push ov (cdaar tempel--active))
     ov))
 
 (defmacro tempel--protect (&rest body)
@@ -488,18 +490,17 @@ If a field was added, return it."
                      (>= (overlay-end ov) (point)))
             (setf (overlay-end ov) (point)))))
       ;; Activate template
-      (let ((st (cons nil nil))
-            (beg (point))
-            (tempel--inhibit-hooks t))
+      (let* ((range (make-overlay (point) (point) nil t))
+             (st (cons (list range) nil))
+             (tempel--inhibit-hooks t))
         (push st tempel--active)
         (cl-loop for x in template until (keywordp x)
                  do (tempel--element region x))
-        (let ((ov (make-overlay beg (point) nil t)))
-          (overlay-put ov 'modification-hooks (list #'tempel--range-modified))
-          (overlay-put ov 'tempel--range st)
-          (overlay-put ov 'tempel--post (plist-get plist :post))
-          ;; (overlay-put ov 'face 'region) ;; Enable for debugging
-          (push ov (car st)))))
+        (move-overlay range (overlay-start range) (point))
+        ;; (overlay-put range 'face 'region) ;; Enable for debugging
+        (overlay-put range 'modification-hooks (list #'tempel--range-modified))
+        (overlay-put range 'tempel--range st)
+        (overlay-put range 'tempel--post (plist-get plist :post))))
     (cond
      ((cl-loop for ov in (caar tempel--active)
                never (overlay-get ov 'tempel--field))
