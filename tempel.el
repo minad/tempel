@@ -254,7 +254,7 @@ BEG and END are the boundaries of the modification."
         (save-excursion
           (goto-char (overlay-start ov))
           (let (x)
-            (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (eval x (cdr st)))
+            (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (or (eval x (cdr st)) ""))
                         (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
             (when x (tempel--synchronize-replace (overlay-start ov) (overlay-end ov) ov x)))))
       ;; Move range overlay
