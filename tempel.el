@@ -6,7 +6,7 @@
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
 ;; Version: 1.2
-;; Package-Requires: ((emacs "27.1") (compat "30"))
+;; Package-Requires: ((emacs "28.1") (compat "30"))
 ;; Homepage: https://github.com/minad/tempel
 ;; Keywords: abbrev, languages, tools, text
 
@@ -76,11 +76,11 @@ trigger completion."
 
 (defcustom tempel-insert-annotation 40
   "Annotation width for `tempel-insert'."
-  :type '(choice (const nil natnum)))
+  :type '(choice (const nil) natnum))
 
 (defcustom tempel-complete-annotation 20
   "Annotation width for `tempel-complete'."
-  :type '(choice (const nil natnum)))
+  :type '(choice (const nil) natnum))
 
 (defcustom tempel-user-elements nil
   "List of user element handler functions.
@@ -537,14 +537,20 @@ This is meant to be a source in `tempel-template-sources'."
            ((and (< dir 0) (< stop pt))
             (setq next (max (or next -1) stop)))))))))
 
+(defun tempel--active-p (_sym buffer)
+  "Return non-nil if Tempel is active in BUFFER."
+  (buffer-local-value 'tempel--active buffer))
+
 (defun tempel-beginning ()
   "Move to beginning of the template."
+  (declare (completion tempel--active-p))
   (interactive)
   (when-let ((pos (tempel--beginning)))
     (if (= pos (point)) (tempel-done) (goto-char pos))))
 
 (defun tempel-end ()
   "Move to end of the template."
+  (declare (completion tempel--active-p))
   (interactive)
   (when-let ((pos (tempel--end)))
     (if (= pos (point)) (tempel-done) (goto-char pos))))
@@ -560,6 +566,7 @@ This is meant to be a source in `tempel-template-sources'."
 
 (defun tempel-kill ()
   "Kill the field contents."
+  (declare (completion tempel--active-p))
   (interactive)
   (if-let ((ov (tempel--field-at-point)))
       (kill-region (overlay-start ov) (overlay-end ov))
@@ -567,6 +574,7 @@ This is meant to be a source in `tempel-template-sources'."
 
 (defun tempel-next (arg)
   "Move ARG fields forward and quit at the end."
+  (declare (completion tempel--active-p))
   (interactive "p")
   (cl-loop for i below (abs arg) do
            (if-let ((next (tempel--find arg)))
@@ -580,6 +588,7 @@ This is meant to be a source in `tempel-template-sources'."
 
 (defun tempel-previous (arg)
   "Move ARG fields backward and quit at the beginning."
+  (declare (completion tempel--active-p))
   (interactive "p")
   (tempel-next (- arg)))
 
@@ -595,6 +604,7 @@ This is meant to be a source in `tempel-template-sources'."
 
 (defun tempel-abort ()
   "Abort template insertion."
+  (declare (completion tempel--active-p))
   (interactive)
   ;; TODO abort only the topmost template?
   (while-let ((st (car tempel--active)))
@@ -615,6 +625,7 @@ This is meant to be a source in `tempel-template-sources'."
 
 (defun tempel-done ()
   "Template completion is done."
+  (declare (completion tempel--active-p))
   (interactive)
   ;; TODO disable only the topmost template?
   (while tempel--active (tempel--done)))
@@ -798,15 +809,6 @@ If called interactively, select a template with `completing-read'."
   "Enable abbrev mode locally."
   (unless (or noninteractive (eq (aref (buffer-name) 0) ?\s))
     (tempel-abbrev-mode 1)))
-
-;; Emacs 28: Do not show Tempel commands in M-X
-(dolist (sym (list #'tempel-next #'tempel-previous #'tempel-beginning
-                   #'tempel-end #'tempel-kill #'tempel-done #'tempel-abort))
-  (put sym 'completion-predicate #'tempel--command-p))
-
-(defun tempel--command-p (_sym buffer)
-  "Return non-nil if Tempel is active in BUFFER."
-  (buffer-local-value 'tempel--active buffer))
 
 (provide 'tempel)
 ;;; tempel.el ends here

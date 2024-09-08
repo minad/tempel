@@ -14,7 +14,7 @@
 #+html: <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg/1920px-Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg" align="right" width="30%">
 
 Tempel is a tiny template package for Emacs, which uses the syntax of the Emacs
-Tempo library. Tempo is an ancient temple of the church of Emacs. It is 27 years
+Tempo library. Tempo is an ancient temple of the church of Emacs. It is 30 years
 old, but still in good shape since it successfully resisted change over the
 decades. However it may look a bit dusty here and there. Therefore we present
 Tempel, a new implementation of Tempo with inline expansion and integration with
