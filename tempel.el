@@ -7,7 +7,7 @@
 ;; Created: 2022
 ;; Version: 1.2
 ;; Package-Requires: ((emacs "28.1") (compat "30"))
-;; Homepage: https://github.com/minad/tempel
+;; URL: https://github.com/minad/tempel
 ;; Keywords: abbrev, languages, tools, text
 
 ;; This file is part of GNU Emacs.
@@ -48,7 +48,7 @@
 (defgroup tempel nil
   "Tempo templates/snippets with in-buffer field editing."
   :link '(info-link :tag "Info Manual" "(tempel)")
-  :link '(url-link :tag "Homepage" "https://github.com/minad/tempel")
+  :link '(url-link :tag "Website" "https://github.com/minad/tempel")
   :link '(emacs-library-link :tag "Library Source" "tempel.el")
   :group 'abbrev
   :group 'tools
