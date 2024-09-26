@@ -378,7 +378,7 @@ optionally a map.
 
 #+begin_src emacs-lisp
 (tempel-key "C-c t f" fun emacs-lisp-mode-map)
-(tempel-key "C-c t d" (format-time-string "%Y-%m-%d"))
+(tempel-key "C-c t d" ((format-time-string "%Y-%m-%d")))
 #+end_src
 
 Internally ~tempel-key~ uses ~tempel-insert~ to trigger the insertion. Depending on
