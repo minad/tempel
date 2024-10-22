@@ -486,7 +486,7 @@ This is meant to be a source in `tempel-template-sources'."
   (cl-loop
    for (modes plist . templates) in (cdr tempel--path-templates)
    if (tempel--condition-p modes plist)
-   append templates))
+   collect (list modes plist templates)))
 
 (defun tempel--condition-p (modes plist)
   "Return non-nil if one of MODES matches and the PLIST condition is satisfied."
@@ -515,6 +515,17 @@ This is meant to be a source in `tempel-template-sources'."
         (t (error "Template source is not a function or a variable: %S" fun)))
        nil))
     result))
+
+
+(defun tempel--enabled-templates ()
+  "Return enabled templates for the current mode."
+  (cl-loop
+	 for (modes plist templates) in (tempel--templates)
+	 if (if-let ((enablefun (plist-get plist :enable-function)))
+			(funcall enablefun)
+		  t)
+	 append templates)
+  )
 
 (defun tempel--region ()
   "Return region bounds."
@@ -680,7 +691,7 @@ command."
   (interactive (list t))
   (if interactive
       (tempel--interactive #'tempel-expand)
-    (when-let ((templates (tempel--templates))
+    (when-let ((templates (tempel--enabled-templates))
                (bounds (tempel--prefix-bounds))
                (name (buffer-substring-no-properties
                       (car bounds) (cdr bounds)))
@@ -707,7 +718,7 @@ Capf, otherwise like an interactive completion command."
           (insert tempel-trigger-prefix))
         (tempel--interactive #'tempel-complete))
     (let ((region (tempel--region)))
-      (when-let ((templates (tempel--templates))
+      (when-let ((templates (tempel--enabled-templates))
                  (bounds (or (and (not region) (tempel--prefix-bounds))
                              (and (not tempel-trigger-prefix) (cons (point) (point))))))
         (list (car bounds) (cdr bounds)
@@ -738,7 +749,7 @@ If called interactively, select a template with `completing-read'."
   (interactive (list nil))
   (tempel--insert
    (if (consp template-or-name) template-or-name
-     (let* ((templates (or (tempel--templates)
+     (let* ((templates (or (tempel--enabled-templates)
                            (error "Tempel: No templates for %s" major-mode)))
             (completion-extra-properties
              (and tempel-insert-annotation
@@ -789,16 +800,25 @@ If called interactively, select a template with `completing-read'."
             (default-value 'abbrev-minor-mode-table-alist))
     (kill-local-variable 'abbrev-minor-mode-table-alist))
   (when tempel-abbrev-mode
-    (let ((table (make-abbrev-table)))
-      (dolist (template (tempel--templates))
-        (let* ((name (symbol-name (car template)))
-               (hook (make-symbol name)))
-          (fset hook (apply-partially #'tempel--abbrev-hook name (cdr template)))
-          (put hook 'no-self-insert t)
-          (define-abbrev table name 'Template hook :system t)))
-      (setq-local abbrev-minor-mode-table-alist
-                  (cons `(tempel-abbrev-mode . ,table)
-                        abbrev-minor-mode-table-alist)))))
+      (cl-loop
+	   for (modes plist templates) in (tempel--templates)
+	   do (let ((table (make-abbrev-table)))
+			(dolist (template templates)
+			  (let* ((name (symbol-name (car template)))
+					 (hook (make-symbol name)))
+				(fset hook (apply-partially #'tempel--abbrev-hook name (cdr template)))
+				(put hook 'no-self-insert t)
+				(define-abbrev table name 'Template hook :system t)))
+
+			(when-let (enablefun (plist-get plist :enable-function))
+			  (if (functionp enablefun)
+				  (abbrev-table-put table :enable-function enablefun))
+			  (error "%s is not a function!" enablefun))
+
+			(setq-local abbrev-minor-mode-table-alist
+						(cons `(tempel-abbrev-mode . ,table)
+							  abbrev-minor-mode-table-alist))
+			))))
 
 ;;;###autoload
 (define-globalized-minor-mode global-tempel-abbrev-mode

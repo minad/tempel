@@ -110,12 +110,15 @@ contributions.
 The templates are defined in a Lisp data file configured by ~tempel-path~. Lisp
 data files are files containing Lisp s-expressions (see ~lisp-data-mode~). By
 default the file =~/.config/emacs/templates= is used. The templates are grouped by
-major mode with an optional ~:when~ condition. Each template is a list in the
-concise form of the Emacs Tempo syntax. The first element of each list is the
-name of the template. I recommend to use avoid special letters for the template
-names, since special letters may carry meaning during completion filtering and
-as such make it harder to select the desired template. Thus the name =lett= is
-better than =let*=. Behind the name, the Tempo syntax elements follow.
+major mode. Each template is a list in the concise form of the Emacs Tempo
+syntax. The first element of each list is the name of the template. I recommend
+to use avoid special letters for the template names, since special letters may
+carry meaning during completion filtering and as such make it harder to select
+the desired template. Thus the name =lett= is better than =let*=. Behind the name,
+the Tempo syntax elements follow.
+
+You may use ~:when~ as a condition whether the group should be loaded or set
+~:enable-function~ which evaluates whether the templates can be expanded or not.
 
 In addition, each template may specify a =:pre= and/or =:post= key with a FORM that
 is evaluated before the template is expanded or after it is finalized,
@@ -278,6 +281,10 @@ org-mode
 (elisp "#+begin_src emacs-lisp" n r n "#+end_src" :post (org-edit-src-code))
 (inlsrc "src_" p "{" q "}")
 (title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en")
+
+org-mode :enable-function org-inside-LaTeX-fragment-p
+
+(int "\\int_{" p "}^{" p "} " p "\\,dx")
 
 ;; Local Variables:
 ;; mode: lisp-data
