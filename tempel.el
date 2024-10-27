@@ -365,7 +365,7 @@ Return the added field."
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
     ('q (overlay-put (tempel--field st) 'tempel--enter #'tempel--done))
-    (_ (if-let ((ret (run-hook-with-args-until-success 'tempel-user-elements elt)))
+    (_ (if-let ((ret (run-hook-with-args-until-success 'tempel-user-elements elt st)))
            (tempel--element st region ret)
          ;; TEMPEL EXTENSION: Evaluate forms
          (tempel--form st elt)))))
