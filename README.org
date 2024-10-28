@@ -344,6 +344,28 @@ The following example templates uses the newly defined include element.
 (package (i header) r n n (i provide))
 #+end_src
 
+If a custom user element needs an access to named fields, the hook function
+should take the second argument ~fields~, which refers to an alist that maps the
+field name to its value in the current template. For example,
+
+#+begin_src emacs-lisp
+(defun tempel-named-field (elt fields)
+    (when (eq (car-safe elt) 'nf)
+      (if-let (field-value (alist-get (cadr elt) fields))
+          field-value
+        (message "Undefined named field: %s" (cadr elt))
+        nil)))
+(add-to-list 'tempel-user-elements #'tempel-named-field)
+#+end_src
+
+Here, ~nf~ is an example of custom user element that uses a named field inside its
+hook function.
+
+#+begin_src emacs-lisp
+(p "foo: " foo t)
+(nf foo) ;; will render the value of the named field `foo'
+#+end_src
+
 * Adding template sources
 
 Tempel offers a flexible mechanism for providing the templates, which are
