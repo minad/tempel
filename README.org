@@ -349,21 +349,41 @@ should take the second argument ~fields~, which refers to an alist that maps the
 field name to its value in the current template. For example,
 
 #+begin_src emacs-lisp
-(defun tempel-named-field (elt fields)
-    (when (eq (car-safe elt) 'nf)
-      (if-let (field-value (alist-get (cadr elt) fields))
-          field-value
-        (message "Undefined named field: %s" (cadr elt))
-        nil)))
-(add-to-list 'tempel-user-elements #'tempel-named-field)
+(defun tempel-include-from-file (elt fields)
+  (when (eq (car-safe elt) 'iff)
+    (if-let ((filename (cadr elt))
+             (content (with-temp-buffer
+                        (insert-file-contents filename)
+                        (buffer-string))))
+        (progn
+          (dolist (field fields)
+            (setq content (replace-regexp-in-string
+                           (format "%%(%s)s" (symbol-name (car field)))
+                           (cdr field)
+                           content)))
+          content)
+      (message "File %s not found" (cadr elt))
+      nil)))
+(add-to-list 'tempel-user-elements #'tempel-include-from-file)
 #+end_src
 
-Here, ~nf~ is an example of custom user element that uses a named field inside its
-hook function.
+adds the ~iff~ element which loads the content of a file given in the argument into a string, and replace all the occurrences of ~"%(field)s~ with the values of the named fields. If the content of the file named ~skel.org~ looks like this
+
+#+begin_src org
+,#+title: %(title)s
+,#+language: %(lang)s
+
+# local variables:
+# ispell-dictionary: "%(lang)s"
+# end:
+#+end_src
+
+then the following template will load the content after replacing ~%(title)s~ and ~%(lang)s~ with the corresponding named field values:
 
 #+begin_src emacs-lisp
-(p "foo: " foo t)
-(nf foo) ;; will render the value of the named field `foo'
+(org (p "title" title t)
+     (p "lang" lang t)
+     (iff "skel.org"))
 #+end_src
 
 * Adding template sources
