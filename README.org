@@ -108,8 +108,8 @@ contributions.
 * Template file format
 
 The templates are defined in a Lisp data file configured by ~tempel-path~. Lisp
-data files are files containing Lisp s-expressions (see ~lisp-data-mode~). By
-default the file =~/.config/emacs/templates= is used. The templates are grouped by
+data files are files containing Lisp s-expressions (see ~lisp-data-mode~). By default the file
+"templates" in the `user-emacs-directory' is used. The templates are grouped by
 major mode with an optional ~:when~ condition. Each template is a list in the
 concise form of the Emacs Tempo syntax. The first element of each list is the
 name of the template. I recommend to use avoid special letters for the template
