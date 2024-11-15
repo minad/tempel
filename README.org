@@ -345,6 +345,29 @@ The following example templates uses the newly defined include element.
 (package (i header) r n n (i provide))
 #+end_src
 
+If a custom user element needs an access to named fields, the hook function
+should take the second argument ~fields~, which refers to an alist that maps the
+field name to its value in the current template. For example here we define a
+custom element ~*~ to repeat a template a number of times:
+
+#+begin_src emacs-lisp
+(defun tempel-repeat (elt fields)
+  (pcase elt
+    (`(* ,count . ,rest)
+     (cons 'l (cl-loop for i below (eval count fields) append rest)))))
+(add-to-list 'tempel-user-elements #'tempel-repeat)
+#+end_src
+
+The ~*~ custom element can be used to expand dynamic tables:
+
+#+begin_src emacs-lisp
+(table (p (read-number "Rows: ") rows noinsert)
+       (p (read-number "Cols: ") cols noinsert)
+       "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n
+       "|" (* cols "----|") n
+       (* rows "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n))
+#+end_src
+
 * Adding template sources
 
 Tempel offers a flexible mechanism for providing the templates, which are
