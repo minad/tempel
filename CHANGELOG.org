@@ -5,6 +5,7 @@
 * Development
 
 - Require Emacs 28.1.
+- Optional named field argument for custom user element hooks.
 
 * Version 1.2 (2024-07-24)
 
