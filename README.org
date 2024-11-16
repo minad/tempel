@@ -170,6 +170,12 @@ latex-mode
 (trivlist "\\begin{trivlist}\n" r> n> "\\end{trivlist}")
 (verbatim "\\begin{verbatim}\n" r> n> "\\end{verbatim}")
 (verbatimm "\\begin{verbatim*}\n" r> n> "\\end{verbatim*}")
+(matrix (p (read-number "Rows: ") rows noinsert)
+        (p (read-number "Cols: ") cols noinsert)
+        "\\begin{" (p "pmatrix" type) "}" n
+        (* (1- rows) (p " ") (* (1- cols) " & " (p " ")) "\\\\" n)
+        (p " ") (* (1- cols) " & " (p " ")) n
+        "\\end{" type "}")
 
 texinfo-mode
 
@@ -217,11 +223,12 @@ emacs-lisp-mode
 (advice "(defun " (p "adv" name) " (&rest app)" n> p n> "(apply app))" n>
         "(advice-add #'" (p "fun") " " (p ":around") " #'" (s name) ")")
 (header ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
-        " -- " p " -*- lexical-binding: t -*-" n
+        " --- " p " -*- lexical-binding: t -*-" n
         ";;; Commentary:" n ";;; Code:" n n)
 (provide "(provide '" (file-name-base (or (buffer-file-name) (buffer-name))) ")" n
          ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
          " ends here" n)
+(package (i header) r n n (i provide))
 
 eshell-mode
 
@@ -245,6 +252,11 @@ text-mode
      "--8<---------------cut here---------------end--------------->8---" n)
 (rot13 (p "plain text" text) n "----" n (rot13 text))
 (calc (p "taylor(sin(x),x=0,3)" formula) n "----" n (format "%s" (calc-eval formula)))
+(table (p (read-number "Rows: ") rows noinsert)
+       (p (read-number "Cols: ") cols noinsert)
+       "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n
+       "|" (* cols "----|") n
+       (* rows "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n))
 
 rst-mode
 
@@ -338,10 +350,12 @@ include templates by name in another template.
 The following example templates uses the newly defined include element.
 
 #+begin_src emacs-lisp
-(header ";;; " (or (buffer-file-name) (buffer-name)) " -- " p
-        " -*- lexical-binding: t -*-" n n)
+(header ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
+        " --- " p " -*- lexical-binding: t -*-" n
+        ";;; Commentary:" n ";;; Code:" n n)
 (provide "(provide '" (file-name-base (or (buffer-file-name) (buffer-name))) ")" n
-         ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name))) " ends here" n)
+         ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
+         " ends here" n)
 (package (i header) r n n (i provide))
 #+end_src
 
@@ -366,7 +380,6 @@ The ~*~ custom element can be used to expand dynamic tables or LaTeX matrices:
        "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n
        "|" (* cols "----|") n
        (* rows "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n))
-
 (matrix (p (read-number "Rows: ") rows noinsert)
         (p (read-number "Cols: ") cols noinsert)
         "\\begin{" (p "pmatrix" type) "}" n
