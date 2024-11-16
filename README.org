@@ -358,7 +358,7 @@ custom element ~*~ to repeat a template a number of times:
 (add-to-list 'tempel-user-elements #'tempel-repeat)
 #+end_src
 
-The ~*~ custom element can be used to expand dynamic tables:
+The ~*~ custom element can be used to expand dynamic tables or LaTeX matrices:
 
 #+begin_src emacs-lisp
 (table (p (read-number "Rows: ") rows noinsert)
@@ -366,6 +366,13 @@ The ~*~ custom element can be used to expand dynamic tables:
        "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n
        "|" (* cols "----|") n
        (* rows "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n))
+
+(matrix (p (read-number "Rows: ") rows noinsert)
+        (p (read-number "Cols: ") cols noinsert)
+        "\\begin{" (p "pmatrix" type) "}" n
+        (* (1- rows) (p " ") (* (1- cols) " & " (p " ")) "\\\\" n)
+        (p " ") (* (1- cols) " & " (p " ")) n
+        "\\end{" type "}")
 #+end_src
 
 * Adding template sources
