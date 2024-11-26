@@ -133,6 +133,9 @@ If a file is modified, added or removed, reload the templates."
 (defvar tempel--inhibit-hooks nil
   "Inhibit tempel modification change hooks from running.")
 
+(defvar tempel--inhibit-clearing-placeholders nil
+  "Inhibit tempel from clearing placeholder defaults if they move.")
+
 (defvar-local tempel--active nil
   "List of active templates.
 Each template state is a pair, where the car is a list of overlays and
@@ -231,12 +234,16 @@ BEG and END are the boundaries of the modification."
       (cond
        ;; Erase default text before modification when typing over it at the
        ;; beginning or end. Deleting or editing inside preserves the text.
-       ((and (not after) (overlay-get ov 'tempel--default) (eq beg end)
+       ((and (not tempel--inhibit-clearing-placeholders)
+             (not after) (overlay-get ov 'tempel--default) (eq beg end)
              (or (= beg (overlay-start ov)) (= end (overlay-end ov))))
         (delete-region (overlay-start ov) (overlay-end ov)))
        ;; Update field after modification
        (after
         (let ((st (overlay-get ov 'tempel--field)))
+          (when (<= beg (overlay-start ov))
+            (let ((offset (- end beg)))
+              (move-overlay ov (+ offset (overlay-start ov)) (overlay-end ov))))
           (unless undo-in-progress
             (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
           (when-let ((name (overlay-get ov 'tempel--name)))
@@ -284,7 +291,8 @@ If OV is alive, move it."
 (defun tempel--update-mark (ov)
   "Update field mark and face of OV."
   (unless (overlay-get ov 'tempel--form)
-    (when (overlay-get ov 'tempel--default)
+    (when (and (overlay-get ov 'tempel--default)
+               (not tempel--inhibit-clearing-placeholders))
       (overlay-put ov 'tempel--default nil)
       (overlay-put ov 'face 'tempel-field))
     (overlay-put ov 'before-string
@@ -346,6 +354,13 @@ Return the added field."
     ;; `indent-according-to-mode' fails sometimes in Org. Ignore errors.
     ('n> (insert "\n") (tempel--protect (indent-according-to-mode)))
     ('> (tempel--protect (indent-according-to-mode)))
+    (`(>> . ,lst)
+     (let ((start (point)))
+       (dolist (e lst)
+         (tempel--element st region e))
+       (let ((tempel--inhibit-hooks nil)
+             (tempel--inhibit-clearing-placeholders t))
+         (indent-region start (point)))))
     ((pred stringp) (insert elt))
     ('& (unless (or (bolp) (save-excursion (re-search-backward "^\\s-*\\=" nil t)))
           (insert "\n")))

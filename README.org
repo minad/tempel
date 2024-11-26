@@ -308,6 +308,8 @@ document the important ones here:
 - ~p~ Inserts an unnamed placeholder field.
 - ~n~ Inserts a newline.
 - ~>~ Indents with ~indent-according-to-mode~.
+- ~(>> ELEMENT ...)~ Takes a list of elements, inserts them and then indents
+  the entire result.
 - ~r~ Inserts the current region.
   If no region is active, quits the containing template when jumped to.
 - ~r>~ Acts like ~r~, but indent region.
