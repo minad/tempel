@@ -794,9 +794,9 @@ If called interactively, select a template with `completing-read'."
             (default-value 'abbrev-minor-mode-table-alist))
     (kill-local-variable 'abbrev-minor-mode-table-alist))
   (when tempel-abbrev-mode
-    (let ((table (make-abbrev-table)))
-      (dolist (template (let ((tempel--ignore-condition t))
-                          (tempel--templates)))
+    (let ((table (make-abbrev-table))
+          (tempel--ignore-condition t))
+      (dolist (template (tempel--templates))
         (let* ((name (symbol-name (car template)))
                (hook (make-symbol name)))
           (fset hook (lambda ()
