@@ -6,6 +6,7 @@
 
 - Require Emacs 28.1.
 - Optional named field argument for custom user element hooks.
+- Support =:when= in =tempel-abbrev-mode= via the abbrev =:enable-function=.
 
 * Version 1.2 (2024-07-24)
 

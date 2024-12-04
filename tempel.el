@@ -133,6 +133,9 @@ If a file is modified, added or removed, reload the templates."
 (defvar tempel--inhibit-hooks nil
   "Inhibit tempel modification change hooks from running.")
 
+(defvar tempel--ignore-condition nil
+  "Ignore template condition.")
+
 (defvar-local tempel--active nil
   "List of active templates.
 Each template state is a pair, where the car is a list of overlays and
@@ -504,7 +507,8 @@ This is meant to be a source in `tempel-template-sources'."
         (derived-mode-p m)
         (when-let ((remap (alist-get m (bound-and-true-p major-mode-remap-alist))))
           (derived-mode-p remap))))
-   (or (not (plist-member plist :when))
+   (or tempel--ignore-condition
+       (not (plist-member plist :when))
        (save-excursion
          (save-restriction
            (save-match-data
@@ -779,12 +783,6 @@ If called interactively, select a template with `completing-read'."
                (interactive)
                (tempel-insert ',template-or-name)))))))
 
-(defun tempel--abbrev-hook (name template)
-  "Abbreviation expansion hook for TEMPLATE with NAME."
-  (tempel--delete-word name)
-  (tempel--insert template nil)
-  t)
-
 ;;;###autoload
 (define-minor-mode tempel-abbrev-mode
   "Install Tempel templates as abbrevs."
@@ -797,12 +795,17 @@ If called interactively, select a template with `completing-read'."
     (kill-local-variable 'abbrev-minor-mode-table-alist))
   (when tempel-abbrev-mode
     (let ((table (make-abbrev-table)))
-      (dolist (template (tempel--templates))
+      (dolist (template (let ((tempel--ignore-condition t))
+                          (tempel--templates)))
         (let* ((name (symbol-name (car template)))
                (hook (make-symbol name)))
-          (fset hook (apply-partially #'tempel--abbrev-hook name (cdr template)))
+          (fset hook (lambda ()
+                       (tempel--delete-word name)
+                       (tempel--insert (cdr template) nil)))
           (put hook 'no-self-insert t)
-          (define-abbrev table name 'Template hook :system t)))
+          (define-abbrev table name 'Template hook
+            :system t :enable-function
+            (lambda () (assq (car template) (tempel--templates))))))
       (setq-local abbrev-minor-mode-table-alist
                   (cons `(tempel-abbrev-mode . ,table)
                         abbrev-minor-mode-table-alist)))))
