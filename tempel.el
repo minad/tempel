@@ -519,8 +519,8 @@ This is meant to be a source in `tempel-template-sources'."
      'tempel-template-sources
      (lambda (fun)
        (cond
-        ((functionp fun) (setq result (append result (funcall fun))))
-        ((boundp fun) (setq result (append result (symbol-value fun))))
+        ((functionp fun) (cl-callf append result (funcall fun)))
+        ((boundp fun) (cl-callf append result (symbol-value fun)))
         (t (error "Template source is not a function or a variable: %S" fun)))
        nil))
     result))
