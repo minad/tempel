@@ -258,9 +258,13 @@ BEG and END are the boundaries of the modification."
         (save-excursion
           (goto-char (overlay-start ov))
           (let (x)
-            (setq x (or (and (setq x (overlay-get ov 'tempel--form)) (or (eval x (cdr st)) ""))
-                        (and (setq x (overlay-get ov 'tempel--name)) (alist-get x (cdr st)))))
-            (when x (tempel--synchronize-replace (overlay-start ov) (overlay-end ov) ov x)))))
+            (setq x (or (and (setq x (overlay-get ov 'tempel--form))
+                             (or (eval x (cdr st)) ""))
+                        (and (setq x (overlay-get ov 'tempel--name))
+                             (alist-get x (cdr st)))))
+            (when x
+              (tempel--synchronize-replace (overlay-start ov)
+                                           (overlay-end ov) ov x)))))
       ;; Move range overlay
       (move-overlay range (overlay-start range)
                     (max (overlay-end range) (overlay-end ov))))))
@@ -486,10 +490,9 @@ This is meant to be a source in `tempel-template-sources'."
            (timestamps
             (cl-loop
              for f in files collect
-             (cons f (time-convert
-                      (file-attribute-modification-time
-                       (file-attributes (file-truename f)))
-                      'integer)))))
+             (cons f (time-convert (file-attribute-modification-time
+                                    (file-attributes (file-truename f)))
+                                   'integer)))))
       (unless (equal (car tempel--path-templates) timestamps)
         (setq tempel--path-templates (cons timestamps
                                            (mapcan #'tempel--file-read files))))))
