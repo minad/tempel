@@ -661,14 +661,6 @@ This is meant to be a source in `tempel-template-sources'."
     (tempel--save)
     (or (completion-at-point) (user-error "%s: No completions" capf))))
 
-(defun tempel--completion-table (templates)
-  "Return a completion table for a list of TEMPLATES.
-The completion table specifies the category `tempel'."
-  (lambda (str pred action)
-    (if (eq action 'metadata)
-        '(metadata (category . tempel))
-      (complete-with-action action templates str pred))))
-
 (defun tempel--prefix-bounds ()
   "Return prefix bounds."
   (if tempel-trigger-prefix
@@ -701,8 +693,8 @@ command."
                (sym (intern-soft name))
                (template (assq sym templates)))
       (setq templates (list template))
-      (list (car bounds) (cdr bounds)
-            (tempel--completion-table templates)
+      (list (car bounds) (cdr bounds) templates
+            :category 'tempel
             :exclusive 'no
             :exit-function (apply-partially #'tempel--exit templates nil)))))
 
@@ -724,8 +716,8 @@ Capf, otherwise like an interactive completion command."
       (when-let ((templates (tempel--templates))
                  (bounds (or (and (not region) (tempel--prefix-bounds))
                              (and (not tempel-trigger-prefix) (cons (point) (point))))))
-        (list (car bounds) (cdr bounds)
-              (tempel--completion-table templates)
+        (list (car bounds) (cdr bounds) templates
+              :category 'tempel
               :exclusive 'no
               :company-kind (lambda (_) 'snippet)
               :exit-function (apply-partially #'tempel--exit templates region)
@@ -752,18 +744,24 @@ If called interactively, select a template with `completing-read'."
   (interactive (list nil))
   (tempel--insert
    (if (consp template-or-name) template-or-name
-     (let* ((templates (or (tempel--templates)
-                           (error "Tempel: No templates for %s" major-mode)))
-            (completion-extra-properties
-             (and tempel-insert-annotation
-                  (list :annotation-function
-                        (apply-partially
-                         #'tempel--annotate templates tempel-insert-annotation
-                         #("  " 1 2 (display (space :align-to (+ left 20)))))))))
+     (let ((templates (or (tempel--templates)
+                          (error "Tempel: No templates for %s" major-mode))))
        (unless template-or-name
-         (setq template-or-name (intern-soft
-                                 (completing-read "Template: " templates
-                                                  nil t nil 'tempel--history))))
+         (setq template-or-name
+               (intern-soft
+                (completing-read
+                 "Template: "
+                 (lambda (str pred action)
+                   (if (eq action 'metadata)
+                       `(metadata
+                         (category . tempel)
+                         ,@(when tempel-insert-annotation
+                             `((annotation-function
+                                . ,(apply-partially
+                                    #'tempel--annotate templates tempel-insert-annotation
+                                    #("  " 1 2 (display (space :align-to (+ left 20)))))))))
+                     (complete-with-action action templates str pred)))
+                 nil t nil 'tempel--history))))
        (or (and template-or-name (alist-get template-or-name templates))
            (user-error "Template %s not found" template-or-name))))
    (tempel--region)))
