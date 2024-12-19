@@ -802,7 +802,8 @@ If called interactively, select a template with `completing-read'."
                (hook (make-symbol name)))
           (fset hook (lambda ()
                        (tempel--delete-word name)
-                       (tempel--insert (cdr template) nil)))
+                       (tempel--insert (cdr template) nil)
+                       t))
           (put hook 'no-self-insert t)
           (define-abbrev table name 'Template hook
             :system t :enable-function
