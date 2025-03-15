@@ -508,7 +508,8 @@ This is meant to be a source in `tempel-template-sources'."
     for m in modes thereis
     (or (eq m #'fundamental-mode)
         (derived-mode-p m)
-        (when-let ((remap (alist-get m (bound-and-true-p major-mode-remap-alist))))
+        (when-let (((eval-when-compile (> emacs-major-version 28)))
+                   (remap (alist-get m (bound-and-true-p major-mode-remap-alist))))
           (derived-mode-p remap))))
    (or tempel--ignore-condition
        (not (plist-member plist :when))
