@@ -655,13 +655,6 @@ This is meant to be a source in `tempel-template-sources'."
     (with-current-buffer buf
       (tempel--disable st))))
 
-(defun tempel--interactive (capf)
-  "Complete with CAPF."
-  (let ((completion-at-point-functions (list capf))
-        completion-cycle-threshold)
-    (tempel--save)
-    (or (completion-at-point) (user-error "%s: No completions" capf))))
-
 (defun tempel--prefix-bounds ()
   "Return prefix bounds."
   (if tempel-trigger-prefix
@@ -685,19 +678,20 @@ If you want to select from a list of templates, use
 acts like a Capf, otherwise like an interactive completion
 command."
   (interactive (list t))
-  (if interactive
-      (tempel--interactive #'tempel-expand)
-    (when-let ((templates (tempel--templates))
-               (bounds (tempel--prefix-bounds))
-               (name (buffer-substring-no-properties
-                      (car bounds) (cdr bounds)))
-               (sym (intern-soft name))
-               (template (assq sym templates)))
-      (setq templates (list template))
-      (list (car bounds) (cdr bounds) templates
-            :category 'tempel
-            :exclusive 'no
-            :exit-function (apply-partially #'tempel--exit templates nil)))))
+  (if-let ((templates (tempel--templates))
+           (bounds (tempel--prefix-bounds))
+           (name (buffer-substring-no-properties
+                  (car bounds) (cdr bounds)))
+           (sym (intern-soft name))
+           (template (assq sym templates)))
+      (if interactive
+          (tempel--exit templates nil name 'finished)
+        (setq templates (list template))
+        (list (car bounds) (cdr bounds) templates
+              :category 'tempel
+              :exclusive 'no
+              :exit-function (apply-partially #'tempel--exit templates nil)))
+    (when interactive (user-error "tempel-expand: No matching templates"))))
 
 ;;;###autoload
 (defun tempel-complete (&optional interactive)
@@ -709,10 +703,13 @@ completion UI (e.g. Corfu) for selection.  See also
 Capf, otherwise like an interactive completion command."
   (interactive (list t))
   (if interactive
-      (progn
+      (let ((completion-at-point-functions (list #'tempel-complete))
+            completion-cycle-threshold)
         (when (and tempel-trigger-prefix (not (tempel--prefix-bounds)))
           (insert tempel-trigger-prefix))
-        (tempel--interactive #'tempel-complete))
+        (tempel--save)
+        (unless (completion-at-point)
+          (user-error "tempel-complete: No matching templates")))
     (let ((region (tempel--region)))
       (when-let ((templates (tempel--templates))
                  (bounds (or (and (not region) (tempel--prefix-bounds))
