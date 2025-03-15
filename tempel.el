@@ -678,6 +678,8 @@ If you want to select from a list of templates, use
 acts like a Capf, otherwise like an interactive completion
 command."
   (interactive (list t))
+  (when interactive
+    (tempel--save))
   (if-let ((templates (tempel--templates))
            (bounds (tempel--prefix-bounds))
            (name (buffer-substring-no-properties
@@ -705,9 +707,9 @@ Capf, otherwise like an interactive completion command."
   (if interactive
       (let ((completion-at-point-functions (list #'tempel-complete))
             completion-cycle-threshold)
+        (tempel--save)
         (when (and tempel-trigger-prefix (not (tempel--prefix-bounds)))
           (insert tempel-trigger-prefix))
-        (tempel--save)
         (unless (completion-at-point)
           (user-error "tempel-complete: No matching templates")))
     (let ((region (tempel--region)))
