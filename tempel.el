@@ -209,13 +209,13 @@ TEMPLATES is the list of templates."
   "Exit function for completion for template NAME and STATUS.
 TEMPLATES is the list of templates.
 REGION are the current region bounds."
-  (unless (eq status 'exact)
-    (when-let ((sym (intern-soft name))
-               (template (alist-get sym templates)))
-      (tempel--delete-word name)
-      (when tempel-trigger-prefix
-        (tempel--delete-word tempel-trigger-prefix))
-      (tempel--insert template region))))
+  (when-let (((not (eq status 'exact)))
+             (sym (intern-soft name))
+             (template (alist-get sym templates)))
+    (tempel--delete-word name)
+    (when tempel-trigger-prefix
+      (tempel--delete-word tempel-trigger-prefix))
+    (tempel--insert template region)))
 
 (defun tempel--range-modified (ov &rest _)
   "Range overlay OV modified."
