@@ -15,9 +15,9 @@ contact_links:
   - name: "🔍 Search through old issues or discussions"
     url: https://github.com/search?q=repo%3Aminad%2Ftempel&type=issues
     about: The same question may have been asked before.
-  - name: "📝 Tempel wiki"
-    url: https://github.com/minad/tempel/wiki
-    about: Additional configuration tips are covered there. Feel free to edit!
+#  - name: "📝 Tempel wiki"
+#    url: https://github.com/minad/tempel/wiki
+#    about: Additional configuration tips are covered there. Feel free to edit!
   - name: "📖 Tempel manual"
     url: https://github.com/minad/tempel/blob/main/README.org
     about: The manual covers the basic setup and workflow.
