@@ -708,14 +708,18 @@ Capf, otherwise like an interactive completion command."
       (let ((completion-at-point-functions (list #'tempel-complete))
             completion-cycle-threshold)
         (tempel--save)
-        (when (and tempel-trigger-prefix (not (tempel--prefix-bounds)))
-          (insert tempel-trigger-prefix))
         (unless (completion-at-point)
           (user-error "tempel-complete: No matching templates")))
-    (let ((region (tempel--region)))
+    ;; If Tempel completion is invoked manually, use the marked region for
+    ;; template insertion. Insert a trigger prefix if missing. Furthermore
+    ;; accept empty input bounds.
+    (let* ((manually (memq this-command (list #'completion-at-point #'tempel-complete)))
+           (region (and manually (tempel--region))))
+      (when (and manually tempel-trigger-prefix (not (tempel--prefix-bounds)))
+        (insert tempel-trigger-prefix))
       (when-let ((templates (tempel--templates))
                  (bounds (or (and (not region) (tempel--prefix-bounds))
-                             (and (not tempel-trigger-prefix) (cons (point) (point))))))
+                             (and manually (cons (point) (point))))))
         (list (car bounds) (cdr bounds) templates
               :category 'tempel
               :exclusive 'no
