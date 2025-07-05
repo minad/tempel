@@ -175,6 +175,20 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
      ((or 'n '& '% 'o) #("\n" 0 1 (face completions-annotations)))
      (_ #("_" 0 1 (face shadow))))))
 
+(defun tempel--print-documentation (elts)
+  "Print documentation of template ELTS."
+  (while (not (keywordp (car elts))) (pop elts))
+  (plist-get elts :doc))
+
+(defun tempel--insert-doc-buffer-content (elts)
+  "Insert documentation buffer content for template ELTS.
+Essentially combines `tempel--print-template' and
+`tempel--print-documentation'."
+  (insert "Preview:\n")
+  (insert (tempel--print-template elts))
+  (insert "\n\nDocumentation:\n")
+  (insert (tempel--print-documentation elts)))
+
 (defun tempel--annotate (templates width sep name)
   "Annotate template NAME given the list of TEMPLATES.
 WIDTH and SEP configure the formatting."
@@ -729,7 +743,7 @@ Capf, otherwise like an interactive completion command."
               :company-doc-buffer
               (apply-partially #'tempel--info-buffer templates
                                (lambda (elts)
-                                 (insert (tempel--print-template elts))
+                                 (tempel--insert-doc-buffer-content elts)
                                  (current-buffer)))
               :company-location
               (apply-partially #'tempel--info-buffer templates

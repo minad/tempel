@@ -113,15 +113,19 @@ default the file =templates= in the ~user-emacs-directory~ is used, e.g.,
 =~/.config/emacs/templates=. The templates are grouped by major mode with
 an optional ~:when~ condition. Each template is a list in the concise form of the
 Emacs Tempo syntax. The first element of each list is the name of the template.
-I recommend to use avoid special letters for the template names, since special
+I recommend to avoid special letters for the template names, since special
 letters may carry meaning during completion filtering and as such make it harder
 to select the desired template. Thus the name =lett= is better than =let*=. Behind
-the name, the Tempo syntax elements follow.
+the name, the Tempo syntax elements follow, specifying the template's
+structure and content.
 
-In addition, each template may specify a =:pre= and/or =:post= key with a FORM that
-is evaluated before the template is expanded or after it is finalized,
-respectively. The =:post= form is evaluated in the lexical scope of the template,
-which means that it can access the template's named fields.
+In addition, /after/ the specification of its structure and content, each
+template may specify several key/value pairs. Specifically, templates may
+specify =:pre= and/or =:post= keys with a FORM that is evaluated before the
+template is expanded or after it is finalized, respectively. The =:post= form is
+evaluated in the lexical scope of the template, which means that it can access
+the template's named fields. Beyond that, templates may include a =:doc= key
+with a string that is used as documentation.
 
 The following examples are written on a single line, but this is is of course
 not a requirement. Strings can even contain line breaks, which can be useful if
