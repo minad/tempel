@@ -177,17 +177,17 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 
 (defun tempel--print-documentation (elts)
   "Print documentation of template ELTS."
-  (while (not (keywordp (car elts))) (pop elts))
+  (while (and elts (not (keywordp (car elts))))
+    (pop elts))
   (plist-get elts :doc))
 
 (defun tempel--insert-doc-buffer-content (elts)
-  "Insert documentation buffer content for template ELTS.
-Essentially combines `tempel--print-template' and
-`tempel--print-documentation'."
+  "Insert documentation buffer content for template ELTS."
   (insert "Preview:\n")
   (insert (tempel--print-template elts))
-  (insert "\n\nDocumentation:\n")
-  (insert (tempel--print-documentation elts)))
+  (when-let* ((doc (tempel--print-documentation elts)))
+    (insert "\n\nDocumentation:\n")
+    (insert (tempel--print-documentation elts))))
 
 (defun tempel--annotate (templates width sep name)
   "Annotate template NAME given the list of TEMPLATES.
