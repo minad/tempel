@@ -165,14 +165,13 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
    for elt in template until (keywordp elt) concat
    (pcase elt
      ('nil nil)
-     ((pred stringp) (propertize elt 'face 'completions-annotations))
-     (`(s ,name) (propertize (symbol-name name) 'face 'completions-annotations))
+     ((pred stringp) elt)
+     (`(s ,name) (symbol-name name))
      (`(,(or 'p 'P) ,_ ,name . ,noinsert)
-      (and (not (car noinsert))
-           (propertize (symbol-name name) 'face 'completions-annotations)))
-     ('> #(" " 0 1 (face completions-annotations)))
-     ('n> #("\n " 0 2 (face completions-annotations)))
-     ((or 'n '& '% 'o) #("\n" 0 1 (face completions-annotations)))
+      (and (not (car noinsert)) (symbol-name name)))
+     ('> " ")
+     ('n> "\n ")
+     ((or 'n '& '% 'o) "\n")
      (_ #("_" 0 1 (face shadow))))))
 
 (defun tempel--template-plist (template)
@@ -191,12 +190,15 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 WIDTH and SEP configure the formatting."
   (when-let ((name (intern-soft name))
              (elts (cdr (assoc name templates))))
-    (concat sep (string-trim
-                 (truncate-string-to-width
-                  (replace-regexp-in-string
-                   "[ \t\n\r]+" #(" " 0 1 (face completions-annotations))
-                   (tempel--print-template elts))
-                  width)))))
+    (let ((ann (truncate-string-to-width
+                (string-trim
+                 (replace-regexp-in-string
+                  "[ \t\n\r]+" " "
+                  (or (plist-get (tempel--template-plist elts) :ann)
+                      (tempel--print-template elts))))
+                width)))
+      (add-face-text-property 0 (length ann) 'completions-annotations t ann)
+      (concat sep ann))))
 
 (defun tempel--info-buffer (templates fun name)
   "Create info buffer for template NAME.
@@ -429,8 +431,8 @@ If a field was added, return it."
       (let ((st (cons nil nil))
             (ov (point))
             (tempel--inhibit-hooks t))
-        (while (and template (not (keywordp (car template))))
-          (tempel--element st region (pop template)))
+        (cl-loop for x in template until (keywordp x)
+                 do (tempel--element st region x))
         (setq ov (make-overlay ov (point) nil t))
         (push ov (car st))
         (overlay-put ov 'modification-hooks (list #'tempel--range-modified))
@@ -744,7 +746,9 @@ Capf, otherwise like an interactive completion command."
               :company-location
               (apply-partially #'tempel--info-buffer templates
                                (lambda (elts)
-                                 (pp elts (current-buffer))
+                                 (pp (cl-loop for x in elts
+                                              until (keywordp x) collect x)
+                                     (current-buffer))
                                  (tempel--insert-doc elts)
                                  (list (current-buffer))))
               :annotation-function
