@@ -2,6 +2,11 @@
 #+author: Daniel Mendler
 #+language: en
 
+* Development
+
+- Templates support the =:doc= and =:ann= keywords for documentation and annotation
+  respectively.
+
 * Version 1.5 (2025-06-20)
 
 - =tempel-complete=: Improve region handling, depending on if completion is
