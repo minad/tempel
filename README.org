@@ -135,7 +135,7 @@ you want to write complex templates.
 
 fundamental-mode ;; Available everywhere
 
-(today (format-time-string "%Y-%m-%d"))
+(today (format-time-string "%Y-%m-%d") :doc "Insert date")
 
 prog-mode
 
@@ -247,10 +247,10 @@ text-mode
 
 (box "┌─" (make-string (length str) ?─) "─┐" n
      "│ " (s str)                       " │" n
-     "└─" (make-string (length str) ?─) "─┘" n)
+     "└─" (make-string (length str) ?─) "─┘" n :doc "UNICODE BOX")
 (abox "+-" (make-string (length str) ?-) "-+" n
       "| " (s str)                       " |" n
-      "+-" (make-string (length str) ?-) "-+" n)
+      "+-" (make-string (length str) ?-) "-+" n :doc "ASCII BOX")
 (cut "--8<---------------cut here---------------start------------->8---" n r n
      "--8<---------------cut here---------------end--------------->8---" n)
 (rot13 (p "plain text" text) n "----" n (rot13 text))
