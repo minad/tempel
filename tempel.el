@@ -183,11 +183,11 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 
 (defun tempel--insert-doc-buffer-content (elts)
   "Insert documentation buffer content for template ELTS."
-  (insert "Preview:\n")
+  (insert (concat (propertize "Preview" 'face '(:underline t)) "\n"))
   (insert (tempel--print-template elts))
   (when-let* ((doc (tempel--print-documentation elts)))
-    (insert "\n\nDocumentation:\n")
-    (insert (tempel--print-documentation elts))))
+    (insert (concat "\n\n" (propertize "Documentation" 'face '(:underline t)) "\n"))
+    (insert doc)))
 
 (defun tempel--annotate (templates width sep name)
   "Annotate template NAME given the list of TEMPLATES.
