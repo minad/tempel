@@ -507,10 +507,14 @@ This is meant to be a source in `tempel-template-sources'."
       (unless (equal (car tempel--path-templates) timestamps)
         (setq tempel--path-templates (cons timestamps
                                            (mapcan #'tempel--file-read files))))))
-  (cl-loop
-   for (modes plist . templates) in (cdr tempel--path-templates)
-   if (tempel--condition-p modes plist)
-   append templates))
+  (tempel--filter-templates (cdr tempel--path-templates)))
+
+(defun tempel--filter-templates (templates)
+  "Filter templates from TEMPLATES relevant to the current buffer.
+TEMPLATES must be a list in the form (modes plist . templates)."
+  (cl-loop for (modes plist . mode-templates) in templates
+           if (tempel--condition-p modes plist)
+           append mode-templates))
 
 (defun tempel--condition-p (modes plist)
   "Return non-nil if one of MODES matches and the PLIST condition is satisfied."
