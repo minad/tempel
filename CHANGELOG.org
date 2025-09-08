@@ -2,7 +2,7 @@
 #+author: Daniel Mendler
 #+language: en
 
-* Development
+* Version 1.6 (2025-09-08)
 
 - Templates support the =:doc= and =:ann= keywords for documentation and annotation
   respectively.
