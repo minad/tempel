@@ -6,7 +6,7 @@
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
 ;; Version: 1.6
-;; Package-Requires: ((emacs "28.1") (compat "30"))
+;; Package-Requires: ((emacs "29.1") (compat "30"))
 ;; URL: https://github.com/minad/tempel
 ;; Keywords: abbrev, languages, tools, text
 
@@ -530,8 +530,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
     for m in modes thereis
     (or (eq m #'fundamental-mode)
         (derived-mode-p m)
-        (when-let (((eval-when-compile (> emacs-major-version 28)))
-                   (remap (alist-get m (bound-and-true-p major-mode-remap-alist))))
+        (when-let ((remap (alist-get m major-mode-remap-alist)))
           (derived-mode-p remap))))
    (or tempel--ignore-condition
        (not (plist-member plist :when))
