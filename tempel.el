@@ -734,7 +734,7 @@ Capf, otherwise like an interactive completion command."
     ;; If Tempel completion is invoked manually, use the marked region for
     ;; template insertion. Insert a trigger prefix if missing. Furthermore
     ;; accept empty input bounds.
-    (let* ((manually (memq this-command (list #'completion-at-point #'tempel-complete)))
+    (let* ((manually (eq this-command #'tempel-complete))
            (region (and manually (tempel--region))))
       (when (and manually tempel-trigger-prefix (not (tempel--prefix-bounds)))
         (insert tempel-trigger-prefix))
