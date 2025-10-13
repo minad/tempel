@@ -2,7 +2,7 @@
 #+author: Daniel Mendler
 #+language: en
 
-* Development
+* Version 1.7 (2025-10-13)
 
 - Require Emacs 29.
 - =tempel-complete=: Insert trigger prefix only if the command =tempel-complete= is
