@@ -5,6 +5,8 @@
 * Development
 
 - Require Emacs 29.
+- =tempel-complete=: Insert trigger prefix only if the command =tempel-complete= is
+  invoked manually.
 
 * Version 1.6 (2025-09-08)
 
