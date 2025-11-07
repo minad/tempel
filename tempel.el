@@ -715,14 +715,11 @@ Capf, otherwise like an interactive completion command."
         (tempel--save)
         (unless (completion-at-point)
           (user-error "tempel-complete: No matching templates")))
-    ;; If Tempel completion is invoked manually, use the marked region for
-    ;; template insertion. Insert a trigger prefix if missing. Furthermore
-    ;; accept empty input bounds.
-    (let* ((manually (eq this-command #'tempel-complete))
-           (region (and manually (tempel--region))))
+    ;; Use the marked region for template insertion if triggered manually.
+    (let ((region (and (eq this-command #'tempel-complete) (tempel--region))))
       (when-let ((templates (tempel--templates))
                  (bounds (or (and (not region) (bounds-of-thing-at-point 'symbol))
-                             (and manually (cons (point) (point))))))
+                             (cons (point) (point)))))
         (list (car bounds) (cdr bounds) templates
               :category 'tempel
               :exclusive 'no
