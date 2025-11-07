@@ -501,7 +501,7 @@ This is meant to be a source in `tempel-template-sources'."
             (cl-loop
              for f in files collect
              (cons f (time-convert (file-attribute-modification-time
-                                    (file-attributes (file-truename f)))
+                                    (file-attributes (file-chase-links f)))
                                    'integer)))))
       (unless (equal (car tempel--path-templates) timestamps)
         (setq tempel--path-templates (cons timestamps
