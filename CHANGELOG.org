@@ -4,8 +4,8 @@
 
 * Development
 
-- =tempel-trigger-prefix=: Remove feature. The goal is to replace this with a
-  generic mechanism in the Cape package.
+- =tempel-trigger-prefix=: Remove feature. Use =cape-capf-trigger= from the Cape
+  package instead.
 
 * Version 1.7 (2025-10-13)
 
