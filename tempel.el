@@ -681,8 +681,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (if tempel-trigger-prefix
       (let ((end (point))
             (beg (save-excursion
-                   (search-backward tempel-trigger-prefix
-                                    (line-beginning-position) 'noerror))))
+                   (search-backward tempel-trigger-prefix (pos-bol) 'noerror))))
         (when (and beg (save-excursion
                          (not (re-search-backward "\\s-" beg 'noerror))))
           (cons (+ beg (length tempel-trigger-prefix)) end)))
