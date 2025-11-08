@@ -56,9 +56,8 @@ and look at the provided key bindings. You can customize the key bindings there.
 
 The package is available on GNU ELPA and MELPA and can be installed with
 =package-install=. The following example configuration relies on =use-package=. For
-some ready-made templates check out the package [[https://github.com/Crandel/tempel-collection][tempel-collection]]. The
-collection is not comprehensive yet, but will certainly grow thanks to
-contributions.
+some ready-made templates check out the package [[https://github.com/Crandel/tempel-collection][tempel-collection]]. We appreciate
+if more templates are contributed there.
 
 #+begin_src emacs-lisp
 ;; Configure Tempel
@@ -96,7 +95,6 @@ contributions.
 )
 
 ;; Optional: Add tempel-collection.
-;; The package is young and doesn't have comprehensive coverage.
 (use-package tempel-collection)
 
 ;; Optional: Use the Corfu completion UI
