@@ -94,7 +94,7 @@ if more templates are contributed there.
   ;; (global-tempel-abbrev-mode)
 )
 
-;; Optional: Add tempel-collection.
+;; Optional: Add tempel-collection if you want ready-made templates.
 (use-package tempel-collection)
 
 ;; Optional: Use the Corfu completion UI
