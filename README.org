@@ -430,8 +430,8 @@ optionally a map.
 
 Internally ~tempel-key~ uses ~tempel-insert~ to trigger the insertion. Depending on
 the style of your user configuration you may want to write your own helper
-macros, which allow you to conveniently bind templates via [[https://github.com/jwiegley/use-package][use-package]], [[https://github.com/noctuid/general][general]]
-or similar keybinding packages.
+macros, which allow you to conveniently bind templates via [[https://www.gnu.org/software/emacs/manual/html_mono/use-package.html][use-package]] or
+similar keybinding packages.
 
 * Alternatives
 
