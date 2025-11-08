@@ -433,6 +433,13 @@ the style of your user configuration you may want to write your own helper
 macros, which allow you to conveniently bind templates via [[https://www.gnu.org/software/emacs/manual/html_mono/use-package.html][use-package]] or
 similar keybinding packages.
 
+* LSP integration
+
+See the following projects:
+
+- [[https://github.com/fejfighter/eglot-tempel][eglot-tempel]]
+- [[https://github.com/svaante/lsp-snippet][lsp-snippet]]
+
 * Alternatives
 
 There are plenty of alternative packages which provide abbreviation or snippet
