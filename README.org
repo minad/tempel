@@ -79,7 +79,8 @@ contributions.
     ;; Alternatively use `tempel-complete' if you want to see all matches.  Use
     ;; a trigger prefix character in order to prevent Tempel from triggering
     ;; unexpectly.
-    ;; (setq-local completion-at-point-functions
+    ;; (setq-local corfu-auto-trigger "/"
+    ;;             completion-at-point-functions
     ;;             (cons (cape-capf-trigger #'tempel-complete ?/)
     ;;                   completion-at-point-functions))
   )
