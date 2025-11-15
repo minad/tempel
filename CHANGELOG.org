@@ -2,7 +2,7 @@
 #+author: Daniel Mendler
 #+language: en
 
-* Development
+* Version 1.8 (2025-11-15)
 
 - =tempel-trigger-prefix=: Remove feature. Use =cape-capf-trigger= from the Cape
   package instead. See also =corfu-auto-trigger=.
