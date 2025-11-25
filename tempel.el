@@ -573,14 +573,14 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (declare (completion tempel--active-p))
   (interactive)
   (when-let ((pos (tempel--beginning)))
-    (if (= pos (point)) (tempel-done) (goto-char pos))))
+    (if (= pos (point)) (tempel-done t) (goto-char pos))))
 
 (defun tempel-end ()
   "Move to end of the template."
   (declare (completion tempel--active-p))
   (interactive)
   (when-let ((pos (tempel--end)))
-    (if (= pos (point)) (tempel-done) (goto-char pos))))
+    (if (= pos (point)) (tempel-done t) (goto-char pos))))
 
 (defun tempel--find-overlay (type)
   "Find overlay of TYPE at point."
@@ -629,17 +629,6 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (and tempel--active
        (cl-loop for st in tempel--active maximize (overlay-end (caar st)))))
 
-(defun tempel-abort ()
-  "Abort template insertion."
-  (declare (completion tempel--active-p))
-  (interactive)
-  ;; TODO abort only the topmost template?
-  (while-let ((st (car tempel--active)))
-    (let ((beg (overlay-start (caar st)))
-          (end (overlay-end (caar st))))
-      (tempel--disable)
-      (delete-region beg end))))
-
 (defun tempel--disable (&optional st)
   "Disable template ST, or last template."
   (if st
@@ -650,16 +639,42 @@ TEMPLATES must be a list in the form (modes plist . templates)."
     (unless tempel--active
       (cl-callf2 assq-delete-all 'tempel--active minor-mode-overriding-map-alist))))
 
-(defun tempel-done ()
-  "Template completion is done."
-  (declare (completion tempel--active-p))
-  (interactive)
-  ;; TODO disable only the topmost template?
-  (while tempel--active (tempel--done)))
+(defun tempel--for (all fun)
+  "Call FUN for template at point or all templates if ALL is non-nil."
+  (declare (indent 1))
+  (if all
+      (if tempel--active
+          (while tempel--active
+            (funcall fun (car tempel--active)))
+        (user-error "No active templates"))
+    (funcall fun (overlay-get
+                  (or (tempel--find-overlay 'tempel--range)
+                      (user-error "No active template at point"))
+                  'tempel--range))))
 
-(defun tempel--done (&optional ov)
-  "Finalize template associated with field OV, or last template."
-  (let ((st (if ov (overlay-get ov 'tempel--field) (car tempel--active)))
+(defun tempel-done (&optional all)
+  "Finish current template.
+If prefix argument ALL is given, finish all templates."
+  (declare (completion tempel--active-p))
+  (interactive "P")
+  (tempel--for all #'tempel--done))
+
+(defun tempel-abort (&optional all)
+  "Abort current template.
+If prefix argument ALL is given, abort all templates."
+  (declare (completion tempel--active-p))
+  (interactive "P")
+  (tempel--for all
+    (lambda (st)
+      (let ((beg (overlay-start (caar st)))
+            (end (overlay-end (caar st))))
+        (tempel--disable)
+        (delete-region beg end)))))
+
+(defun tempel--done (&optional st)
+  "Finalize template ST, or last template."
+  (let ((st (if (overlayp st) (overlay-get st 'tempel--field)
+              (or st (car tempel--active))))
         (buf (current-buffer)))
     ;; Ignore errors in post expansion to ensure that templates can be
     ;; terminated gracefully.
