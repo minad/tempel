@@ -2,6 +2,15 @@
 #+author: Daniel Mendler
 #+language: en
 
+* Development
+
+- =tempel-done=, =tempel-abort=: Add =ALL= prefix argument to finish or abort all
+  templates. If =ALL= is nil, treat only the template at point.
+- =tempel-done-on-region=, =tempel-done-on-boundary=: New options to customize
+  quitting behavior. If =tempel-done-or-region= is non-nil, quit when entering a
+  region. If =tempel-done-on-boundary= is non-nil, quit when leaving the last
+  field with =tempel-next= or =tempel-previous=.
+
 * Version 1.8 (2025-11-15)
 
 - =tempel-trigger-prefix=: Remove feature. Use =cape-capf-trigger= from the Cape
