@@ -93,8 +93,8 @@ must return a list of templates which apply to the buffer or context."
   "Automatically finish template when entering region field."
   :type 'boolean)
 
-(defcustom tempel-done-on-boundary t
-  "Automatically finish template at boundary."
+(defcustom tempel-done-on-next t
+  "Automatically finish template on `tempel-next' from last field."
   :type 'boolean)
 
 (defcustom tempel-auto-reload t
@@ -584,7 +584,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (when-let ((pos (tempel--beginning)))
     (cond
      ((/= pos (point)) (goto-char pos))
-     (tempel-done-on-boundary (tempel-done t)))))
+     (tempel-done-on-next (tempel-done t)))))
 
 (defun tempel-end ()
   "Move to end of the template."
@@ -593,7 +593,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (when-let ((pos (tempel--end)))
     (cond
      ((/= pos (point)) (goto-char pos))
-     (tempel-done-on-boundary (tempel-done t)))))
+     (tempel-done-on-next (tempel-done t)))))
 
 (defun tempel--find-overlay (type)
   "Find overlay of TYPE at point."
@@ -619,7 +619,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (cl-loop for i below (abs arg) do
            (if-let ((next (tempel--find arg)))
                (goto-char next)
-             (when tempel-done-on-boundary
+             (when tempel-done-on-next
                (tempel-done t))
              (cl-return)))
   ;; Run the enter action of the field.
