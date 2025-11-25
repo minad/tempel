@@ -438,7 +438,7 @@ If a field was added, return it."
         (overlay-put ov 'modification-hooks (list #'tempel--range-modified))
         (overlay-put ov 'tempel--range st)
         (overlay-put ov 'tempel--post (plist-get plist :post))
-        ;;(overlay-put ov 'face 'region) ;; TODO debug
+        ;;(overlay-put ov 'face 'region) ;; For debugging
         (push st tempel--active)))
     (cond
      ((cl-loop for ov in (caar tempel--active)
