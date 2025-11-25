@@ -414,7 +414,6 @@ If a field was added, return it."
     (setf (alist-get 'tempel--active minor-mode-overriding-map-alist) tempel-map)
     (save-excursion
       ;; Split existing overlays, do not expand within existing field.
-      ;; TODO This will be causing issues. Think more about nested expansion.
       (dolist (st tempel--active)
         (dolist (ov (cdar st))
           (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
