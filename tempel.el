@@ -582,12 +582,12 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (when-let ((pos (tempel--end)))
     (if (= pos (point)) (tempel-done) (goto-char pos))))
 
-(defun tempel--field-at-point ()
-  "Return the field overlay at point."
+(defun tempel--find-overlay (type)
+  "Find overlay of TYPE at point."
   (let ((start most-positive-fixnum) field)
     (dolist (ov (overlays-in (max (point-min) (1- (point)))
                              (min (point-max) (1+ (point)))))
-      (when (and (overlay-get ov 'tempel--field) (< (overlay-start ov) start))
+      (when (and (overlay-get ov type) (< (overlay-start ov) start))
         (setq start (overlay-start ov) field ov)))
     field))
 
@@ -595,7 +595,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   "Kill the field contents."
   (declare (completion tempel--active-p))
   (interactive)
-  (if-let ((ov (tempel--field-at-point)))
+  (if-let ((ov (tempel--find-overlay 'tempel--field)))
       (kill-region (overlay-start ov) (overlay-end ov))
     (kill-sentence nil)))
 
@@ -609,7 +609,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
              (tempel-done)
              (cl-return)))
   ;; Run the enter action of the field.
-  (when-let ((ov (tempel--field-at-point))
+  (when-let ((ov (tempel--find-overlay 'tempel--field))
              (fun (overlay-get ov 'tempel--enter)))
     (funcall fun ov)))
 
