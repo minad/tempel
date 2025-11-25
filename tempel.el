@@ -89,6 +89,14 @@ A source can either be a function or a variable symbol.  The functions
 must return a list of templates which apply to the buffer or context."
   :type 'hook)
 
+(defcustom tempel-done-on-region t
+  "Automatically finish template when entering region field."
+  :type 'boolean)
+
+(defcustom tempel-done-on-boundary t
+  "Automatically finish template at boundary."
+  :type 'boolean)
+
 (defcustom tempel-auto-reload t
   "Reload templates when files specified by `tempel-path' change.
 If a file is modified, added or removed, reload the templates."
@@ -371,7 +379,8 @@ Return the added field."
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
          (when-let ((ov (apply #'tempel--placeholder st rest))
-                    ((not rest)))
+                    ((not rest))
+                    (tempel-done-on-region))
            (overlay-put ov 'tempel--enter #'tempel--done))
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
@@ -573,14 +582,18 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (declare (completion tempel--active-p))
   (interactive)
   (when-let ((pos (tempel--beginning)))
-    (if (= pos (point)) (tempel-done t) (goto-char pos))))
+    (cond
+     ((/= pos (point)) (goto-char pos))
+     (tempel-done-on-boundary (tempel-done t)))))
 
 (defun tempel-end ()
   "Move to end of the template."
   (declare (completion tempel--active-p))
   (interactive)
   (when-let ((pos (tempel--end)))
-    (if (= pos (point)) (tempel-done t) (goto-char pos))))
+    (cond
+     ((/= pos (point)) (goto-char pos))
+     (tempel-done-on-boundary (tempel-done t)))))
 
 (defun tempel--find-overlay (type)
   "Find overlay of TYPE at point."
@@ -606,7 +619,8 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (cl-loop for i below (abs arg) do
            (if-let ((next (tempel--find arg)))
                (goto-char next)
-             (tempel-done)
+             (when tempel-done-on-boundary
+               (tempel-done t))
              (cl-return)))
   ;; Run the enter action of the field.
   (when-let ((ov (tempel--find-overlay 'tempel--field))
