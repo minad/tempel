@@ -2,7 +2,7 @@
 #+author: Daniel Mendler
 #+language: en
 
-* Development
+* Version 1.9 (2025-11-30)
 
 - =tempel-done=, =tempel-abort=: Add =ALL= prefix argument to finish or abort all
   templates. If =ALL= is nil, treat only the template at point.
