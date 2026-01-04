@@ -182,7 +182,7 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 
 (defun tempel--insert-doc (template)
   "Insert documentation of TEMPLATE."
-  (when-let ((doc (plist-get (tempel--template-plist template) :doc)))
+  (when-let* ((doc (plist-get (tempel--template-plist template) :doc)))
     (unless (eq ?\n (char-before)) (insert "\n"))
     (insert (propertize "\n" 'face '(:overline t :height 0.1 :extend t)))
     (insert doc)))
@@ -190,8 +190,8 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 (defun tempel--annotate (templates width sep name)
   "Annotate template NAME given the list of TEMPLATES.
 WIDTH and SEP configure the formatting."
-  (when-let ((name (intern-soft name))
-             (elts (cdr (assoc name templates))))
+  (when-let* ((name (intern-soft name))
+              (elts (cdr (assoc name templates))))
     (let ((ann (truncate-string-to-width
                 (string-trim
                  (replace-regexp-in-string
@@ -206,8 +206,8 @@ WIDTH and SEP configure the formatting."
   "Create info buffer for template NAME.
 FUN inserts the info into the buffer.
 TEMPLATES is the list of templates."
-  (when-let ((name (intern-soft name))
-             (elts (cdr (assoc name templates))))
+  (when-let* ((name (intern-soft name))
+              (elts (cdr (assoc name templates))))
     (with-current-buffer (get-buffer-create " *tempel-info*")
       (setq buffer-read-only t)
       (let ((inhibit-read-only t))
@@ -224,9 +224,9 @@ TEMPLATES is the list of templates."
   "Exit function for completion for template NAME and STATUS.
 TEMPLATES is the list of templates.
 REGION are the current region bounds."
-  (when-let (((not (eq status 'exact)))
-             (sym (intern-soft name))
-             (template (alist-get sym templates)))
+  (when-let* (((not (eq status 'exact)))
+              (sym (intern-soft name))
+              (template (alist-get sym templates)))
     (tempel--delete-word name)
     (tempel--insert template region)))
 
@@ -255,7 +255,7 @@ BEG and END are the boundaries of the modification."
         (let ((st (overlay-get ov 'tempel--field)))
           (unless undo-in-progress
             (move-overlay ov (overlay-start ov) (max end (overlay-end ov))))
-          (when-let ((name (overlay-get ov 'tempel--name)))
+          (when-let* ((name (overlay-get ov 'tempel--name)))
             (setf (alist-get name (cdr st))
                   (buffer-substring-no-properties
                    (overlay-start ov) (overlay-end ov))))
@@ -378,22 +378,22 @@ Return the added field."
     ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
-         (when-let ((ov (apply #'tempel--placeholder st rest))
-                    ((not rest))
-                    (tempel-done-on-region))
+         (when-let* ((ov (apply #'tempel--placeholder st rest))
+                     ((not rest))
+                     (tempel-done-on-region))
            (overlay-put ov 'tempel--enter #'tempel--done))
        (goto-char (cdr region))
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
     ('q (overlay-put (tempel--field st) 'tempel--enter #'tempel--done))
-    (_ (if-let ((ret (run-hook-wrapped 'tempel-user-elements
-                                       (lambda (hook elt fields)
-                                         (condition-case nil
-                                             (funcall hook elt)
-                                           (wrong-number-of-arguments
-                                            (funcall hook elt fields))))
-                                       elt (cdr st))))
+    (_ (if-let* ((ret (run-hook-wrapped 'tempel-user-elements
+                                        (lambda (hook elt fields)
+                                          (condition-case nil
+                                              (funcall hook elt)
+                                            (wrong-number-of-arguments
+                                             (funcall hook elt fields))))
+                                        elt (cdr st))))
            (tempel--element st region ret)
          ;; TEMPEL EXTENSION: Evaluate forms
          (tempel--form st elt)))))
@@ -455,7 +455,7 @@ If a field was added, return it."
   (cl-loop
    with all = nil
    for (file . _ts) in (car tempel--path-templates) do
-   (when-let ((buf (get-file-buffer file)))
+   (when-let* ((buf (get-file-buffer file)))
      (with-current-buffer buf
        (when (and (buffer-modified-p)
                   (pcase (or all (read-answer
@@ -530,7 +530,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
     for m in modes thereis
     (or (eq m #'fundamental-mode)
         (derived-mode-p m)
-        (when-let ((remap (alist-get m major-mode-remap-alist)))
+        (when-let* ((remap (alist-get m major-mode-remap-alist)))
           (derived-mode-p remap))))
    (or tempel--ignore-condition
        (not (plist-member plist :when))
@@ -581,7 +581,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   "Move to beginning of the template."
   (declare (completion tempel--active-p))
   (interactive)
-  (when-let ((pos (tempel--beginning)))
+  (when-let* ((pos (tempel--beginning)))
     (cond
      ((/= pos (point)) (goto-char pos))
      (tempel-done-on-next (tempel-done t)))))
@@ -590,7 +590,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   "Move to end of the template."
   (declare (completion tempel--active-p))
   (interactive)
-  (when-let ((pos (tempel--end)))
+  (when-let* ((pos (tempel--end)))
     (cond
      ((/= pos (point)) (goto-char pos))
      (tempel-done-on-next (tempel-done t)))))
@@ -608,7 +608,7 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   "Kill the field contents."
   (declare (completion tempel--active-p))
   (interactive)
-  (if-let ((ov (tempel--find-overlay 'tempel--field)))
+  (if-let* ((ov (tempel--find-overlay 'tempel--field)))
       (kill-region (overlay-start ov) (overlay-end ov))
     (kill-sentence nil)))
 
@@ -617,14 +617,14 @@ TEMPLATES must be a list in the form (modes plist . templates)."
   (declare (completion tempel--active-p))
   (interactive "p")
   (cl-loop for i below (abs arg) do
-           (if-let ((next (tempel--find arg)))
+           (if-let* ((next (tempel--find arg)))
                (goto-char next)
              (when tempel-done-on-next
                (tempel-done t))
              (cl-return)))
   ;; Run the enter action of the field.
-  (when-let ((ov (tempel--find-overlay 'tempel--field))
-             (fun (overlay-get ov 'tempel--enter)))
+  (when-let* ((ov (tempel--find-overlay 'tempel--field))
+              (fun (overlay-get ov 'tempel--enter)))
     (funcall fun ov)))
 
 (defun tempel-previous (arg)
@@ -713,12 +713,12 @@ command."
   (interactive (list t))
   (when interactive
     (tempel--save))
-  (if-let ((templates (tempel--templates))
-           (bounds (bounds-of-thing-at-point 'symbol))
-           (name (buffer-substring-no-properties
-                  (car bounds) (cdr bounds)))
-           (sym (intern-soft name))
-           (template (assq sym templates)))
+  (if-let* ((templates (tempel--templates))
+            (bounds (bounds-of-thing-at-point 'symbol))
+            (name (buffer-substring-no-properties
+                   (car bounds) (cdr bounds)))
+            (sym (intern-soft name))
+            (template (assq sym templates)))
       (if interactive
           (tempel--exit templates nil name 'finished)
         (setq templates (list template))
@@ -745,9 +745,9 @@ Capf, otherwise like an interactive completion command."
           (user-error "tempel-complete: No matching templates")))
     ;; Use the marked region for template insertion if triggered manually.
     (let ((region (and (eq this-command #'tempel-complete) (tempel--region))))
-      (when-let ((templates (tempel--templates))
-                 (bounds (or (and (not region) (bounds-of-thing-at-point 'symbol))
-                             (cons (point) (point)))))
+      (when-let* ((templates (tempel--templates))
+                  (bounds (or (and (not region) (bounds-of-thing-at-point 'symbol))
+                              (cons (point) (point)))))
         (list (car bounds) (cdr bounds) templates
               :category 'tempel
               :exclusive 'no
