@@ -82,6 +82,15 @@ The functions take a template element as argument and must return either
 nil or a new template element, which is subsequently evaluated."
   :type 'hook)
 
+(defcustom tempel-insert-string-functions nil
+  "List of functions to run when inserting a string.
+Each function is called with a single argument, STRING and should return
+another string.  This could be used for making all strings upcase by
+setting it to (upcase), for example.
+
+Alternatively, the value can be a function."
+  :type '(choice (const nil) function hook))
+
 (defcustom tempel-template-sources
   (list #'tempel-path-templates)
   "List of template sources.
@@ -358,6 +367,23 @@ Return the added field."
   `(with-demoted-errors "Tempel Error: %S"
      ,@body))
 
+(defun tempel--process-and-insert-string (string)
+  "Insert a STRING from a template.
+Run a string through the pre-processors in
+`tempo-insert-string-functions' and insert the results."
+  (cond ((null tempel-insert-string-functions)
+	 nil)
+	((symbolp tempel-insert-string-functions)
+	 (setq string
+	       (funcall tempel-insert-string-functions string)))
+	((listp tempel-insert-string-functions)
+	 (dolist (fn tempel-insert-string-functions)
+	   (setq string (funcall fn string))))
+	(t
+	 (error "Bogus value in tempo-insert-string-functions: %s"
+		tempel-insert-string-functions)))
+  (insert string))
+
 (defun tempel--element (st region elt)
   "Add template ELT to ST given the REGION."
   (pcase elt
@@ -366,7 +392,7 @@ Return the added field."
     ;; `indent-according-to-mode' fails sometimes in Org. Ignore errors.
     ('n> (insert "\n") (tempel--protect (indent-according-to-mode)))
     ('> (tempel--protect (indent-according-to-mode)))
-    ((pred stringp) (insert elt))
+    ((pred stringp) (tempel--process-and-insert-string elt))
     ('& (unless (or (bolp) (save-excursion (re-search-backward "^\\s-*\\=" nil t)))
           (insert "\n")))
     ('% (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
@@ -375,7 +401,9 @@ Return the added field."
           (open-line 1)))
     (`(s ,name) (tempel--field st name))
     (`(l . ,lst) (dolist (e lst) (tempel--element st region e)))
-    ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st rest))
+    (`(P . ,lst) ; Only for tempo backward compatibility
+     (tempel--placeholder st (nth 0 lst) (nth 1 lst) (nth 2 lst) :only-prompt))
+    ((or 'p `(p . ,rest)) (apply #'tempel--placeholder st rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
          (when-let* ((ov (apply #'tempel--placeholder st rest))
@@ -398,14 +426,19 @@ Return the added field."
          ;; TEMPEL EXTENSION: Evaluate forms
          (tempel--form st elt)))))
 
-(defun tempel--placeholder (st &optional prompt name noinsert)
+(defun tempel--placeholder (st &optional prompt name noinsert only-prompt)
   "Handle placeholder element and add field with NAME to ST.
 If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
+
+If ONLY-PROMPT is non-nil, prompt in the minibuffer for a value to
+insert.
+
 PROMPT is the optional prompt/default value.
 If a field was added, return it."
   (setq prompt
         (cond
-         ((and (stringp prompt) noinsert) (read-string prompt))
+         ((and (stringp prompt) (or only-prompt noinsert))
+          (read-string prompt))
          ((stringp prompt) (propertize prompt 'tempel--default t))
          ;; TEMPEL EXTENSION: Evaluate prompt
          (t (eval prompt (cdr st)))))
@@ -612,10 +645,11 @@ TEMPLATES must be a list in the form (modes plist . templates)."
       (kill-region (overlay-start ov) (overlay-end ov))
     (kill-sentence nil)))
 
-(defun tempel-next (arg)
+(defun tempel-next (&optional arg)
   "Move ARG fields forward and quit at the end."
   (declare (completion tempel--active-p))
   (interactive "p")
+  (unless arg (setq arg 1))
   (cl-loop for i below (abs arg) do
            (if-let* ((next (tempel--find arg)))
                (goto-char next)
@@ -627,10 +661,11 @@ TEMPLATES must be a list in the form (modes plist . templates)."
               (fun (overlay-get ov 'tempel--enter)))
     (funcall fun ov)))
 
-(defun tempel-previous (arg)
+(defun tempel-previous (&optional arg)
   "Move ARG fields backward and quit at the beginning."
   (declare (completion tempel--active-p))
   (interactive "p")
+  (unless arg (setq arg 1))
   (tempel-next (- arg)))
 
 (defun tempel--beginning ()
