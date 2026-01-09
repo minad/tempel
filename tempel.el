@@ -707,9 +707,17 @@ If prefix argument ALL is given, abort all templates."
     (with-current-buffer buf
       (tempel--disable st))))
 
-(defun tempel--prefix-bounds ()
-  "Return prefix bounds."
-  (bounds-of-thing-at-point 'symbol))
+(defun tempel--prefix-bounds (templates)
+  "Return prefix bounds given TEMPLATES list."
+  ;; Check if prefix matches a template name.
+  (let ((beg (save-excursion (skip-chars-backward "^[:space:]") (point)))
+        (end (point)))
+    (if (and (/= beg end)
+             (try-completion (buffer-substring-no-properties beg end)
+                             templates))
+        (cons beg end)
+      ;; Fallback to `bounds-of-thing-at-point'.
+      (bounds-of-thing-at-point 'symbol))))
 
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
@@ -725,7 +733,7 @@ command."
   (when interactive
     (tempel--save))
   (if-let* ((templates (tempel--templates))
-            (bounds (bounds-of-thing-at-point 'symbol))
+            (bounds (tempel--prefix-bounds templates))
             (name (buffer-substring-no-properties
                    (car bounds) (cdr bounds)))
             (sym (intern-soft name))
@@ -757,7 +765,7 @@ Capf, otherwise like an interactive completion command."
     ;; Use the marked region for template insertion if triggered manually.
     (let ((region (and (eq this-command #'tempel-complete) (tempel--region))))
       (when-let* ((templates (tempel--templates))
-                  (bounds (or (and (not region) (bounds-of-thing-at-point 'symbol))
+                  (bounds (or (and (not region) (tempel--prefix-bounds templates))
                               (cons (point) (point)))))
         (list (car bounds) (cdr bounds) templates
               :category 'tempel
