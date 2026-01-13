@@ -232,7 +232,8 @@ REGION are the current region bounds."
 
 (defun tempel--range-modified (ov &rest _)
   "Range overlay OV modified."
-  (when (and (not tempel--inhibit-hooks) (= (overlay-start ov) (overlay-end ov)))
+  (when (and (not tempel--inhibit-hooks)
+             (= (overlay-start ov) (overlay-end ov)))
     (let ((inhibit-modification-hooks nil)
           (tempel--inhibit-hooks t))
       (tempel--disable (overlay-get ov 'tempel--range)))))
@@ -417,7 +418,6 @@ If a field was added, return it."
   "Insert TEMPLATE given the current REGION."
   (let ((plist (tempel--template-plist template)))
     (eval (plist-get plist :pre) 'lexical)
-    ;; TODO do we want to have the ability to reactivate snippets?
     (unless (eq buffer-undo-list t)
       (push '(apply tempel--disable) buffer-undo-list))
     (setf (alist-get 'tempel--active minor-mode-overriding-map-alist) tempel-map)
@@ -425,7 +425,8 @@ If a field was added, return it."
       ;; Split existing overlays, do not expand within existing field.
       (dolist (st tempel--active)
         (dolist (ov (cdar st))
-          (when (and (<= (overlay-start ov) (point)) (>= (overlay-end ov) (point)))
+          (when (and (<= (overlay-start ov) (point))
+                     (>= (overlay-end ov) (point)))
             (setf (overlay-end ov) (point)))))
       ;; Activate template
       (let ((st (cons nil nil))
@@ -438,7 +439,7 @@ If a field was added, return it."
         (overlay-put ov 'modification-hooks (list #'tempel--range-modified))
         (overlay-put ov 'tempel--range st)
         (overlay-put ov 'tempel--post (plist-get plist :post))
-        ;;(overlay-put ov 'face 'region) ;; For debugging
+        ;; (overlay-put ov 'face 'region) ;; Enable for debugging
         (push st tempel--active)))
     (cond
      ((cl-loop for ov in (caar tempel--active)
@@ -493,7 +494,7 @@ template.eld file.  The return value is a list of (modes plist . templates)."
           (push (pop data) plist))
         (while (consp (car data))
           (push (pop data) templates))
-        (push `(,(nreverse modes) ,(nreverse plist) . ,(nreverse templates)) result)))
+        (push `( ,(nreverse modes) ,(nreverse plist) . ,(nreverse templates)) result)))
     result))
 
 (defun tempel-path-templates ()
@@ -512,8 +513,8 @@ This is meant to be a source in `tempel-template-sources'."
                                     (file-attributes (file-chase-links f)))
                                    'integer)))))
       (unless (equal (car tempel--path-templates) timestamps)
-        (setq tempel--path-templates (cons timestamps
-                                           (mapcan #'tempel--file-read files))))))
+        (setq tempel--path-templates
+              (cons timestamps (mapcan #'tempel--file-read files))))))
   (tempel--filter-templates (cdr tempel--path-templates)))
 
 (defun tempel--filter-templates (templates)
