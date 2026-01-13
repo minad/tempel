@@ -612,12 +612,14 @@ TEMPLATES must be a list in the form (modes plist . templates)."
       (kill-region (overlay-start ov) (overlay-end ov))
     (kill-sentence nil)))
 
-(defun tempel-next (arg)
-  "Move ARG fields forward and quit at the end."
+(defun tempel-next (&optional n)
+  "Move N fields forward.
+Quit at the end if `tempel-done-on-next' is non-nil."
   (declare (completion tempel--active-p))
   (interactive "p")
-  (cl-loop for i below (abs arg) do
-           (if-let* ((next (tempel--find arg)))
+  (setq n (or n 1))
+  (cl-loop for i below (abs n) do
+           (if-let* ((next (tempel--find n)))
                (goto-char next)
              (when tempel-done-on-next
                (tempel-done t))
@@ -627,11 +629,12 @@ TEMPLATES must be a list in the form (modes plist . templates)."
               (fun (overlay-get ov 'tempel--enter)))
     (funcall fun ov)))
 
-(defun tempel-previous (arg)
-  "Move ARG fields backward and quit at the beginning."
+(defun tempel-previous (&optional n)
+  "Move N fields backward.
+Quit at the beginning if `tempel-done-on-next' is non-nil."
   (declare (completion tempel--active-p))
   (interactive "p")
-  (tempel-next (- arg)))
+  (tempel-next (- (or n 1))))
 
 (defun tempel--beginning ()
   "Return beginning of template markers."
