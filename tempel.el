@@ -430,17 +430,17 @@ If a field was added, return it."
             (setf (overlay-end ov) (point)))))
       ;; Activate template
       (let ((st (cons nil nil))
-            (ov (point))
+            (beg (point))
             (tempel--inhibit-hooks t))
+        (push st tempel--active)
         (cl-loop for x in template until (keywordp x)
                  do (tempel--element st region x))
-        (setq ov (make-overlay ov (point) nil t))
-        (push ov (car st))
-        (overlay-put ov 'modification-hooks (list #'tempel--range-modified))
-        (overlay-put ov 'tempel--range st)
-        (overlay-put ov 'tempel--post (plist-get plist :post))
-        ;; (overlay-put ov 'face 'region) ;; Enable for debugging
-        (push st tempel--active)))
+        (let ((ov (make-overlay beg (point) nil t)))
+          (overlay-put ov 'modification-hooks (list #'tempel--range-modified))
+          (overlay-put ov 'tempel--range st)
+          (overlay-put ov 'tempel--post (plist-get plist :post))
+          ;; (overlay-put ov 'face 'region) ;; Enable for debugging
+          (push ov (car st)))))
     (cond
      ((cl-loop for ov in (caar tempel--active)
                never (overlay-get ov 'tempel--field))
@@ -449,7 +449,7 @@ If a field was added, return it."
      ((cl-loop for ov in (caar tempel--active)
                never (and (overlay-get ov 'tempel--field)
                           (eq (point) (overlay-start ov))))
-      (tempel-next 1))))) ;; Jump to first field
+      (tempel-next))))) ;; Jump to first field
 
 (defun tempel--save ()
   "Prompt to save modified files in `tempel-path'."
