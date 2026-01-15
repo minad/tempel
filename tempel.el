@@ -261,10 +261,10 @@ BEG and END are the boundaries of the modification."
                   (buffer-substring-no-properties
                    (overlay-start ov) (overlay-end ov))))
           (unless undo-in-progress
-            (tempel--synchronize-fields st ov)))))
+            (tempel--sync-fields st ov)))))
       (tempel--update-mark ov))))
 
-(defun tempel--synchronize-fields (st current)
+(defun tempel--sync-fields (st current)
   "Synchronize fields of ST, except CURRENT overlay."
   (let ((range (caar st)))
     (dolist (ov (cdar st))
@@ -277,20 +277,20 @@ BEG and END are the boundaries of the modification."
                         (and (setq x (overlay-get ov 'tempel--name))
                              (alist-get x (cdr st)))))
             (when x
-              (tempel--synchronize-replace (overlay-start ov)
+              (tempel--sync-replace (overlay-start ov)
                                            (overlay-end ov) ov x)))))
       ;; Move range overlay
       (move-overlay range (overlay-start range)
                     (max (overlay-end range) (overlay-end ov))))))
 
-(defun tempel--synchronize-replace (beg end ov str)
+(defun tempel--sync-replace (beg end ov str)
   "Replace region between BEG and END with STR.
 If OV is alive, move it."
   (let ((old (buffer-substring-no-properties beg end)))
     (setq ov (and ov (overlay-buffer ov) ov))
     (unless (equal str old)
       (unless (eq buffer-undo-list t)
-        (push (list 'apply #'tempel--synchronize-replace
+        (push (list 'apply #'tempel--sync-replace
                     beg (+ beg (length str)) ov old)
               buffer-undo-list))
       (let ((buffer-undo-list t))
@@ -312,12 +312,13 @@ If OV is alive, move it."
                  (and (= (overlay-start ov) (overlay-end ov))
                       tempel-mark))))
 
-(defun tempel--field (st &optional name init)
-  "Add template field to ST.
+(defun tempel--field (&optional name init)
+  "Add template field.
 NAME is the optional field name.
 INIT is the optional initial input.
 Return the added field."
-  (let ((ov (make-overlay (point) (point)))
+  (let ((st (car tempel--active))
+        (ov (make-overlay (point) (point)))
         (hooks (list #'tempel--field-modified)))
     (push ov (car st))
     (when name
@@ -337,13 +338,14 @@ Return the added field."
       (overlay-put ov 'face 'tempel-default)
       (overlay-put ov 'tempel--default
                    (if (string-suffix-p ": " init) 'end 'start)))
-    (tempel--synchronize-fields st ov)
+    (tempel--sync-fields st ov)
     ov))
 
-(defun tempel--form (st form)
-  "Add new template field evaluating FORM to ST.
+(defun tempel--form (form)
+  "Add new template field evaluating FORM.
 Return the added field."
-  (let ((beg (point)))
+  (let ((beg (point))
+        (st (car tempel--active)))
     (condition-case nil
         (insert (or (eval form (cdr st)) ""))
       ;; Ignore errors since some variables may not be defined yet.
@@ -359,8 +361,8 @@ Return the added field."
   `(with-demoted-errors "Tempel Error: %S"
      ,@body))
 
-(defun tempel--element (st region elt)
-  "Add template ELT to ST given the REGION."
+(defun tempel--element (region elt)
+  "Add template ELT given the REGION."
   (pcase elt
     ('nil)
     ('n (insert "\n"))
@@ -374,12 +376,12 @@ Return the added field."
           (insert "\n")))
     ('o (unless (or (eolp) (save-excursion (re-search-forward "\\=\\s-*$" nil t)))
           (open-line 1)))
-    (`(s ,name) (tempel--field st name))
-    (`(l . ,lst) (dolist (e lst) (tempel--element st region e)))
-    ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder st rest))
+    (`(s ,name) (tempel--field name))
+    (`(l . ,lst) (dolist (e lst) (tempel--element region e)))
+    ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
-         (when-let* ((ov (apply #'tempel--placeholder st rest))
+         (when-let* ((ov (apply #'tempel--placeholder rest))
                      ((not rest))
                      (tempel-done-on-region))
            (overlay-put ov 'tempel--enter #'tempel--done))
@@ -387,20 +389,20 @@ Return the added field."
        (when (eq (or (car-safe elt) elt) 'r>)
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
-    ('q (overlay-put (tempel--field st) 'tempel--enter #'tempel--done))
+    ('q (overlay-put (tempel--field) 'tempel--enter #'tempel--done))
     (_ (if-let* ((ret (run-hook-wrapped 'tempel-user-elements
                                         (lambda (hook elt fields)
                                           (condition-case nil
                                               (funcall hook elt)
                                             (wrong-number-of-arguments
                                              (funcall hook elt fields))))
-                                        elt (cdr st))))
-           (tempel--element st region ret)
+                                        elt (cdar tempel--active))))
+           (tempel--element region ret)
          ;; TEMPEL EXTENSION: Evaluate forms
-         (tempel--form st elt)))))
+         (tempel--form elt)))))
 
-(defun tempel--placeholder (st &optional prompt name noinsert)
-  "Handle placeholder element and add field with NAME to ST.
+(defun tempel--placeholder (&optional prompt name noinsert)
+  "Handle placeholder element and add field with NAME.
 If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
 PROMPT is the optional prompt/default value.
 If a field was added, return it."
@@ -409,10 +411,10 @@ If a field was added, return it."
          ((and (stringp prompt) noinsert) (read-string prompt))
          ((stringp prompt) (propertize prompt 'tempel--default t))
          ;; TEMPEL EXTENSION: Evaluate prompt
-         (t (eval prompt (cdr st)))))
+         (t (eval prompt (cdar tempel--active)))))
   (if noinsert
-      (progn (setf (alist-get name (cdr st)) prompt) nil)
-    (tempel--field st name prompt)))
+      (progn (setf (alist-get name (cdar tempel--active)) prompt) nil)
+    (tempel--field name prompt)))
 
 (defun tempel--insert (template region)
   "Insert TEMPLATE given the current REGION."
@@ -434,7 +436,7 @@ If a field was added, return it."
             (tempel--inhibit-hooks t))
         (push st tempel--active)
         (cl-loop for x in template until (keywordp x)
-                 do (tempel--element st region x))
+                 do (tempel--element region x))
         (let ((ov (make-overlay beg (point) nil t)))
           (overlay-put ov 'modification-hooks (list #'tempel--range-modified))
           (overlay-put ov 'tempel--range st)
