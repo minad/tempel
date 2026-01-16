@@ -344,13 +344,12 @@ Return the added field."
 (defun tempel--form (form initial)
   "Add new template field evaluating FORM with INITIAL text.
 Return the added field."
-  (let ((beg (point)))
-    (insert (or initial ""))
-    (let ((ov (make-overlay beg (point) nil t)))
-      (overlay-put ov 'face 'tempel-form)
-      (overlay-put ov 'tempel--form form)
-      (push ov (caar tempel--active))
-      ov)))
+  (insert initial)
+  (let ((ov (make-overlay (- (point) (length initial)) (point) nil t)))
+    (overlay-put ov 'face 'tempel-form)
+    (overlay-put ov 'tempel--form form)
+    (push ov (caar tempel--active))
+    ov))
 
 (defmacro tempel--protect (&rest body)
   "Protect BODY, catch errors."
@@ -391,8 +390,8 @@ Return the added field."
                       ;; Ignore errors since variables may not be defined yet.
                       (condition-case nil
                           (eval elt (cdar tempel--active))
-                        (void-variable nil)))))
-         (if (or uel (consp val))
+                        (void-variable "")))))
+         (if (or uel (not (stringp val)))
              (tempel--element region (or uel val))
            ;; TEMPEL EXTENSION: Evaluate forms
            (tempel--form elt val))))))
