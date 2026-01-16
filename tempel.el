@@ -388,9 +388,9 @@ Return the added field."
     ('q (overlay-put (tempel--field) 'tempel--enter #'tempel--done))
     (_ (let* ((uelt (tempel--user-element elt))
               (eelt (unless uelt
+                      ;; Ignore errors since variables may not be defined yet.
                       (condition-case nil
                           (eval elt (cdar tempel--active))
-                        ;; Ignore errors since variables may not be defined yet.
                         (void-variable nil)))))
          (if (or uelt (consp eelt))
              (tempel--element region (or uelt eelt))
