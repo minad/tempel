@@ -709,10 +709,10 @@ If prefix argument ALL is given, abort all templates."
 
 (defun tempel--prefix-bounds (templates)
   "Return prefix bounds given TEMPLATES list."
-  ;; Check if prefix matches a template name.
   (let ((beg (save-excursion (skip-chars-backward "^[:space:]") (point)))
         (end (point)))
     (if (and (/= beg end)
+             ;; Check if prefix matches a template name.
              (try-completion (buffer-substring-no-properties beg end)
                              templates))
         (cons beg end)
