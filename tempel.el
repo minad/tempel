@@ -501,7 +501,8 @@ template.eld file.  The return value is a list of (modes plist . templates)."
           (push (pop data) plist))
         (while (consp (car data))
           (push (pop data) templates))
-        (push `( ,(nreverse modes) ,(nreverse plist) . ,(nreverse templates)) result)))
+        (push `( ,(nreverse modes) ,(nreverse plist) . ,(nreverse templates))
+              result)))
     result))
 
 (defun tempel-path-templates ()
@@ -573,8 +574,10 @@ TEMPLATES must be a list in the form (modes plist . templates)."
     (dolist (st tempel--active next)
       (dolist (ov (car st))
         (unless (overlay-get ov 'tempel--form)
-          (setq stop (if (or (< dir 0) (eq 'start (overlay-get ov 'tempel--default)))
-                         (overlay-start ov) (overlay-end ov)))
+          (setq stop (if (or (< dir 0)
+                             (eq 'start (overlay-get ov 'tempel--default)))
+                         (overlay-start ov)
+                       (overlay-end ov)))
           (cond
            ((and (> dir 0) (> stop pt))
             (setq next (min (or next (point-max)) stop)))
@@ -765,7 +768,8 @@ Capf, otherwise like an interactive completion command."
     ;; Use the marked region for template insertion if triggered manually.
     (let ((region (and (eq this-command #'tempel-complete) (tempel--region))))
       (when-let* ((templates (tempel--templates))
-                  (bounds (or (and (not region) (tempel--prefix-bounds templates))
+                  (bounds (or (and (not region)
+                                   (tempel--prefix-bounds templates))
                               (cons (point) (point)))))
         (list (car bounds) (cdr bounds) templates
               :category 'tempel
@@ -787,9 +791,9 @@ Capf, otherwise like an interactive completion command."
                                  (tempel--insert-doc elts)
                                  (list (current-buffer))))
               :annotation-function
-              (and tempel-complete-annotation
-                   (apply-partially #'tempel--annotate
-                                    templates tempel-complete-annotation " ")))))))
+              (when tempel-complete-annotation
+                (apply-partially #'tempel--annotate
+                                 templates tempel-complete-annotation " ")))))))
 
 ;;;###autoload
 (defun tempel-insert (template-or-name)
@@ -805,6 +809,7 @@ If called interactively, select a template with `completing-read'."
                (intern-soft
                 (completing-read
                  "Template: "
+                 ;; TODO: Use `completion-table-with-metadata' via Compat 31
                  (lambda (str pred action)
                    (if (eq action 'metadata)
                        `(metadata
