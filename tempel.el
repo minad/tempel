@@ -341,19 +341,15 @@ Return the added field."
     (tempel--sync-fields st ov)
     ov))
 
-(defun tempel--form (form)
-  "Add new template field evaluating FORM.
+(defun tempel--form (form initial)
+  "Add new template field evaluating FORM with INITIAL text.
 Return the added field."
-  (let ((beg (point))
-        (st (car tempel--active)))
-    (condition-case nil
-        (insert (or (eval form (cdr st)) ""))
-      ;; Ignore errors since some variables may not be defined yet.
-      (void-variable nil))
+  (let ((beg (point)))
+    (insert (or initial ""))
     (let ((ov (make-overlay beg (point) nil t)))
       (overlay-put ov 'face 'tempel-form)
       (overlay-put ov 'tempel--form form)
-      (push ov (car st))
+      (push ov (caar tempel--active))
       ov)))
 
 (defmacro tempel--protect (&rest body)
@@ -390,10 +386,16 @@ Return the added field."
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
     ('q (overlay-put (tempel--field) 'tempel--enter #'tempel--done))
-    (_ (if-let* ((ret (tempel--user-element elt)))
-           (tempel--element region ret)
-         ;; TEMPEL EXTENSION: Evaluate forms
-         (tempel--form elt)))))
+    (_ (let* ((uelt (tempel--user-element elt))
+              (eelt (unless uelt
+                      (condition-case nil
+                          (eval elt (cdar tempel--active))
+                        ;; Ignore errors since variables may not be defined yet.
+                        (void-variable nil)))))
+         (if (or uelt (consp eelt))
+             (tempel--element region (or uelt eelt))
+           ;; TEMPEL EXTENSION: Evaluate forms
+           (tempel--form elt eelt))))))
 
 (defun tempel--user-element (elt)
   "Evaluate user element ELT."
