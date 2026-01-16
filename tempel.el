@@ -386,16 +386,16 @@ Return the added field."
          (indent-region (car region) (cdr region) nil))))
     ;; TEMPEL EXTENSION: Quit template immediately
     ('q (overlay-put (tempel--field) 'tempel--enter #'tempel--done))
-    (_ (let* ((uelt (tempel--user-element elt))
-              (eelt (unless uelt
+    (_ (let* ((uel (tempel--user-element elt))
+              (val (unless uel
                       ;; Ignore errors since variables may not be defined yet.
                       (condition-case nil
                           (eval elt (cdar tempel--active))
                         (void-variable nil)))))
-         (if (or uelt (consp eelt))
-             (tempel--element region (or uelt eelt))
+         (if (or uel (consp val))
+             (tempel--element region (or uel val))
            ;; TEMPEL EXTENSION: Evaluate forms
-           (tempel--form elt eelt))))))
+           (tempel--form elt val))))))
 
 (defun tempel--user-element (elt)
   "Evaluate user element ELT."
