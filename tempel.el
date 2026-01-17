@@ -508,9 +508,9 @@ template.eld file.  The return value is a list of (modes plist . templates)."
 
 (defun tempel-path-templates ()
   "Return templates defined in `tempel-path'.
-Additionally, save any files in `tempel-template-sources' that have been
-modified since the last time this function was called.
-This is meant to be a source in `tempel-template-sources'."
+Additionally, save any files in `tempel-path' that have been modified
+since the last time this function was called.  This function can be used
+as source in `tempel-template-sources'."
   (when (or (not tempel--path-templates) tempel-auto-reload)
     (let* ((files
             (cl-loop for path in (ensure-list tempel-path)
