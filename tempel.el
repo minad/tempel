@@ -858,9 +858,8 @@ If called interactively, select a template with `completing-read'."
   (when tempel-abbrev-mode
     (let ((table (make-abbrev-table))
           (tempel--ignore-condition t))
-      (dolist (template (tempel--templates))
-        (let* ((sym (car template))
-               (hook (make-symbol (symbol-name sym))))
+      (dolist (sym (delete-dups (mapcar #'car (tempel--templates))))
+        (let ((hook (make-symbol (symbol-name sym))))
           (fset hook (lambda ()
                        (tempel--delete-word (symbol-name sym))
                        (tempel--insert (alist-get sym (tempel--templates)) nil)
