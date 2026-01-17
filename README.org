@@ -330,7 +330,8 @@ document the important ones here:
 
 Furthermore Tempel supports syntax extensions:
 
-- ~(p FORM <NAME> <NOINSERT>)~ Like ~p~ described above, but ~FORM~ is evaluated.
+- ~(p FORM <NAME> <NOINSERT>)~ Like ~p~ described above, but ~FORM~ is evaluated. You
+  can for example select from various values via ~completing-read~.
 - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
 - ~q~ Like ~p~, but the template is finished if the user jumps to the field (see
   also ~r~).
