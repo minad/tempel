@@ -502,7 +502,8 @@ template.eld file.  The return value is a list of (modes plist . templates)."
           (push (pop data) plist))
         (while (consp (car data))
           (push (pop data) templates))
-        (push `( ,(nreverse modes) ,(nreverse plist) . ,(nreverse templates))
+        (push `( ,(nreverse modes) ,(plist-get (nreverse plist) :when)
+                 . ,(nreverse templates))
               result)))
     result))
 
@@ -529,12 +530,12 @@ as source in `tempel-template-sources'."
 (defun tempel--filter-templates (templates)
   "Filter templates from TEMPLATES relevant to the current buffer.
 TEMPLATES must be a list in the form (modes plist . templates)."
-  (cl-loop for (modes plist . mode-templates) in templates
-           if (tempel--condition-p modes plist)
+  (cl-loop for (modes cond . mode-templates) in templates
+           if (tempel--condition-p modes cond)
            append mode-templates))
 
-(defun tempel--condition-p (modes plist)
-  "Return non-nil if one of MODES matches and the PLIST condition is satisfied."
+(defun tempel--condition-p (modes cond)
+  "Return non-nil if one of MODES matches and COND is satisfied."
   (and
    (cl-loop
     for m in modes thereis
@@ -543,11 +544,11 @@ TEMPLATES must be a list in the form (modes plist . templates)."
         (when-let* ((remap (alist-get m major-mode-remap-alist)))
           (derived-mode-p remap))))
    (or tempel--ignore-condition
-       (not (plist-member plist :when))
+       (not cond)
        (save-excursion
          (save-restriction
            (save-match-data
-             (eval (plist-get plist :when) 'lexical)))))))
+             (eval cond 'lexical)))))))
 
 (defun tempel--templates ()
   "Return templates for current mode."
