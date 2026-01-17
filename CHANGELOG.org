@@ -2,6 +2,15 @@
 #+author: Daniel Mendler
 #+language: en
 
+* Development
+
+- Support arbitrary non-whitespace characters in completion prefix, such that
+  templates can be named, e.g., =<template=.
+- Support Lisp expressions which evaluate to template elements.
+- =tempel-next/previous=: Make argument optional.
+- The currently active template state can be obtained from the top of the
+  =tempel--active= stack.
+
 * Version 1.9 (2025-11-30)
 
 - =tempel-done=, =tempel-abort=: Add =ALL= prefix argument to finish or abort all
