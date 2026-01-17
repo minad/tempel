@@ -312,10 +312,11 @@ If OV is alive, move it."
                  (and (= (overlay-start ov) (overlay-end ov))
                       tempel-mark))))
 
-(defun tempel--field (&optional name init)
+(defun tempel--field (&optional name init default)
   "Add template field.
 NAME is the optional field name.
 INIT is the optional initial input.
+DEFAULT specifies if initial input is a default value.
 Return the added field."
   (let ((st (car tempel--active))
         (ov (make-overlay (point) (point)))
@@ -334,7 +335,7 @@ Return the added field."
     (overlay-put ov 'insert-in-front-hooks hooks)
     (overlay-put ov 'insert-behind-hooks hooks)
     (overlay-put ov 'face 'tempel-field)
-    (when (and init (get-text-property 0 'tempel--default init))
+    (when (and init default)
       (overlay-put ov 'face 'tempel-default)
       (overlay-put ov 'tempel--default
                    (if (string-suffix-p ": " init) 'end 'start)))
@@ -411,15 +412,15 @@ Return the added field."
 If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
 PROMPT is the optional prompt/default value.
 If a field was added, return it."
-  (setq prompt
-        (cond
-         ((and (stringp prompt) noinsert) (read-string prompt))
-         ((stringp prompt) (propertize prompt 'tempel--default t))
-         ;; TEMPEL EXTENSION: Evaluate prompt
-         (t (eval prompt (cdar tempel--active)))))
-  (if noinsert
-      (progn (setf (alist-get name (cdar tempel--active)) prompt) nil)
-    (tempel--field name prompt)))
+  (let ((init
+         (cond
+          ((and (stringp prompt) noinsert) (read-string prompt))
+          ((stringp prompt) prompt)
+          ;; TEMPEL EXTENSION: Evaluate prompt
+          (t (eval prompt (cdar tempel--active))))))
+    (if noinsert
+        (progn (setf (alist-get name (cdar tempel--active)) init) nil)
+      (tempel--field name init (stringp prompt)))))
 
 (defun tempel--insert (template region)
   "Insert TEMPLATE given the current REGION."
