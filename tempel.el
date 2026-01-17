@@ -859,16 +859,16 @@ If called interactively, select a template with `completing-read'."
     (let ((table (make-abbrev-table))
           (tempel--ignore-condition t))
       (dolist (template (tempel--templates))
-        (let* ((name (symbol-name (car template)))
-               (hook (make-symbol name)))
+        (let* ((sym (car template))
+               (hook (make-symbol (symbol-name sym))))
           (fset hook (lambda ()
-                       (tempel--delete-word name)
-                       (tempel--insert (cdr template) nil)
+                       (tempel--delete-word (symbol-name sym))
+                       (tempel--insert (alist-get sym (tempel--templates)) nil)
                        t))
           (put hook 'no-self-insert t)
-          (define-abbrev table name 'Template hook
+          (define-abbrev table (symbol-name sym) 'Template hook
             :system t :enable-function
-            (lambda () (assq (car template) (tempel--templates))))))
+            (lambda () (assq sym (tempel--templates))))))
       (setq-local abbrev-minor-mode-table-alist
                   (cons `(tempel-abbrev-mode . ,table)
                         abbrev-minor-mode-table-alist)))))
