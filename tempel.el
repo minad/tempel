@@ -164,9 +164,9 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
 (defun tempel--print-template (template)
   "Print TEMPLATE."
   (cl-loop
-   for elt in template until (keywordp elt) concat
+   for elt in template until (keywordp elt) collect
    (pcase elt
-     ('nil nil)
+     ('nil "")
      ((pred stringp) elt)
      (`(s ,name) (symbol-name name))
      (`(,(or 'p 'P) ,_ ,name . ,noinsert)
@@ -174,7 +174,8 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
      ('> " ")
      ('n> "\n ")
      ((or 'n '& '% 'o) "\n")
-     (_ #("_" 0 1 (face shadow))))))
+     (_ #("_" 0 1 (face shadow))))
+   into result finally return (apply #'concat result)))
 
 (defun tempel--template-plist (template)
   "Get property list from TEMPLATE list."
@@ -191,13 +192,13 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
   "Annotate template NAME given the list of TEMPLATES.
 WIDTH and SEP configure the formatting."
   (when-let* ((name (intern-soft name))
-              (elts (alist-get name templates)))
+              (template (alist-get name templates)))
     (let ((ann (truncate-string-to-width
                 (string-trim
                  (replace-regexp-in-string
                   "[ \t\n\r]+" " "
-                  (or (plist-get (tempel--template-plist elts) :ann)
-                      (tempel--print-template elts))))
+                  (or (plist-get (tempel--template-plist template) :ann)
+                      (tempel--print-template template))))
                 width)))
       (add-face-text-property 0 (length ann) 'completions-annotations t ann)
       (concat sep ann))))
@@ -207,12 +208,12 @@ WIDTH and SEP configure the formatting."
 FUN inserts the info into the buffer.
 TEMPLATES is the list of templates."
   (when-let* ((name (intern-soft name))
-              (elts (alist-get name templates)))
+              (template (alist-get name templates)))
     (with-current-buffer (get-buffer-create " *tempel-info*")
       (setq buffer-read-only t)
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (funcall fun elts)))))
+        (funcall fun template)))))
 
 (defun tempel--delete-word (word)
   "Delete WORD before point."
@@ -780,17 +781,17 @@ Capf, otherwise like an interactive completion command."
               :exit-function (apply-partially #'tempel--exit templates region)
               :company-doc-buffer
               (apply-partially #'tempel--info-buffer templates
-                               (lambda (elts)
-                                 (insert (tempel--print-template elts))
-                                 (tempel--insert-doc elts)
+                               (lambda (template)
+                                 (insert (tempel--print-template template))
+                                 (tempel--insert-doc template)
                                  (current-buffer)))
               :company-location
               (apply-partially #'tempel--info-buffer templates
-                               (lambda (elts)
-                                 (pp (cl-loop for x in elts
+                               (lambda (template)
+                                 (pp (cl-loop for x in template
                                               until (keywordp x) collect x)
                                      (current-buffer))
-                                 (tempel--insert-doc elts)
+                                 (tempel--insert-doc template)
                                  (list (current-buffer))))
               :annotation-function
               (when tempel-complete-annotation
