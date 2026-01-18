@@ -83,7 +83,7 @@ nil or a new template element, which is subsequently evaluated."
   :type 'hook)
 
 (defcustom tempel-template-sources
-  (list #'tempel-path-templates)
+  (list #'tempel-path-templates 'tempel-global-templates)
   "List of template sources.
 A source can either be a function or a variable symbol.  The functions
 must return a list of templates which apply to the buffer or context."
@@ -125,6 +125,9 @@ If a file is modified, added or removed, reload the templates."
      :background "#041529" :foreground "#a8e5e5" :slant italic)
     (t :inherit highlight :slant italic))
   "Face used for default values.")
+
+(defvar tempel-global-templates nil
+  "Alist of global templates.")
 
 (defvar tempel--path-templates nil
   "Templates loaded from the `tempel-path'.")
@@ -375,6 +378,8 @@ Return the added field."
           (open-line 1)))
     (`(s ,name) (tempel--field name))
     (`(l . ,lst) (dolist (e lst) (tempel--element region e)))
+    (`(P . ,lst) ; Only for tempo backward compatibility
+     (tempel--placeholder (nth 0 lst) (nth 1 lst) (nth 2 lst) :only-prompt))
     ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
@@ -408,14 +413,18 @@ Return the added field."
                          (funcall hook elt fields))))
                     elt (cdar tempel--active)))
 
-(defun tempel--placeholder (&optional prompt name noinsert)
+(defun tempel--placeholder (&optional prompt name noinsert only-prompt)
   "Handle placeholder element and add field with NAME.
 If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
+
+If ONLY-PROMPT is non-nil, prompt in the minibuffer for a value to
+insert.
+
 PROMPT is the optional prompt/default value.
 If a field was added, return it."
   (let ((init
          (cond
-          ((and (stringp prompt) noinsert) (read-string prompt))
+          ((and (stringp prompt) (or only-prompt noinsert)) (read-string prompt))
           ((stringp prompt) prompt)
           ;; TEMPEL EXTENSION: Evaluate prompt
           (t (eval prompt (cdar tempel--active))))))
@@ -724,6 +733,51 @@ If prefix argument ALL is given, abort all templates."
         (cons beg end)
       ;; Fallback to `bounds-of-thing-at-point'.
       (bounds-of-thing-at-point 'symbol))))
+
+(defun tempel--add-template-to-alist (name template &optional alist)
+  "Add TEMPLATE elements and NAME to ALIST.
+If the template is already in the alist, override its content."
+  (unless alist (setq alist 'tempel-global-templates))
+
+  (let ((place (assoc name (symbol-value alist))))
+    (if place
+        ;; Tag is already in the list, assign a new template to it.
+        (setcdr place template)
+      ;; Tag is not present in the list, add as a new template
+      (add-to-list alist `(,name ,@template)))))
+
+;;;###autoload
+(cl-defun tempel-define-template (&key fnname name elements doc)
+  "Define a global Tempel template.
+Usage:
+
+:fnname Specified the name to create a template variable and an
+interactive function that inserts the template at the
+point (`tempel-template-<FNNAME VALUE>').  The created function is
+returned.
+
+:name (Optional) The template name (a string) to expand, if not defined,
+this function only creates the function and variable.
+
+:elements A list with Tempel syntax elements.
+
+:doc (Optional) The documentation for the function, variable and
+template."
+  (unless (or fnname elements)
+    (error "FNNAME and ELEMENTS must be defined"))
+
+  (let ((fnname (intern (concat "tempel-template-" fnname))))
+    (when (and (not (memq :doc elements)) doc)
+      (setq elements (append elements `(:doc ,doc))))
+
+    (set fnname elements)
+    (fset fnname (lambda ()
+                     (:documentation
+                      (or doc (format "Insert a %s." (or name fnname))))
+                     (interactive)
+                     (tempel--insert elements (tempel--region))))
+    (when name (tempel--add-template-to-alist (intern name) elements))
+    fnname))
 
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
