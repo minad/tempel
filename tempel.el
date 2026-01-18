@@ -492,7 +492,7 @@ If a field was added, return it."
   "Reorganize the template DATA from file.
 DATA must be a list (modes plist templates modes plist templates...).
 See the README, which provides an example for the file format of the
-template.eld file.  The return value is a list of (modes plist . templates)."
+template.eld file.  The return value is a list of (modes cond . templates)."
   (let (result)
     (while data
       (let (modes plist templates)
@@ -530,7 +530,7 @@ as source in `tempel-template-sources'."
 
 (defun tempel--filter-templates (templates)
   "Filter templates from TEMPLATES relevant to the current buffer.
-TEMPLATES must be a list in the form (modes plist . templates)."
+TEMPLATES must be a list in the form (modes cond . templates)."
   (cl-loop for (modes cond . mode-templates) in templates
            if (tempel--condition-p modes cond)
            append mode-templates))
