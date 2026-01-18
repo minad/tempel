@@ -191,7 +191,7 @@ may be named with `tempel--name' or carry an evaluatable Lisp expression
   "Annotate template NAME given the list of TEMPLATES.
 WIDTH and SEP configure the formatting."
   (when-let* ((name (intern-soft name))
-              (elts (cdr (assoc name templates))))
+              (elts (alist-get name templates)))
     (let ((ann (truncate-string-to-width
                 (string-trim
                  (replace-regexp-in-string
@@ -207,7 +207,7 @@ WIDTH and SEP configure the formatting."
 FUN inserts the info into the buffer.
 TEMPLATES is the list of templates."
   (when-let* ((name (intern-soft name))
-              (elts (cdr (assoc name templates))))
+              (elts (alist-get name templates)))
     (with-current-buffer (get-buffer-create " *tempel-info*")
       (setq buffer-read-only t)
       (let ((inhibit-read-only t))
