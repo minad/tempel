@@ -553,16 +553,16 @@ TEMPLATES must be a list in the form (modes plist . templates)."
 
 (defun tempel--templates ()
   "Return templates for current mode."
-  (let (result)
+  (let (list)
     (run-hook-wrapped
      'tempel-template-sources
      (lambda (fun)
        (cond
-        ((functionp fun) (cl-callf append result (funcall fun)))
-        ((boundp fun) (cl-callf append result (symbol-value fun)))
+        ((functionp fun) (push (funcall fun) list))
+        ((boundp fun) (push (symbol-value fun) list))
         (t (error "Template source is not a function or a variable: %S" fun)))
        nil))
-    result))
+    (apply #'append list)))
 
 (defun tempel--region ()
   "Return region bounds."
