@@ -492,7 +492,7 @@ If a field was added, return it."
   "Reorganize the template DATA from file.
 DATA must be a list (modes plist templates modes plist templates...).
 See the README, which provides an example for the file format of the
-template.eld file.  The return value is a list of (modes cond . templates)."
+template.eld file.  The return value is a list of (mode cond . templates)."
   (let (result)
     (while data
       (let (modes plist templates)
@@ -503,9 +503,10 @@ template.eld file.  The return value is a list of (modes cond . templates)."
           (push (pop data) plist))
         (while (consp (car data))
           (push (pop data) templates))
-        (push `( ,(nreverse modes) ,(plist-get (nreverse plist) :when)
-                 . ,(nreverse templates))
-              result)))
+        (setq plist (plist-get (nreverse plist) :when)
+              templates (nreverse templates))
+        (dolist (m modes)
+          (push `(,m ,plist ,@templates) result))))
     result))
 
 (defun tempel-path-templates ()
@@ -530,20 +531,18 @@ as source in `tempel-template-sources'."
 
 (defun tempel--filter-templates (templates)
   "Filter templates from TEMPLATES relevant to the current buffer.
-TEMPLATES must be a list in the form (modes cond . templates)."
-  (cl-loop for (modes cond . mode-templates) in templates
-           if (tempel--condition-p modes cond)
+TEMPLATES must be a list in the form (mode cond . templates)."
+  (cl-loop for (mode cond . mode-templates) in templates
+           if (tempel--condition-p mode cond)
            append mode-templates))
 
-(defun tempel--condition-p (modes cond)
-  "Return non-nil if one of MODES matches and COND is satisfied."
+(defun tempel--condition-p (mode cond)
+  "Return non-nil if MODE matches and COND is satisfied."
   (and
-   (cl-loop
-    for m in modes thereis
-    (or (eq m #'fundamental-mode)
-        (derived-mode-p m)
-        (when-let* ((remap (alist-get m major-mode-remap-alist)))
-          (derived-mode-p remap))))
+   (or (eq mode #'fundamental-mode)
+       (derived-mode-p mode)
+       (when-let* ((remap (alist-get mode major-mode-remap-alist)))
+         (derived-mode-p remap)))
    (or tempel--ignore-condition
        (not cond)
        (save-excursion
