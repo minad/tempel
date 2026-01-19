@@ -401,18 +401,33 @@ Tempel offers a flexible mechanism for providing the templates, which are
 applicable to the current context. The variable ~tempel-template-sources~
 specifies a list of sources or a single source. A source can either be a
 function, which should return a list of applicable templates, or the symbol of a
-variable, which holds a list of templates, which apply to the current context.
-By default, Tempel configures only the source ~tempel-path-templates~. You may
-want to add global or local template variables to your user configuration:
+variable, which holds a list of templates. By default, Tempel configures the
+source ~tempel-path-templates~. You can add define additional global templates as
+follows in your configuration:
 
 #+begin_src emacs-lisp
 (defvar my-global-templates
-  '((example "Global example template"))
-  "My global templates.")
-(defvar-local my-local-templates nil
-  "Buffer-local templates.")
+  '((fixme comment-start "FIXME ")
+    (todo comment-start "TODO "))
+  "List of global templates.")
+
 (add-to-list 'tempel-template-sources 'my-global-templates)
-(add-to-list 'tempel-template-sources 'my-local-templates)
+#+end_src
+
+For mode-specific templates, the following approach can be used. Similarly,
+modes themselves can directly provide templates in the same way.
+
+#+begin_src emacs-lisp
+(defvar my-emacs-lisp-templates
+  '((lambda "(lambda (" p ")" n> r> ")")
+    (var "(defvar " p "\n  \"" p "\")")
+    (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")"))
+  "List of Elisp templates.")
+
+(add-hook
+ 'emacs-lisp-mode-hook
+ (lambda ()
+   (add-hook 'tempel-template-sources 'my-emacs-lisp-templates nil 'local)))
 #+end_src
 
 * Hooking into the Abbrev mechanism
