@@ -499,14 +499,14 @@ template.eld file.  The return value is a list of (mode cond . templates)."
         (while (and (car data) (symbolp (car data)) (not (keywordp (car data))))
           (push (pop data) modes))
         (while (keywordp (car data))
-          (push (pop data) plist)
-          (push (pop data) plist))
+          (setq plist `(,(car data) ,(cadr data) ,@plist)
+                data (cddr data)))
         (while (consp (car data))
           (push (pop data) templates))
-        (setq plist (plist-get (nreverse plist) :when)
+        (setq plist (or (not (plist-member plist :when)) (plist-get plist :when))
               templates (nreverse templates))
-        (dolist (m modes)
-          (push `(,m ,plist ,@templates) result))))
+        (dolist (mode modes)
+          (push `(,mode ,plist ,@templates) result))))
     result))
 
 (defun tempel-path-templates ()
@@ -544,7 +544,7 @@ TEMPLATES must be a list in the form (mode cond . templates)."
        (when-let* ((remap (alist-get mode major-mode-remap-alist)))
          (derived-mode-p remap)))
    (or tempel--ignore-condition
-       (not cond)
+       (eq cond t)
        (save-excursion
          (save-restriction
            (save-match-data
