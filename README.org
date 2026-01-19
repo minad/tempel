@@ -395,15 +395,16 @@ The ~*~ custom element can be used to expand dynamic tables or LaTeX matrices:
         "\\end{" type "}")
 #+end_src
 
-* Adding template sources
+* Adding templates
 
 Tempel offers a flexible mechanism for providing the templates, which are
 applicable to the current context. The variable ~tempel-template-sources~
 specifies a list of sources or a single source. A source can either be a
 function, which should return a list of applicable templates, or the symbol of a
 variable, which holds a list of templates. By default, Tempel configures the
-source ~tempel-path-templates~. You can add define additional global templates as
-follows in your configuration:
+source ~tempel-path-templates~, which reads the files specified by the variable
+~tempel-path~. You can add define additional global templates as follows in your
+configuration:
 
 #+begin_src emacs-lisp
 (defvar my-global-templates
