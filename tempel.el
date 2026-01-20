@@ -375,8 +375,6 @@ Return the added field."
           (open-line 1)))
     (`(s ,name) (tempel--field name))
     (`(l . ,lst) (dolist (e lst) (tempel--element region e)))
-    (`(P . ,lst) ; Only for tempo backward compatibility
-     (tempel--placeholder (nth 0 lst) (nth 1 lst) (nth 2 lst) :only-prompt))
     ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
@@ -410,18 +408,14 @@ Return the added field."
                          (funcall hook elt fields))))
                     elt (cdar tempel--active)))
 
-(defun tempel--placeholder (&optional prompt name noinsert only-prompt)
+(defun tempel--placeholder (&optional prompt name noinsert)
   "Handle placeholder element and add field with NAME.
 If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
-
-If ONLY-PROMPT is non-nil, prompt in the minibuffer for a value to
-insert.
-
 PROMPT is the optional prompt/default value.
 If a field was added, return it."
   (let ((init
          (cond
-          ((and (stringp prompt) (or only-prompt noinsert)) (read-string prompt))
+          ((and (stringp prompt) noinsert) (read-string prompt))
           ((stringp prompt) prompt)
           ;; TEMPEL EXTENSION: Evaluate prompt
           (t (eval prompt (cdar tempel--active))))))
