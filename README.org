@@ -304,8 +304,8 @@ org-mode
 
 * Template syntax
 
-All the Tempo syntax elements are fully supported. The syntax elements are
-described in the docstring of ~tempel--element~ in tempel.el and originally in
+The Tempo syntax is fully supported. The syntax elements are described in the
+docstring of ~tempel--element~ in tempel.el and originally in
 ~tempo-define-template~ in tempo.el. The documentation is repeated here.
 
 - ~"string"~ The string is inserted in the buffer.
