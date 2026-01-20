@@ -398,7 +398,7 @@ A template can consist of elements of several types:
   value is a string it is dynamically updated on modification of other
   fields.  Other return values are treated as elements and inserted
   according to the rules.  The element (l ..) is useful to return
-  multiple elements, e.g., `(l first second)'.
+  multiple elements.
 
 Tempel extends the Tempo syntax with the following elements:
 
