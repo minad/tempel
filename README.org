@@ -362,11 +362,10 @@ include templates by name in another template.
 
 #+begin_src emacs-lisp
 (defun tempel-include (elt)
-  (when (eq (car-safe elt) 'i)
-    (if-let* ((template (alist-get (cadr elt) (tempel--templates))))
-        (cons 'l template)
-      (message "Template %s not found" (cadr elt))
-      nil)))
+  (pcase elt
+    (`(i ,inc)
+     (cons 'l (or (alist-get inc (tempel--templates))
+                  (error "Template %s not found" inc))))))
 (add-to-list 'tempel-user-elements #'tempel-include)
 #+end_src
 
