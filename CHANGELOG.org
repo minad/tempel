@@ -10,6 +10,7 @@
 - =tempel-next/previous=: Make argument optional.
 - The currently active template state can be obtained from the top of the
   =tempel--active= stack.
+- Improve Tempo compatibility.
 
 * Version 1.9 (2025-11-30)
 
