@@ -359,7 +359,59 @@ Return the added field."
      ,@body))
 
 (defun tempel--element (region elt)
-  "Add template ELT given the REGION."
+  "Add template ELT given the REGION.
+A template can consist of elements of several types:
+
+- string: The string is inserted in the buffer.
+- nil: It is ignored.
+- `p': An empty and unnamed placeholder field is inserted.
+- `r': Inserts the currently active region.  If no region is active, a
+  placeholder field is inserted.  If `tempel-done-on-region' is non-nil,
+  the template is finished when you jump to the field like `q'.
+- `r>': Like `r', but it also indents the region.
+- `n': Inserts a newline.
+- `n>': Inserts a newline and indents line.
+- `>': The line is indented using `indent-according-to-mode'.  Note
+  that you often should place this item after the text you want on the
+  line.
+- `&': If there is only whitespace between the line start and point,
+  nothing happens.  Otherwise a newline is inserted.
+- `%': If there is only whitespace between point and end of line,
+  nothing happens.  Otherwise a newline is inserted.
+- `o': Like `%' but leaves the point before the newline.
+- (s NAME): Inserts a named field.
+- (p PROMPT <NAME> <NOINSERT>): Insert an optionally named field with a
+  prompt.  The PROMPT is displayed directly in the buffer as default
+  value.  The field value is bound to NAME and updated dynamically.  If
+  NOINSERT is non-nil, no field is inserted and the minibuffer is used
+  for prompting.  For clarity, the symbol `noinsert' should be used as
+  argument.
+- (r PROMPT <NAME> <NOINSERT>): Like (p ..), but if there is a current
+  region, it is placed here.
+- (r> PROMPT <NAME> <NOINSERT>): Like (r ..), but is also indents the
+  region.
+- (l ELEMENTS..): Insert multiple elements.
+- Anything else is passed to each function in `tempel-user-elements'
+  until one of the functions returns non-nil, and the result is
+  inserted.  If all of them return nil, the form is evaluated.  The
+  result can either be a string or any other element.  If the return
+  value is a string it is dynamically updated on modification of other
+  fields.  Other return values are treated as elements and inserted
+  according to the rules.  The element (l ..) is useful to return
+  multiple elements, e.g., `(l first second)'.
+
+Tempel extends the Tempo syntax with the following elements:
+
+- (p FORM <NAME> <NOINSERT>): Like (p ..) described above, but FORM is
+  evaluated.  FORM can for example call `completing-read' to select
+  among various elements.
+- (FORM ..): If a Lisp form evaluates to a string, it is inserted as
+  overlay and the overlay is updated on modifications of other fields.
+- `q': Like `p', but the template is finished if the user jumps to the
+  field.  Similarly `r' finishes the template if `tempel-done-on-region'
+  is non-nil.
+
+Use caution with templates which execute arbitrary code!"
   (pcase elt
     ('nil)
     ('n (insert "\n"))
