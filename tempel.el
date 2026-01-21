@@ -279,7 +279,7 @@ BEG and END are the boundaries of the modification."
                              (alist-get x (cdr st)))))
             (when x
               (tempel--sync-replace (overlay-start ov)
-                                           (overlay-end ov) ov x)))))
+                                    (overlay-end ov) ov x)))))
       ;; Move range overlay
       (move-overlay range (overlay-start range)
                     (max (overlay-end range) (overlay-end ov))))))
@@ -441,10 +441,10 @@ Use caution with templates which execute arbitrary code!"
     ('q (overlay-put (tempel--field) 'tempel--enter #'tempel--done))
     (_ (let* ((uel (tempel--user-element elt))
               (val (unless uel
-                      ;; Ignore errors since variables may not be defined yet.
-                      (condition-case nil
-                          (eval elt (cdar tempel--active))
-                        (void-variable "")))))
+                     ;; Ignore errors since variables may not be defined yet.
+                     (condition-case nil
+                         (eval elt (cdar tempel--active))
+                       (void-variable "")))))
          (if (or uel (not (stringp val)))
              (tempel--element region (or uel val))
            ;; TEMPEL EXTENSION: Evaluate forms
@@ -885,18 +885,19 @@ If called interactively, select a template with `completing-read'."
   "Bind KEY to TEMPLATE-OR-NAME in MAP."
   (unless (key-valid-p key)
     (error "Invalid key %s" key))
-  `(define-key ,(or map 'global-map) ,(key-parse key)
-     ,(if (consp template-or-name)
-          `(lambda ()
-             (interactive)
-             (tempel-insert ',template-or-name))
-        (let ((cmd (intern (format "tempel-insert-%s" template-or-name))))
-          `(prog1 ',cmd
-             (defun ,cmd ()
-               ,(format "Insert template %s in the current buffer."
-                        template-or-name)
-               (interactive)
-               (tempel-insert ',template-or-name)))))))
+  `(define-key
+    ,(or map 'global-map) ,(key-parse key)
+    ,(if (consp template-or-name)
+         `(lambda ()
+            (interactive)
+            (tempel-insert ',template-or-name))
+       (let ((cmd (intern (format "tempel-insert-%s" template-or-name))))
+         `(prog1 ',cmd
+            (defun ,cmd ()
+              ,(format "Insert template %s in the current buffer."
+                       template-or-name)
+              (interactive)
+              (tempel-insert ',template-or-name)))))))
 
 ;;;###autoload
 (define-minor-mode tempel-abbrev-mode
