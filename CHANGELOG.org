@@ -2,7 +2,7 @@
 #+author: Daniel Mendler
 #+language: en
 
-* Development
+* Version 1.10 (2026-01-21)
 
 - Support arbitrary non-whitespace characters in completion prefix, such that
   templates can be named, e.g., =<template=.
