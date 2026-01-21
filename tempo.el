@@ -376,6 +376,8 @@ mode, ON-REGION is ignored and assumed true if the region is active."
 ;;;
 ;;; tempo-insert
 
+;;; TODO: Probably `tempo-insert' must be reworked to work like
+;;; `tempel--element', they are almost compatible.
 (defun tempo-insert (element on-region)
   "Insert a template ELEMENT.
 Insert one element from a template.  If ON-REGION is non-nil the `r'
