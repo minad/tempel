@@ -273,7 +273,7 @@ BEG and END are the boundaries of the modification."
         (save-excursion
           (goto-char (overlay-start ov))
           (when-let* ((str (if-let* ((form (overlay-get ov 'tempel--form)))
-                               (or (eval form (cdr st)) "")
+                               (eval form (cdr st))
                              (when-let* ((name (overlay-get ov 'tempel--name)))
                                (alist-get name (cdr st))))))
             (tempel--sync-replace (overlay-start ov)
