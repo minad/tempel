@@ -330,8 +330,6 @@ docstring of ~tempel--element~ in tempel.el and originally in
   value is bound to ~NAME~ and updated dynamically. If ~NOINSERT~ is non-nil, no
   field is inserted and the minibuffer is used for prompting. For clarity, the
   symbol ~noinsert~ should be used as argument.
-- ~(P PROMPT <NAME> <NOINSERT>)~ Works just like ~(p ...)~, but always reads from
-  the minibuffer.
 - ~(r PROMPT <NAME> <NOINSERT>)~: Like ~(p ..)~, but if there is a current region,
   it is placed here.
 - ~(r> PROMPT <NAME> <NOINSERT>)~ Like ~(r ..)~, but it also indents the region.

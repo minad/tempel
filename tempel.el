@@ -386,8 +386,6 @@ A template can consist of elements of several types:
   NOINSERT is non-nil, no field is inserted and the minibuffer is used
   for prompting.  For clarity, the symbol `noinsert' should be used as
   argument.
-- (P PROMPT <NAME> <NOINSERT>): Works just like (p ...), but always
-  reads from the minibuffer.
 - (r PROMPT <NAME> <NOINSERT>): Like (p ..), but if there is a current
   region, it is placed here.
 - (r> PROMPT <NAME> <NOINSERT>): Like (r ..), but is also indents the
@@ -429,11 +427,10 @@ Use caution with templates which execute arbitrary code!"
           (open-line 1)))
     (`(s ,name) (tempel--field name))
     (`(l . ,lst) (dolist (e lst) (tempel--element region e)))
-    ((or 'p `(,(and tag (or 'p 'P)) . ,rest))
-     (apply #'tempel--placeholder (eq tag 'P) rest))
+    ((or 'p `(,(or 'p 'P) . ,rest)) (apply #'tempel--placeholder rest))
     ((or 'r 'r> `(,(or 'r 'r>) . ,rest))
      (if (not region)
-         (when-let* ((ov (apply #'tempel--placeholder nil rest))
+         (when-let* ((ov (apply #'tempel--placeholder rest))
                      ((not rest))
                      (tempel-done-on-region))
            (overlay-put ov 'tempel--enter #'tempel--done))
@@ -463,20 +460,20 @@ Use caution with templates which execute arbitrary code!"
                          (funcall hook elt fields))))
                     elt (cdar tempel--active)))
 
-(defun tempel--placeholder (read &optional prompt name noinsert)
+(defun tempel--placeholder (&optional prompt name noinsert)
   "Handle placeholder element and add field with NAME.
-If READ is non-nil read a string from the minibuffer.  If NOINSERT is
-non-nil do not insert a field, only bind the value to NAME.  PROMPT is
-the optional prompt/default value.  If a field was added, return it."
+If NOINSERT is non-nil do not insert a field, only bind the value to NAME.
+PROMPT is the optional prompt/default value.
+If a field was added, return it."
   (let ((init
          (cond
-          ((and (stringp prompt) (or noinsert read)) (read-string prompt))
+          ((and (stringp prompt) noinsert) (read-string prompt))
           ((stringp prompt) prompt)
           ;; TEMPEL EXTENSION: Evaluate prompt
           (t (eval prompt (cdar tempel--active))))))
     (if noinsert
         (progn (setf (alist-get name (cdar tempel--active)) init) nil)
-      (tempel--field name init (and (not read) (stringp prompt))))))
+      (tempel--field name init (stringp prompt)))))
 
 (defun tempel--insert (template region)
   "Insert TEMPLATE given the current REGION."
