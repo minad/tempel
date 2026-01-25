@@ -2,6 +2,10 @@
 #+author: Daniel Mendler
 #+language: en
 
+* Version 1.11 (2026-01-25)
+
+- Bugfixes.
+
 * Version 1.10 (2026-01-21)
 
 - Support arbitrary non-whitespace characters in completion prefix, such that
