@@ -106,16 +106,17 @@ if more templates are contributed there.
 
 * Template file format
 
-The templates are defined in a Lisp data file configured by ~tempel-path~. Lisp
-data files are files containing Lisp s-expressions (see ~lisp-data-mode~). By
-default the file =templates= in the ~user-emacs-directory~ is used, e.g.,
-=~/.config/emacs/templates=. The templates are grouped by major mode with
-an optional ~:when~ condition. Each template is a list in the concise form of the
-Emacs Tempo syntax. The first element of each list is the name of the template.
-I recommend to avoid special letters for the template names, since special
-letters may carry meaning during completion filtering and as such make it harder
-to select the desired template. Thus the name =lett= is better than =let*=. Behind
-the name, the Tempo syntax elements follow.
+The templates are defined in a Lisp data file configured by ~tempel-path~. Lisp data files
+are files containing Lisp s-expressions (see ~lisp-data-mode~). By default the file
+=templates= in the ~user-emacs-directory~ is used, e.g., =~/.config/emacs/templates=. The
+templates are grouped by major mode with an optional ~:when~ condition. The condition is
+evaluated at the point where the template will be inserted, so for example before the
+completion prefix in the case of abbrev expansion or auto-complete. Each template is a list
+in the concise form of the Emacs Tempo syntax. The first element of each list is the name
+of the template. I recommend to avoid special letters for the template names, since
+special letters may carry meaning during completion filtering and as such make it harder
+to select the desired template. Thus the name =lett= is better than =let*=. Behind the
+name, the Tempo syntax elements follow.
 
 In addition, /after/ the template elements, each template may specify several
 key/value pairs. Specifically, templates may specify =:pre= and/or =:post= keys with
@@ -277,6 +278,10 @@ c-mode :when (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
 
 org-mode
 
+(inlsrc "src_" p "{" q "}")
+
+org-mode :when (bolp)
+
 (caption "#+caption: ")
 (drawer ":" p ":" n r ":end:")
 (begin "#+begin_" (s name) n> r> n "#+end_" name)
@@ -293,7 +298,6 @@ org-mode
 (src "#+begin_src " q n r n "#+end_src")
 (gnuplot "#+begin_src gnuplot :var data=" (p "table") " :file " (p "plot.png") n r n "#+end_src" :post (org-edit-src-code))
 (elisp "#+begin_src emacs-lisp" n r n "#+end_src" :post (org-edit-src-code))
-(inlsrc "src_" p "{" q "}")
 (title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en")
 
 ;; Local Variables:

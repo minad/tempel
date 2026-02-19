@@ -43,7 +43,8 @@
 (require 'compat)
 (eval-when-compile
   (require 'subr-x)
-  (require 'cl-lib))
+  (require 'cl-lib)
+  (require 'seq))
 
 (defgroup tempel nil
   "Tempo templates/snippets with in-buffer field editing."
@@ -767,17 +768,16 @@ If prefix argument ALL is given, abort all templates."
     (with-current-buffer buf
       (tempel--disable st))))
 
-(defun tempel--prefix-bounds (templates)
-  "Return prefix bounds given TEMPLATES list."
-  (let ((beg (save-excursion (skip-chars-backward "^[:space:]") (point)))
-        (end (point)))
-    (if (and (/= beg end)
-             ;; Check if prefix matches a template name.
-             (try-completion (buffer-substring-no-properties beg end)
-                             templates))
-        (cons beg end)
-      ;; Fallback to `bounds-of-thing-at-point'.
-      (bounds-of-thing-at-point 'symbol))))
+(defun tempel--prefix-bounds ()
+  "Return prefix bounds."
+  (bounds-of-thing-at-point 'symbol))
+
+(defmacro tempel--with-point-at (pos &rest body)
+  "Execute the forms in BODY with point as POS."
+  (declare (indent 1) (debug t))
+  `(save-excursion
+     (goto-char ,pos)
+     ,@body))
 
 ;;;###autoload
 (defun tempel-expand (&optional interactive)
@@ -792,8 +792,8 @@ command."
   (interactive (list t))
   (when interactive
     (tempel--save))
-  (if-let* ((templates (tempel--templates))
-            (bounds (tempel--prefix-bounds templates))
+  (if-let* ((bounds (tempel--prefix-bounds))
+            (templates (tempel--with-point-at (car bounds) (tempel--templates)))
             (name (buffer-substring-no-properties
                    (car bounds) (cdr bounds)))
             (sym (intern-soft name))
@@ -824,10 +824,9 @@ Capf, otherwise like an interactive completion command."
           (user-error "tempel-complete: No matching templates")))
     ;; Use the marked region for template insertion if triggered manually.
     (let ((region (and (eq this-command #'tempel-complete) (tempel--region))))
-      (when-let* ((templates (tempel--templates))
-                  (bounds (or (and (not region)
-                                   (tempel--prefix-bounds templates))
-                              (cons (point) (point)))))
+      (when-let* ((bounds (or (and (not region) (tempel--prefix-bounds))
+                              (cons (point) (point))))
+                  (templates (tempel--with-point-at (car bounds) (tempel--templates))))
         (list (car bounds) (cdr bounds) templates
               :category 'tempel
               :exclusive 'no
@@ -857,30 +856,32 @@ Capf, otherwise like an interactive completion command."
   "Insert TEMPLATE-OR-NAME.
 If called interactively, select a template with `completing-read'."
   (interactive (list nil))
-  (tempel--insert
-   (if (consp template-or-name) template-or-name
-     (let ((templates (or (tempel--templates)
-                          (error "Tempel: No templates for %s" major-mode))))
-       (unless template-or-name
-         (setq template-or-name
-               (intern-soft
-                (completing-read
-                 "Template: "
-                 ;; TODO: Use `completion-table-with-metadata' via Compat 31
-                 (lambda (str pred action)
-                   (if (eq action 'metadata)
-                       `(metadata
-                         (category . tempel)
-                         ,@(when tempel-insert-annotation
-                             `((annotation-function
-                                . ,(apply-partially
-                                    #'tempel--annotate templates tempel-insert-annotation
-                                    #("  " 1 2 (display (space :align-to (+ left 20)))))))))
-                     (complete-with-action action templates str pred)))
-                 nil t nil 'tempel--history))))
-       (or (and template-or-name (alist-get template-or-name templates))
-           (user-error "Template %s not found" template-or-name))))
-   (tempel--region)))
+  (let ((region (tempel--region)))
+    (tempel--insert
+     (if (consp template-or-name) template-or-name
+       (let* ((insertion-point (if region (car region) (point)))
+              (templates (or (tempel--with-point-at insertion-point (tempel--templates))
+                             (error "Tempel: No templates for %s" major-mode))))
+         (unless template-or-name
+           (setq template-or-name
+                 (intern-soft
+                  (completing-read
+                   "Template: "
+                   ;; TODO: Use `completion-table-with-metadata' via Compat 31
+                   (lambda (str pred action)
+                     (if (eq action 'metadata)
+                         `(metadata
+                           (category . tempel)
+                           ,@(when tempel-insert-annotation
+                               `((annotation-function
+                                  . ,(apply-partially
+                                      #'tempel--annotate templates tempel-insert-annotation
+                                      #("  " 1 2 (display (space :align-to (+ left 20)))))))))
+                       (complete-with-action action templates str pred)))
+                   nil t nil 'tempel--history))))
+         (or (and template-or-name (alist-get template-or-name templates))
+             (user-error "Template %s not found" template-or-name))))
+     region)))
 
 ;;;###autoload
 (defmacro tempel-key (key template-or-name &optional map)
@@ -913,17 +914,21 @@ If called interactively, select a template with `completing-read'."
     (kill-local-variable 'abbrev-minor-mode-table-alist))
   (when tempel-abbrev-mode
     (let ((table (make-abbrev-table))
-          (tempel--ignore-condition t))
-      (dolist (sym (delete-dups (mapcar #'car (tempel--templates))))
-        (let ((hook (make-symbol (symbol-name sym))))
+          (templates (let ((tempel--ignore-condition t)) (tempel--templates))))
+      (pcase-dolist (`(,sym . ,template) (seq-uniq templates (lambda (a b) (equal (car a) (car b)))))
+        (let* ((prefix (symbol-name sym))
+               (hook (make-symbol prefix)))
           (fset hook (lambda ()
-                       (tempel--delete-word (symbol-name sym))
-                       (tempel--insert (alist-get sym (tempel--templates)) nil)
+                       (tempel--delete-word prefix)
+                       (tempel--insert template nil)
                        t))
           (put hook 'no-self-insert t)
-          (define-abbrev table (symbol-name sym) 'Template hook
+          (define-abbrev table prefix 'Template hook
             :system t :enable-function
-            (lambda () (assq sym (tempel--templates))))))
+            (lambda ()
+              (let* ((prefix-start (- (point) (length prefix)))
+                     (templates (tempel--with-point-at prefix-start (tempel--templates))))
+                (assq sym templates))))))
       (setq-local abbrev-minor-mode-table-alist
                   (cons `(tempel-abbrev-mode . ,table)
                         abbrev-minor-mode-table-alist)))))
