@@ -994,18 +994,25 @@ If called interactively, select a template with `completing-read'."
             (default-value 'abbrev-minor-mode-table-alist))
     (kill-local-variable 'abbrev-minor-mode-table-alist))
   (when tempel-abbrev-mode
-    (let ((table (make-abbrev-table)))
-      (pcase-dolist (`(,sym . ,templates) (seq-group-by #'car (tempel--templates)))
-        (let* ((prefix (symbol-name sym))
+    (let ((table (make-abbrev-table))
+          (templates (tempel--templates)))
+      ;; Since template names might include special characters, it is difficult to
+      ;; recognize possible template names in general. Instead, we explicitly check for
+      ;; any known template name preceded by a symbol boundary or white space.
+      (let* ((names (seq-uniq (mapcar #'car templates)))
+             (name-regex (regexp-opt (mapcar #'symbol-name names) t))
+             (regexp (concat "\\(?:\\_<\\|^\\|[\n[:space:]]\\)" name-regex)))
+        (abbrev-table-put table :regexp regexp))
+      (pcase-dolist (`(,name . ,name-templates) (seq-group-by #'car templates))
+        (let* ((prefix (symbol-name name))
                (hook (make-symbol prefix)))
           (fset hook
                 (lambda ()
-                  (let* ((available (let ((prefix-start (- (point) (length prefix))))
-                                      (tempel--with-point-at prefix-start
-                                        (seq-filter #'tempel--condition-p templates))))
-                         (template (tempel--select-template available)))
-                    (tempel--delete-word prefix)
-                    (tempel--insert template nil))
+                  ;; Multiple abbrevs might be suffixes of each other, so we trigger
+                  ;; general expansion to consider all prefixes at point regardless of
+                  ;; which abbrev was triggered.
+                  (tempel-expand t)
+                  ;; Inhibit insertion of the triggering character
                   t))
           (put hook 'no-self-insert t)
           (define-abbrev table prefix 'Template hook
@@ -1013,7 +1020,7 @@ If called interactively, select a template with `completing-read'."
             (lambda ()
               (let ((prefix-start (- (point) (length prefix))))
                 (tempel--with-point-at prefix-start
-                  (seq-some #'tempel--condition-p templates)))))))
+                  (seq-some #'tempel--condition-p name-templates)))))))
       (setq-local abbrev-minor-mode-table-alist
                   (cons `(tempel-abbrev-mode . ,table)
                         abbrev-minor-mode-table-alist)))))
