@@ -416,38 +416,23 @@ The ~*~ custom element can be used to expand dynamic tables or LaTeX matrices:
 
 * Adding templates
 
-Tempel offers a flexible mechanism for providing the templates, which are
-applicable to the current context. The variable ~tempel-template-sources~
-specifies a list of sources or a single source. A source can either be a
-function, which should return a list of applicable templates, or the symbol of a
-variable, which holds a list of templates. By default, Tempel configures the
-source ~tempel-path-templates~, which reads the files specified by the variable
-~tempel-path~. You can add define additional global templates as follows in your
-configuration:
+Besides configuring templates in lisp-data files under ~tempel-path~ as described above, you can add additional template sources to ~tempel-template-sources~. A source must either be a variable symbol or a function that resolves respectively evaluates to a list of ~(modes . templates)~ pairs as in the following example.
 
 #+begin_src emacs-lisp
-(defvar my-global-templates
-  '((fixme comment-start "FIXME ")
-    (todo comment-start "TODO "))
-  "List of global templates.")
+(defvar my-templates
+  '((fundamental-mode (fixme comment-start "FIXME ")
+                      (todo comment-start "TODO " :when (bolp)))
+    ((lisp-mode emacs-lisp-mode) (lambda "(lambda (" p ")" n> r> ")")))
+  "List of templates.")
 
-(add-to-list 'tempel-template-sources 'my-global-templates)
-#+end_src
+(add-to-list 'tempel-template-sources 'my-templates)
 
-For mode-specific templates, the following approach can be used. Similarly,
-modes themselves can directly provide templates in the same way.
+(defun my-dynamic-templates ()
+  "Generate some templates dynamically."
+  ;; If you are feeling adventurous, you could read them from a database or web service
+  `((markdown-mode (dynamic "Fixed at " ,(format-time-string "%H:%M")))))
 
-#+begin_src emacs-lisp
-(defvar my-emacs-lisp-templates
-  '((lambda "(lambda (" p ")" n> r> ")")
-    (var "(defvar " p "\n  \"" p "\")")
-    (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")"))
-  "List of Elisp templates.")
-
-(add-hook
- 'emacs-lisp-mode-hook
- (lambda ()
-   (add-hook 'tempel-template-sources 'my-emacs-lisp-templates nil 'local)))
+(add-to-list 'tempel-template-sources 'my-dynamic-templates)
 #+end_src
 
 * Hooking into the Abbrev mechanism
