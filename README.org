@@ -7,8 +7,6 @@
 #+texinfo_dir_desc: Simple templates for Emacs
 
 #+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://github.com/minad/corfu/blob/screenshots/emacs.svg?raw=true"/></a>
-#+html: <a href="https://elpa.gnu.org/packages/tempel.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/tempel.svg"/></a>
-#+html: <a href="https://elpa.gnu.org/devel/tempel.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/tempel.svg"/></a>
 #+html: <a href="https://melpa.org/#/tempel"><img alt="MELPA" src="https://melpa.org/packages/tempel-badge.svg"/></a>
 #+html: <a href="https://stable.melpa.org/#/tempel"><img alt="MELPA Stable" src="https://stable.melpa.org/packages/tempel-badge.svg"/></a>
 #+html: <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg/1920px-Temple_of_Hephaestus_%28Southwest%29%2C_Athens_-_20070711b.jpg" align="right" width="30%">
@@ -55,10 +53,10 @@ provided key bindings. You can customize the key bindings there.
 
 * Configuration
 
-The package is available on GNU ELPA and MELPA and can be installed with
-=package-install=. The following example configuration relies on =use-package=. For
-some ready-made templates check out the package [[https://github.com/Crandel/tempel-collection][tempel-collection]]. We appreciate
-if more templates are contributed there.
+The package is available from MELPA and can be installed with =package-install=.
+The following example configuration relies on =use-package=. For some ready-made
+templates check out the package [[https://github.com/Crandel/tempel-collection][tempel-collection]]. We appreciate if more
+templates are contributed there.
 
 #+begin_src emacs-lisp
 ;; Configure Tempel
@@ -499,8 +497,3 @@ List of alternatives (built-in or separate packages):
 - [[https://github.com/pkazmier/snippet.el][snippet.el]]: Original snippet mode, with inline expansion
 - [[https://nschum.de/src/emacs/tempo-snippets/][tempo-snippets.el]]: Interface like snippet.el for Tempo
 - [[https://github.com/joaotavora/yasnippet][yasnippet.el]]: Template system inspired by Textmate snippets
-
-* Contributions
-
-Since this package is part of [[https://elpa.gnu.org/packages/tempel.html][GNU ELPA]] contributions require a copyright
-assignment to the FSF.
