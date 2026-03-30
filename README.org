@@ -104,16 +104,17 @@ templates are contributed there.
 
 * Template file format
 
-The templates are defined in a Lisp data file configured by ~tempel-path~. Lisp
-data files are files containing Lisp s-expressions (see ~lisp-data-mode~). By
-default the file =templates= in the ~user-emacs-directory~ is used, e.g.,
-=~/.config/emacs/templates=. The templates are grouped by major mode with
-an optional ~:when~ condition. Each template is a list in the concise form of the
-Emacs Tempo syntax. The first element of each list is the name of the template.
-I recommend to avoid special letters for the template names, since special
-letters may carry meaning during completion filtering and as such make it harder
-to select the desired template. Thus the name =lett= is better than =let*=. Behind
-the name, the Tempo syntax elements follow.
+The templates are defined in a Lisp data file configured by ~tempel-path~. Lisp data files
+are files containing Lisp s-expressions (see ~lisp-data-mode~). By default the file
+=templates= in the ~user-emacs-directory~ is used, e.g., =~/.config/emacs/templates=. The
+templates are grouped by major mode with an optional ~:when~ condition. The condition is
+evaluated at the point where the template will be inserted, so for example before the
+completion prefix in the case of abbrev expansion or auto-complete. Each template is a list
+in the concise form of the Emacs Tempo syntax. The first element of each list is the name
+of the template. I recommend to avoid special letters for the template names, since
+special letters may carry meaning during completion filtering and as such make it harder
+to select the desired template. Thus the name =lett= is better than =let*=. Behind the
+name, the Tempo syntax elements follow.
 
 In addition, /after/ the template elements, each template may specify several
 key/value pairs. Specifically, templates may specify =:pre= and/or =:post= keys with
@@ -275,6 +276,10 @@ c-mode :when (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
 
 org-mode
 
+(inlsrc "src_" p "{" q "}")
+
+org-mode :when (bolp)
+
 (caption "#+caption: ")
 (drawer ":" p ":" n r ":end:")
 (begin "#+begin_" (s name) n> r> n "#+end_" name)
@@ -291,7 +296,6 @@ org-mode
 (src "#+begin_src " q n r n "#+end_src")
 (gnuplot "#+begin_src gnuplot :var data=" (p "table") " :file " (p "plot.png") n r n "#+end_src" :post (org-edit-src-code))
 (elisp "#+begin_src emacs-lisp" n r n "#+end_src" :post (org-edit-src-code))
-(inlsrc "src_" p "{" q "}")
 (title "#+title: " p n "#+author: Daniel Mendler" n "#+language: en")
 
 ;; Local Variables:
@@ -410,38 +414,23 @@ The ~*~ custom element can be used to expand dynamic tables or LaTeX matrices:
 
 * Adding templates
 
-Tempel offers a flexible mechanism for providing the templates, which are
-applicable to the current context. The variable ~tempel-template-sources~
-specifies a list of sources or a single source. A source can either be a
-function, which should return a list of applicable templates, or the symbol of a
-variable, which holds a list of templates. By default, Tempel configures the
-source ~tempel-path-templates~, which reads the files specified by the variable
-~tempel-path~. You can add define additional global templates as follows in your
-configuration:
+Besides configuring templates in lisp-data files under ~tempel-path~ as described above, you can add additional template sources to ~tempel-template-sources~. A source must either be a variable symbol or a function that resolves respectively evaluates to a list of ~(modes . templates)~ pairs as in the following example.
 
 #+begin_src emacs-lisp
-(defvar my-global-templates
-  '((fixme comment-start "FIXME ")
-    (todo comment-start "TODO "))
-  "List of global templates.")
+(defvar my-templates
+  '((fundamental-mode (fixme comment-start "FIXME ")
+                      (todo comment-start "TODO " :when (bolp)))
+    ((lisp-mode emacs-lisp-mode) (lambda "(lambda (" p ")" n> r> ")")))
+  "List of templates.")
 
-(add-to-list 'tempel-template-sources 'my-global-templates)
-#+end_src
+(add-to-list 'tempel-template-sources 'my-templates)
 
-For mode-specific templates, the following approach can be used. Similarly,
-modes themselves can directly provide templates in the same way.
+(defun my-dynamic-templates ()
+  "Generate some templates dynamically."
+  ;; If you are feeling adventurous, you could read them from a database or web service
+  `((markdown-mode (dynamic "Fixed at " ,(format-time-string "%H:%M")))))
 
-#+begin_src emacs-lisp
-(defvar my-emacs-lisp-templates
-  '((lambda "(lambda (" p ")" n> r> ")")
-    (var "(defvar " p "\n  \"" p "\")")
-    (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")"))
-  "List of Elisp templates.")
-
-(add-hook
- 'emacs-lisp-mode-hook
- (lambda ()
-   (add-hook 'tempel-template-sources 'my-emacs-lisp-templates nil 'local)))
+(add-to-list 'tempel-template-sources 'my-dynamic-templates)
 #+end_src
 
 * Hooking into the Abbrev mechanism
