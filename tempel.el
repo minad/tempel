@@ -83,10 +83,11 @@ nil or a new template element, which is subsequently evaluated."
   :type 'hook)
 
 (defcustom tempel-template-sources
-  (list #'tempel-path-templates)
+  '(tempel-local-templates tempel-global-templates tempel-path-templates)
   "List of template sources.
 A source can either be a function or a variable symbol.  The functions
-must return a list of templates which apply to the buffer or context."
+must return a list of templates which apply to the buffer or context.
+See also `tempel-local-templates' and `tempel-global-templates'."
   :type 'hook)
 
 (defcustom tempel-done-on-region t
@@ -101,6 +102,15 @@ must return a list of templates which apply to the buffer or context."
   "Reload templates when files specified by `tempel-path' change.
 If a file is modified, added or removed, reload the templates."
   :type 'boolean)
+
+(defvar tempel-global-templates nil
+  "Alist of global templates.
+The keys must be symbols and the values are lists of template elements.
+See also `tempel-local-templates'.")
+
+(defvar-local tempel-local-templates nil
+  "Alist of buffer-local templates.
+See also `tempel-global-templates'.")
 
 (defface tempel-field
   '((((class color) (min-colors 88) (background light))

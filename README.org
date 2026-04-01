@@ -416,23 +416,20 @@ specifies a list of sources or a single source. A source can either be a
 function, which should return a list of applicable templates, or the symbol of a
 variable, which holds a list of templates. By default, Tempel configures the
 source ~tempel-path-templates~, which reads the files specified by the variable
-~tempel-path~. You can add define additional global templates as follows in your
-configuration:
+~tempel-path~, and the variables ~tempel-global-templates~ and
+~tempel-local-templates~.
 
 #+begin_src emacs-lisp
-(defvar my-global-templates
+(setq tempel-global-templates
   '((fixme comment-start "FIXME ")
-    (todo comment-start "TODO "))
-  "List of global templates.")
-
-(add-to-list 'tempel-template-sources 'my-global-templates)
+    (todo comment-start "TODO ")))
 #+end_src
 
 For mode-specific templates, the following approach can be used. Similarly,
 modes themselves can directly provide templates in the same way.
 
 #+begin_src emacs-lisp
-(defvar my-emacs-lisp-templates
+(defvar my-elisp-templates
   '((lambda "(lambda (" p ")" n> r> ")")
     (var "(defvar " p "\n  \"" p "\")")
     (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")"))
@@ -440,8 +437,7 @@ modes themselves can directly provide templates in the same way.
 
 (add-hook
  'emacs-lisp-mode-hook
- (lambda ()
-   (add-hook 'tempel-template-sources 'my-emacs-lisp-templates nil 'local)))
+ (lambda () (setq tempel-local-templates my-elisp-templates)))
 #+end_src
 
 * Hooking into the Abbrev mechanism
