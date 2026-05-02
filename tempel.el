@@ -6,7 +6,7 @@
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
 ;; Version: 1.12
-;; Package-Requires: ((emacs "29.1") (compat "30"))
+;; Package-Requires: ((emacs "29.1") (compat "31"))
 ;; URL: https://github.com/minad/tempel
 ;; Keywords: abbrev, languages, tools, text
 
@@ -866,17 +866,14 @@ If called interactively, select a template with `completing-read'."
                (intern-soft
                 (completing-read
                  "Template: "
-                 ;; TODO: Use `completion-table-with-metadata' via Compat 31
-                 (lambda (str pred action)
-                   (if (eq action 'metadata)
-                       `(metadata
-                         (category . tempel)
-                         ,@(when tempel-insert-annotation
-                             `((annotation-function
-                                . ,(apply-partially
-                                    #'tempel--annotate templates tempel-insert-annotation
-                                    #("  " 1 2 (display (space :align-to (+ left 20)))))))))
-                     (complete-with-action action templates str pred)))
+                 (completion-table-with-metadata
+                  templates
+                  `((category . tempel)
+                    ,@(when tempel-insert-annotation
+                        `((annotation-function
+                           . ,(apply-partially
+                               #'tempel--annotate templates tempel-insert-annotation
+                               #("  " 1 2 (display (space :align-to (+ left 20))))))))))
                  nil t nil 'tempel--history))))
        (or (and template-or-name (alist-get template-or-name templates))
            (user-error "Template %s not found" template-or-name))))
