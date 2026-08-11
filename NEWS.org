@@ -1,4 +1,4 @@
-#+title: tempel.el - Changelog
+#+title: tempel.el - News
 #+author: Daniel Mendler
 #+language: en
 
